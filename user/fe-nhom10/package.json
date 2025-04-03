@@ -1,0 +1,26 @@
+{
+  "name": "fe-nhom10",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.1",
+    "@vue/cli-service": "^5.0.8",
+    "@vuepic/vue-datepicker": "^11.0.2",
+    "axios": "^1.7.7",
+    "bootstrap": "^5.3.3",
+    "chart.js": "^4.4.0",
+    "vue": "^3.5.13",
+    "vue-chartjs": "^5.2.0",
+    "vue-router": "^4.4.5",
+    "vuex": "^4.1.0"
+  }
+}
