@@ -1,6 +1,11 @@
 module.exports = {
-  // Example configuration for Vue 3
-  chainWebpack: config => {
-    config.resolve.alias.set('vue$', 'vue/dist/vue.esm-bundler.js');
-  }
-};
+    devServer: {
+      proxy: {
+        '^/api': {
+          target: 'http://127.0.0.1:8000',
+          changeOrigin: true,
+          pathRewrite: { '^/api': '/api' },
+        },
+      },
+    },
+  };

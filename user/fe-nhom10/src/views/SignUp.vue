@@ -2,20 +2,20 @@
     <section id="register" class="section">
       <div class="auth-wrapper">
         <div class="modal-header">
-        <img
-          src="https://cdn-resize-img.vietcetera.com/_next/image?url=https%3A%2F%2Fimg.vietcetera.com%2Fuploads%2Fimages%2F28-dec-2021%2Finfina-feature-1640679969588.jpg&q=80&w=1536"
-          alt="Logo"
-          class="modal-logo"
-        />
-        <h2>Đăng kí</h2>
-    </div>
+          <img
+            src="https://cdn-resize-img.vietcetera.com/_next/image?url=https%3A%2F%2Fimg.vietcetera.com%2Fuploads%2Fimages%2F28-dec-2021%2Finfina-feature-1640679969588.jpg&q=80&w=1536"
+            alt="Logo"
+            class="modal-logo"
+          />
+          <h2>Đăng kí</h2>
+        </div>
         <form class="auth-form" @submit.prevent="handleRegister">
           <div class="form-group">
             <label for="register-name">Họ và tên</label>
             <input
               type="text"
               id="register-name"
-              v-model="name"
+              v-model="ten"
               required
               placeholder="Nhập họ và tên"
             />
@@ -70,27 +70,56 @@
       </div>
     </section>
   </template>
-  
+
   <script>
   export default {
     name: "RegisterPage",
     data() {
       return {
-        name: "",
+        ten: "",
         email: "",
         password: "",
         confirmPassword: "",
-        showPassword: false, // Trạng thái ẩn/hiện mật khẩu
-        showConfirmPassword: false, // Trạng thái ẩn/hiện xác nhận mật khẩu
+        showPassword: false,
+        showConfirmPassword: false,
       };
     },
     methods: {
-      handleRegister() {
+      async handleRegister() {
         if (this.password !== this.confirmPassword) {
           alert("Mật khẩu xác nhận không khớp!");
           return;
         }
-        console.log("Đăng ký với:", this.name, this.email, this.password);
+
+        try {
+          const response = await fetch("/api/register", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ten: this.ten,
+              email: this.email,
+              password: this.password,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            const errorMsg = data?.errors
+              ? Object.values(data.errors).flat().join("\n")
+              : "Đăng ký thất bại!";
+            alert(errorMsg);
+            return;
+          }
+
+          alert("Đăng ký thành công!");
+          this.$router.push("/login");
+        } catch (error) {
+          alert("Lỗi kết nối máy chủ!");
+          console.error(error);
+        }
       },
       togglePassword() {
         this.showPassword = !this.showPassword;
@@ -101,7 +130,8 @@
     },
   };
   </script>
-  
+
+
   <style scoped>
   /* Đảm bảo phần tử cha không bị ảnh hưởng bởi style toàn cục */
   html, body {
@@ -168,7 +198,7 @@
   height: auto;
   margin-bottom: 0.5rem;
 }
- 
+
 
 .auth-wrapper-image {
   width: 50px; /* Điều chỉnh kích thước hình ảnh nhỏ */
@@ -176,25 +206,25 @@
   object-fit: contain;
   margin-bottom: 1rem; /* Khoảng cách dưới hình ảnh */
 }
-  
+
   /* Form đăng ký */
   .auth-form {
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
   }
-  
+
   .auth-form .form-group {
     margin-bottom: 1rem;
   }
-  
+
   .auth-form label {
     display: block;
     font-weight: 500;
     margin-bottom: 0.5rem;
     color: #374151;
   }
-  
+
   .auth-form input {
     width: 100%;
     padding: 0.75rem;
@@ -203,22 +233,22 @@
     font-size: 1rem;
     transition: all 0.3s ease;
   }
-  
+
   .auth-form input:focus {
     outline: none;
     border-color: #0ea5e9;
     box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
   }
-  
+
   /* Nút ẩn/hiện mật khẩu */
   .password-group {
     position: relative;
   }
-  
+
   .password-wrapper {
     position: relative;
   }
-  
+
   .toggle-password {
     position: absolute;
     right: 0.75rem;
@@ -228,11 +258,11 @@
     color: #6b7280;
     font-size: 1rem;
   }
-  
+
   .toggle-password:hover {
     color: #0ea5e9;
   }
-  
+
   /* Nút đăng ký */
   .auth-form button {
     width: auto;
@@ -246,53 +276,53 @@
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  
+
   .auth-form button:hover {
     background-color: #0284c7;
     transform: scale(1.05);
   }
-  
+
   /* Liên kết */
   .auth-links {
     text-align: center;
     margin-top: 1.5rem;
   }
-  
+
   .auth-links p {
     color: #6b7280;
     margin-bottom: 0.5rem;
   }
-  
+
   .auth-links a {
     color: #0ea5e9;
     text-decoration: none;
     font-weight: bold;
   }
-  
+
   .auth-links a:hover {
     text-decoration: underline;
   }
-  
+
   /* Responsive */
   @media (max-width: 768px) {
     .section {
       padding-top: 6rem;
       min-height: 80vh;
     }
-  
+
     .section-title {
       font-size: 2rem;
     }
-  
+
     .auth-wrapper {
       padding: 1.5rem;
       max-width: 90%;
     }
-  
+
     .auth-form input {
       font-size: 0.9rem;
     }
-  
+
     .auth-form button {
       padding: 0.5rem 1.5rem;
       font-size: 0.9rem;

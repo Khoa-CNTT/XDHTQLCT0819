@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import HomeView from "../views/HomeView.vue";
+import HomeView from "@/views/HomeView.vue";
 import Login from "@/views/Login.vue";
 import SignUp from "@/views/SignUp.vue";
 import ForgotPass from "@/views/ForgotPass.vue";
@@ -33,26 +33,41 @@ const routes = [
     path: "/quan-li-chi-tieu",
     name: "quan-li-chi-tieu",
     component: ExpenseManagement,
+    meta: { requiresAuth: true },
   },
   {
     path: "/nhat-ki-chi-tieu",
     name: "nhat-ki-chi-tieu",
     component: Transaction,
+    meta: { requiresAuth: true },
   },
   {
     path: "/muc-tieu",
     name: "muc-tieu",
     component: Target,
+    meta: { requiresAuth: true },
   },
   {
     path: "/bao-cao",
     name: "bao-cao",
     component: Report,
+    meta: { requiresAuth: true },
   },
 ];
+
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes,
+});
+
+// Middleware check login
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = !!localStorage.getItem("auth_token");
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next("/login");
+  } else {
+    next();
+  }
 });
 
 export default router;
