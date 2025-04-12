@@ -12,10 +12,10 @@ return new class extends Migration
             $table->id();
             $table->string('ten');
             $table->string('email')->unique();
-            $table->string('matkhau');
+            $table->string('password');
             $table->enum('loai_goi', ['mien_phi', 'cao_cap'])->default('mien_phi');
             $table->json('tuychinh')->nullable();
-            $table->timestamps(); 
+            $table->timestamps();
         });
     }
 

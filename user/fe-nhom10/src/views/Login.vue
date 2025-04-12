@@ -1,88 +1,93 @@
 <template>
-  <section id="login" class="section">
-    <div class="auth-wrapper">
-      <div class="modal-header">
-        <img
-          src="https://cdn-resize-img.vietcetera.com/_next/image?url=https%3A%2F%2Fimg.vietcetera.com%2Fuploads%2Fimages%2F28-dec-2021%2Finfina-feature-1640679969588.jpg&q=80&w=1536"
-          alt="Logo"
-          class="modal-logo"
-        />
-        <h2>Đăng nhập</h2>
-      </div>
-      <form class="auth-form" @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label for="login-email">Email</label>
-          <input
-            type="email"
-            id="login-email"
-            v-model="email"
-            required
-            placeholder="Nhập email"
+    <section id="login" class="section">
+      <div class="auth-wrapper">
+        <div class="modal-header">
+          <img
+            src="https://cdn-resize-img.vietcetera.com/_next/image?url=https%3A%2F%2Fimg.vietcetera.com%2Fuploads%2Fimages%2F28-dec-2021%2Finfina-feature-1640679969588.jpg&q=80&w=1536"
+            alt="Logo"
+            class="modal-logo"
           />
+          <h2>Đăng nhập</h2>
         </div>
-        <div class="form-group password-group">
-          <label for="login-password">Mật khẩu</label>
-          <div class="password-wrapper">
+        <form class="auth-form" @submit.prevent="handleLogin">
+          <div class="form-group">
+            <label for="login-email">Email</label>
             <input
-              :type="showPassword ? 'text' : 'password'"
-              id="login-password"
-              v-model="password"
+              type="email"
+              id="login-email"
+              v-model="email"
               required
-              placeholder="Nhập mật khẩu"
+              placeholder="Nhập email"
             />
-            <span class="toggle-password" @click="togglePassword">
-              <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-            </span>
           </div>
-        </div>
-        <div class="form-group remember-me">
-          <label>
-            <input type="checkbox" v-model="rememberMe" />
-            Ghi nhớ mật khẩu
-          </label>
-        </div>
-        <button type="submit" class="btn-primary">Đăng nhập</button>
-      </form>
-      <div class="auth-links">
-        <p>
-          Bạn chưa có tài khoản? <router-link to="/sign-up">Đăng ký ngay</router-link>
-        </p>
-        <p>
-          Quên mật khẩu? <router-link to="/forgot-password">Khôi phục mật khẩu</router-link>
-        </p>
+          <div class="form-group password-group">
+            <label for="login-password">Mật khẩu</label>
+            <div class="password-wrapper">
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                id="login-password"
+                v-model="password"
+                required
+                placeholder="Nhập mật khẩu"
+              />
+              <span class="toggle-password" @click="togglePassword">
+                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </span>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">Đăng nhập</button>
+        </form>
       </div>
-    </div>
-  </section>
-</template>
+    </section>
+  </template>
 
-<script>
-export default {
-  name: "LoginPage",
-  data() {
-    return {
-      email: "",
-      password: "",
-      rememberMe: false,
-      showPassword: false,
-    };
-  },
-  methods: {
-    handleLogin() {
-      console.log("Đăng nhập với:", {
-        email: this.email,
-        password: this.password,
-        rememberMe: this.rememberMe,
-      });
-      if (this.rememberMe) {
-        localStorage.setItem("rememberedEmail", this.email);
-      }
+  <script>
+  export default {
+    name: "LoginPage",
+    data() {
+      return {
+        email: "",
+        password: "",
+        showPassword: false,
+      };
     },
-    togglePassword() {
-      this.showPassword = !this.showPassword;
+    methods: {
+      async handleLogin() {
+        try {
+          const response = await fetch("/api/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: this.email,
+              password: this.password,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            alert(data?.error || "Đăng nhập thất bại!");
+            return;
+          }
+
+          localStorage.setItem("auth_token", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+
+          alert("Đăng nhập thành công!");
+          this.$router.push("/quan-li-chi-tieu");
+        } catch (error) {
+          alert("Lỗi kết nối máy chủ!");
+          console.error(error);
+        }
+      },
+      togglePassword() {
+        this.showPassword = !this.showPassword;
+      },
     },
-  },
-};
-</script>
+  };
+  </script>
 
 <style scoped>
 /* Reset cơ bản */
