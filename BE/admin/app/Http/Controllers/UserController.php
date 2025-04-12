@@ -195,7 +195,6 @@ class UserController extends Controller
      *             @OA\Property(property="id", type="integer", example=1),
      *             @OA\Property(property="username", type="string", example="user1"),
      *             @OA\Property(property="email", type="string", format="email", example="user1@example.com"),
-     *             @OA\Property(property="email", type="string", example="user1@example.com"),
      *             @OA\Property(property="phone", type="string", example="123456789"),
      *             @OA\Property(property="fullName", type="string", example="John Doe"),
      *             @OA\Property(property="address", type="string", example="123 Main St"),
