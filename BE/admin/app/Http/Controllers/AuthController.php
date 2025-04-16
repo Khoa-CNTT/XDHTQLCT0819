@@ -187,10 +187,10 @@ class AuthController extends Controller
     public function resetShow(Request $request)
     {
         $token = $request->query('token');
-        $email = $request->query('email'); 
+        $email = $request->query('email');
         return view('comfirm-password.view-reset-password', compact('token', 'email'));
     }
-    
+
 
 
     public function changePassword(Request $request)
