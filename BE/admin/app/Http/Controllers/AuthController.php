@@ -170,11 +170,12 @@ class AuthController extends Controller
         $token = $user->createToken('API Token')->plainTextToken;
 
         return response()->json([
+            'message' => 'Đăng nhập thành công',
             'token' => $token
         ]);
     }
 
-
+ 
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
