@@ -32,8 +32,12 @@ class User extends Authenticatable
         'currency',
         'fullName',
         'address',
-        'role'
+        'role',
+        'isActived',
+        'isBlocked',
+        'verify_token'
     ];
+    
 
 
     protected $hidden = [
