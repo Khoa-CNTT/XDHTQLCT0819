@@ -9,6 +9,405 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/accounts": {
+            "get": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Lấy danh sách tài khoản của người dùng hiện tại",
+                "operationId": "13efa5706d1fae14fc1cf87c9f6b1427",
+                "responses": {
+                    "200": {
+                        "description": "Danh sách tài khoản",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "string",
+                                                "example": 1
+                                            },
+                                            "user_id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Tài khoản chính"
+                                            },
+                                            "type": {
+                                                "type": "string",
+                                                "example": "vietcombank"
+                                            },
+                                            "number_card": {
+                                                "type": "integer",
+                                                "example": 123456789
+                                            },
+                                            "expired": {
+                                                "type": "string",
+                                                "format": "date",
+                                                "example": "2030-12-31"
+                                            },
+                                            "pin_code": {
+                                                "type": "integer",
+                                                "example": 1234
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Tạo tài khoản mới",
+                "operationId": "e974666bc6c050296a8ee09a3ab6533f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "type",
+                                    "number_card",
+                                    "expired",
+                                    "pin_code"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tài khoản chính"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "vietcombank"
+                                    },
+                                    "number_card": {
+                                        "type": "integer",
+                                        "example": 123456789
+                                    },
+                                    "expired": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2030-12-31"
+                                    },
+                                    "pin_code": {
+                                        "type": "integer",
+                                        "example": 1234
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tạo tài khoản thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tạo tài khoản thành công"
+                                        },
+                                        "account": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Tài khoản chính"
+                                                },
+                                                "type": {
+                                                    "type": "string",
+                                                    "example": "vietcombank"
+                                                },
+                                                "number_card": {
+                                                    "type": "integer",
+                                                    "example": 123456789
+                                                },
+                                                "expired": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2030-12-31"
+                                                },
+                                                "pin_code": {
+                                                    "type": "integer",
+                                                    "example": 1234
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Dữ liệu không hợp lệ"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/accounts/{id}": {
+            "get": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Xem chi tiết một tài khoản",
+                "operationId": "79a3a3587c52275ef2490fb75172dc70",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của tài khoản",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thông tin tài khoản",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "user_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Tài khoản chính"
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "vietcombank"
+                                        },
+                                        "number_card": {
+                                            "type": "integer",
+                                            "example": 123456789
+                                        },
+                                        "expired": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "2030-12-31"
+                                        },
+                                        "pin_code": {
+                                            "type": "integer",
+                                            "example": 1234
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy tài khoản"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Cập nhật thông tin tài khoản",
+                "operationId": "9be8085be375b01725706b78df130bca",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của tài khoản",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tài khoản chính sửa đổi"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "vietcombank"
+                                    },
+                                    "number_card": {
+                                        "type": "integer",
+                                        "example": 987654321
+                                    },
+                                    "expired": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2035-01-01"
+                                    },
+                                    "pin_code": {
+                                        "type": "integer",
+                                        "example": 4321
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật tài khoản thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cập nhật tài khoản thành công"
+                                        },
+                                        "account": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Tài khoản chính sửa đổi"
+                                                },
+                                                "type": {
+                                                    "type": "string",
+                                                    "example": "vietcombank"
+                                                },
+                                                "number_card": {
+                                                    "type": "integer",
+                                                    "example": 987654321
+                                                },
+                                                "expired": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2035-01-01"
+                                                },
+                                                "pin_code": {
+                                                    "type": "integer",
+                                                    "example": 4321
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy tài khoản"
+                    },
+                    "422": {
+                        "description": "Dữ liệu không hợp lệ"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Xóa tài khoản",
+                "operationId": "102c60c5fd1e94be8c71c4efbeb51bf8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của tài khoản",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa tài khoản thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Xóa tài khoản thành công"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy tài khoản"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/register": {
             "post": {
                 "tags": [
@@ -266,6 +665,273 @@
                         "description": "Token không hợp lệ hoặc đã hết hạn"
                     }
                 }
+            }
+        },
+        "/api/categories": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Lấy danh sách danh mục",
+                "operationId": "3f5817a34833d0a1f4af4548dd3aeaba",
+                "responses": {
+                    "200": {
+                        "description": "Danh sách danh mục",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "type": {
+                                                "type": "string"
+                                            },
+                                            "icon": {
+                                                "type": "string"
+                                            },
+                                            "user_id": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Tạo danh mục mới",
+                "operationId": "71fcad552bb0eaba9fb191fd8d8dcab0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Chi tiêu"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "expense"
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "example": "icon-wallet"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tạo thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tạo danh mục thành công"
+                                        },
+                                        "category": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/categories/{id}": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Xem chi tiết danh mục",
+                "operationId": "c68e76d323c008827a9e47398b1583de",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thông tin danh mục",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "icon": {
+                                            "type": "string"
+                                        },
+                                        "user_id": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Cập nhật danh mục",
+                "operationId": "0e686b2748211cc688333ed705dc111f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Chi tiêu sửa"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "expense"
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "example": "icon-new"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cập nhật thành công"
+                                        },
+                                        "category": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Xóa danh mục",
+                "operationId": "4c12e22a7f8c617bd83bfa1fdc05428d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Xóa danh mục thành công"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/example": {
@@ -598,8 +1264,16 @@
     },
     "tags": [
         {
+            "name": "Account",
+            "description": "Account"
+        },
+        {
             "name": "Auth",
             "description": "Auth"
+        },
+        {
+            "name": "Categories",
+            "description": "Categories"
         },
         {
             "name": "User",
