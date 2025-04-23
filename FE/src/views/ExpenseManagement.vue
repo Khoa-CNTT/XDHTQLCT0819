@@ -1,256 +1,222 @@
 <template>
-    <div class="expense-management">
-      <div class="row">
-        <div class="hero-section">
-          <div class="hero-content">
-            <h1>XIN CHÀO</h1>
-            <p>Hôm nay bạn đã chi tiêu những gì?</p>
-            <form class="search-form" action="/search" method="get">
-              <input type="text" name="query" placeholder="Tìm kiếm danh mục chi tiêu..." />
-              <button type="submit">Search</button>
-            </form>
-          </div>
-        </div>
+  <div class="expense-management">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <h1>XIN CHÀO</h1>
+        <p>Hôm nay bạn đã chi tiêu những gì?</p>
+        <form class="search-form" @submit.prevent>
+          <input type="text" v-model="searchQuery" placeholder="Tìm kiếm danh mục chi tiêu..." />
+          <button @click="searchCategory">Search</button>
+        </form>
       </div>
-  
-      <!-- Thông tin tài chính -->
-      <div class="finance-info">
-        <div class="info-card income-card">
-          <span class="label">Thu Nhập:</span>
-          <span class="value income">10,000,000</span>
-        </div>
-        <div class="info-card balance-card">
-          <span class="label">Số dư hiện tại:</span>
-          <span class="value balance">1,200,000</span>
-        </div>
+    </div>
+
+    <!-- Tông quan tài chính -->
+    <div class="finance-info">
+      <div class="info-card income-card">
+        <span class="label">Thu Nhập:</span>
+        <span class="value income">{{ totalIncome.toLocaleString() }}</span>
       </div>
-  
-      <!-- Danh sách danh mục chi tiêu -->
-      <div class="expense-list">
-        <h3 class="list-title">Danh sách danh mục chi tiêu</h3>
-        <div
-          class="expense-item"
-          v-for="(category, index) in categories"
-          :key="index"
-          @click="showDetailModal(category)"
-        >
-          <div class="item-icon">
-            <i :class="category.icon"></i>
-          </div>
-          <div class="item-details ms-3">
-            <span class="category">{{ category.name }}</span>
-            <span class="amount negative">{{ category.total }}</span>
-          </div>
-          <div class="item-action ms-3">
-            <i class="fas fa-chevron-right"></i>
-          </div>
-        </div>
+      <div class="info-card balance-card">
+        <span class="label">Số dư hiện tại:</span>
+        <span class="value balance">{{ balance.toLocaleString() }}</span>
       </div>
-  
-      <!-- Modal thêm danh mục -->
-      <div v-if="showModal" class="modal-overlay">
-        <div class="modal">
-          <h2 class="modal-title">Thêm chi tiêu</h2>
-          <form @submit.prevent="addExpense" class="modal-form">
-            <div class="form-group">
-              <label for="amount">Nhập số tiền</label>
-              <input
-                type="number"
-                id="amount"
-                v-model="newExpense.amount"
-                placeholder="Nhập số tiền..."
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="category">Danh mục</label>
-              <select id="category" v-model="newExpense.category" required>
-                <option value="" disabled>Chọn danh mục</option>
-                <option value="Ăn uống">Ăn uống</option>
-                <option value="Di chuyển">Di chuyển</option>
-                <option value="Mua sắm">Mua sắm</option>
-                <option value="Học tập">Học tập</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="date">Ngày</label>
-              <input
-                type="date"
-                id="date"
-                v-model="newExpense.date"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="time">Giờ</label>
-              <input
-                type="time"
-                id="time"
-                v-model="newExpense.time"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="note">Ghi chú</label>
-              <textarea
-                id="note"
-                v-model="newExpense.note"
-                placeholder="Ghi chú..."
-              ></textarea>
-            </div>
-            <div class="modal-actions">
-              <button type="button" class="cancel-button" @click="showModal = false">Hủy</button>
-              <button type="submit" class="add-button">Thêm</button>
-            </div>
-          </form>
+    </div>
+
+    <!-- Danh sách danh mục chi tiêu -->
+    <div class="expense-list">
+      <h3 class="list-title">Danh sách danh mục chi tiêu</h3>
+      <div
+        class="expense-item"
+        v-for="(group, index) in filteredExpenses"
+        :key="index"
+        @click="showDetailModal(group.category)"
+      >
+        <div class="item-icon"><i :class="group.category.icon"></i></div>
+        <div class="item-details ms-3">
+          <span class="category">{{ group.category.name }}</span>
+          <span class="amount negative">-{{ group.total.toLocaleString() }}</span>
         </div>
+        <div class="item-action ms-3"><i class="fas fa-chevron-right"></i></div>
       </div>
-  
-      <!-- Modal chi tiết danh mục -->
-      <div v-if="showDetail" class="modal-overlay">
-        <div class="modal detail-modal">
-          <h2 class="modal-title">{{ selectedCategory.name }}</h2>
-          <div class="detail-list">
-            <div
-              class="detail-item"
-              v-for="(expense, index) in selectedCategory.expenses"
-              :key="index"
-            >
-              <div class="detail-date">
-                <span class="day">{{ expense.day }}</span>
-                <span class="month-year">{{ expense.monthYear }}</span>
-              </div>
-              <div class="detail-info">
-                <span class="detail-purpose">{{ expense.purpose }}</span>
-                <span class="detail-amount negative">{{ expense.amount }}</span>
-                <span class="detail-note">{{ expense.note }}</span>
-              </div>
-            </div>
+    </div>
+
+    <!-- Modal thêm thu nhập -->
+    <div v-if="showIncomeModal" class="modal-overlay">
+      <div class="modal">
+        <h2 class="modal-title">Thêm thu nhập</h2>
+        <form @submit.prevent="addIncome" class="modal-form">
+          <div class="form-group">
+            <label>Nhập số tiền</label>
+            <input type="number" v-model="income.amount" required />
+          </div>
+          <div class="form-group">
+            <label>Ghi chú</label>
+            <textarea v-model="income.note"></textarea>
           </div>
           <div class="modal-actions">
-            <button class="cancel-button" @click="showDetail = false">Đóng</button>
+            <button type="button" class="cancel-button" @click="showIncomeModal = false">Huỷ</button>
+            <button type="submit" class="add-button">Thêm</button>
           </div>
-        </div>
+        </form>
       </div>
-  
-      <!-- Nút mở modal thêm chi tiêu -->
-      <button class="open-modal-button" @click="showModal = true">
-        <i class="fas fa-plus"></i>
-      </button>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: "ExpenseManagement",
-    data() {
-      return {
-        searchQuery: "",
-        showModal: false,
-        showDetail: false,
-        selectedCategory: null,
-        newExpense: {
-          amount: "",
-          category: "",
-          date: "",
-          time: "",
-          note: "",
-        },
-        categories: [
-          {
-            name: "Ăn uống",
-            icon: "fa-solid fa-utensils",
-            total: "-300,000",
-            expenses: [
-              {
-                day: "2",
-                monthYear: "Thứ Sáu tháng 12 năm 2025",
-                purpose: "Ăn uống",
-                amount: "-50,000 VND",
-                note: "Mua đồ ăn sáng",
-              },
-              {
-                day: "19",
-                monthYear: "Thứ Bảy tháng 11 năm 2025",
-                purpose: "Ăn uống",
-                amount: "-65,000 VND",
-                note: "Ăn trưa với bạn",
-              },
-              {
-                day: "11",
-                monthYear: "Thứ Sáu tháng 11 năm 2025",
-                purpose: "Ăn uống",
-                amount: "-10,000 VND",
-                note: "Mua nước uống",
-              },
-            ],
-          },
-          {
-            name: "Di chuyển",
-            icon: "fa-solid fa-car-side",
-            total: "-100,000",
-            expenses: [
-              {
-                day: "19",
-                monthYear: "Thứ Bảy tháng 11 năm 2025",
-                purpose: "Di chuyển",
-                amount: "-15,000 VND",
-                note: "Đi xe buýt",
-              },
-              {
-                day: "11",
-                monthYear: "Thứ Sáu tháng 11 năm 2025",
-                purpose: "Di chuyển",
-                amount: "-10,000 VND",
-                note: "Đi xe ôm",
-              },
-              {
-                day: "12",
-                monthYear: "Thứ Tư tháng 10 năm 2025",
-                purpose: "Di chuyển",
-                amount: "-100,000 VND",
-                note: "Đổ xăng xe máy",
-              },
-            ],
-          },
-          {
-            name: "Mua sắm",
-            icon: "fa-solid fa-cart-shopping",
-            total: "-300,000",
-            expenses: [
-              {
-                day: "12",
-                monthYear: "Thứ Tư tháng 10 năm 2025",
-                purpose: "Mua sắm",
-                amount: "-100,000 VND",
-                note: "Mua quần áo",
-              },
-            ],
-          },
-        ],
-      };
+
+    <!-- Modal thêm chi tiêu -->
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal">
+        <h2 class="modal-title">Thêm chi tiêu</h2>
+        <form @submit.prevent="addExpense" class="modal-form">
+          <div class="form-group">
+            <label>Nhập số tiền</label>
+            <input type="number" v-model="newExpense.amount" required />
+          </div>
+          <div class="form-group">
+            <label>Danh mục</label>
+            <select v-model="newExpense.category_id" required>
+              <option value="" disabled>Chọn danh mục</option>
+              <option v-for="cat in categoryList" :key="cat.id" :value="cat.id">
+                {{ cat.name }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ngày</label>
+            <input type="date" v-model="newExpense.date" required />
+          </div>
+          <div class="form-group">
+            <label>Giờ</label>
+            <input type="time" v-model="newExpense.time" required />
+          </div>
+          <div class="form-group">
+            <label>Ghi chú</label>
+            <textarea v-model="newExpense.note"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="cancel-button" @click="showModal = false">Huỷ</button>
+            <button type="submit" class="add-button">Thêm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <button class="open-modal-button" @click="showModal = true">
+      <i class="fas fa-plus"></i>
+    </button>
+    <button class="open-modal-button" style="right: 80px" @click="showIncomeModal = true">
+      <i class="fas fa-coins"></i>
+    </button>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data() {
+    return {
+      showModal: false,
+      showIncomeModal: false,
+      showDetail: false,
+      selectedCategory: null,
+      searchQuery: '',
+      newExpense: { amount: '', category_id: '', date: '', time: '', note: '' },
+      income: { amount: '', note: '' },
+      categoryList: [],
+      expenseList: [],
+      incomeList: []
+    }
+  },
+  computed: {
+    groupedExpenses() {
+      const groups = {};
+      this.expenseList.forEach(exp => {
+        const cat = exp.category;
+        if (!groups[cat.id]) {
+          groups[cat.id] = { category: cat, expenses: [], total: 0 };
+        }
+        groups[cat.id].expenses.push(exp);
+        groups[cat.id].total += parseFloat(exp.amount);
+      });
+      return Object.values(groups);
     },
-    methods: {
-      addExpense() {
-        // Logic để thêm chi tiêu mới
-        console.log("Thêm chi tiêu:", this.newExpense);
-        // Sau khi thêm, đóng modal và reset form
-        this.showModal = false;
-        this.newExpense = {
-          amount: "",
-          category: "",
-          date: "",
-          time: "",
-          note: "",
-        };
-      },
-      showDetailModal(category) {
-        this.selectedCategory = category;
+    totalIncome() {
+      return this.incomeList.reduce((acc, i) => acc + parseFloat(i.amount), 0);
+    },
+    totalExpense() {
+      return this.expenseList.reduce((acc, e) => acc + parseFloat(e.amount), 0);
+    },
+    balance() {
+      return this.totalIncome - this.totalExpense;
+    },
+    filteredExpenses() {
+      if (!this.searchQuery.trim()) return this.groupedExpenses;
+      return this.groupedExpenses.filter(group =>
+        group.category.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    }
+  },
+  methods: {
+    async fetchCategories() {
+      const res = await axios.get('/api/categories', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      this.categoryList = res.data.filter(cat => cat.type === 'expense');
+    },
+    async fetchExpenses() {
+      const res = await axios.get('/api/expenses', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      this.expenseList = res.data;
+    },
+    async fetchIncomes() {
+      const res = await axios.get('/api/incomes', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      this.incomeList = res.data;
+    },
+    async addExpense() {
+      await axios.post('/api/expenses', this.newExpense, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      this.newExpense = { amount: '', category_id: '', date: '', time: '', note: '' };
+      this.showModal = false;
+      this.fetchExpenses();
+    },
+    async addIncome() {
+      await axios.post('/api/incomes', this.income, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      this.income = { amount: '', note: '' };
+      this.showIncomeModal = false;
+      this.fetchIncomes();
+    },
+    searchCategory() {},
+    showDetailModal(category) {
+      const group = this.groupedExpenses.find(g => g.category.id === category.id);
+      if (group) {
+        this.selectedCategory = { ...group.category, expenses: group.expenses };
         this.showDetail = true;
-      },
+      }
     },
-  };
-  </script>
+    formatDay(dateStr) {
+      return new Date(dateStr).getDate();
+    },
+    formatMonthYear(dateStr) {
+      const d = new Date(dateStr);
+      return `${d.toLocaleDateString('vi-VN', { weekday: 'long' })}, ${d.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}`;
+    },
+  },
+  mounted() {
+    this.fetchCategories();
+    this.fetchExpenses();
+    this.fetchIncomes();
+  }
+};
+</script>
+
+
   
   <style scoped>
   /* Reset cơ bản */

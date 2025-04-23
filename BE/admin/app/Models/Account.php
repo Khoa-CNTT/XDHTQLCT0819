@@ -19,4 +19,8 @@ class Account extends Model
         'expired',
         'pin_code',
     ];
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

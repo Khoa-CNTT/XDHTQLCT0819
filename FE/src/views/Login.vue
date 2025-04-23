@@ -1,93 +1,93 @@
 <template>
-    <section id="login" class="section">
-      <div class="auth-wrapper">
-        <div class="modal-header">
-          <img
-            src="https://cdn-resize-img.vietcetera.com/_next/image?url=https%3A%2F%2Fimg.vietcetera.com%2Fuploads%2Fimages%2F28-dec-2021%2Finfina-feature-1640679969588.jpg&q=80&w=1536"
-            alt="Logo"
-            class="modal-logo"
-          />
-          <h2>Đăng nhập</h2>
-        </div>
-        <form class="auth-form" @submit.prevent="handleLogin">
-          <div class="form-group">
-            <label for="login-email">Email</label>
-            <input
-              type="email"
-              id="login-email"
-              v-model="email"
-              required
-              placeholder="Nhập email"
-            />
-          </div>
-          <div class="form-group password-group">
-            <label for="login-password">Mật khẩu</label>
-            <div class="password-wrapper">
-              <input
-                :type="showPassword ? 'text' : 'password'"
-                id="login-password"
-                v-model="password"
-                required
-                placeholder="Nhập mật khẩu"
-              />
-              <span class="toggle-password" @click="togglePassword">
-                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-              </span>
-            </div>
-          </div>
-          <button type="submit" class="btn-primary">Đăng nhập</button>
-        </form>
+  <section id="login" class="section">
+    <div class="auth-wrapper">
+      <div class="modal-header">
+        <img
+          src="https://cdn-resize-img.vietcetera.com/_next/image?url=https%3A%2F%2Fimg.vietcetera.com%2Fuploads%2Fimages%2F28-dec-2021%2Finfina-feature-1640679969588.jpg&q=80&w=1536"
+          alt="Logo"
+          class="modal-logo"
+        />
+        <h2>Đăng nhập</h2>
       </div>
-    </section>
-  </template>
+      <form class="auth-form" @submit.prevent="handleLogin">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input
+            type="email"
+            id="login-email"
+            v-model="email"
+            required
+            placeholder="Nhập email"
+          />
+        </div>
+        <div class="form-group password-group">
+          <label for="login-password">Mật khẩu</label>
+          <div class="password-wrapper">
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              id="login-password"
+              v-model="password"
+              required
+              placeholder="Nhập mật khẩu"
+            />
+            <span class="toggle-password" @click="togglePassword">
+              <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </span>
+          </div>
+        </div>
+        <div class="auth-links">
+          <p><router-link to="/forgot-password">Quên mật khẩu?</router-link></p>
+        </div>
+        <button type="submit" class="btn-primary">Đăng nhập</button>
+      </form>
+    </div>
+  </section>
+</template>
 
-  <script>
-  export default {
-    name: "LoginPage",
-    data() {
-      return {
-        email: "",
-        password: "",
-        showPassword: false,
-      };
-    },
-    methods: {
-      async handleLogin() {
-        try {
-          const response = await fetch("/api/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              email: this.email,
-              password: this.password,
-            }),
-          });
+<script>
+import axios from 'axios';
 
-          const data = await response.json();
+export default {
+  name: "LoginPage",
+  data() {
+    return {
+      email: "",
+      password: "",
+      showPassword: false,
+    };
+  },
+  methods: {
+    async handleLogin() {
+      try {
+        const response = await axios.post("http://localhost:8000/api/login", {
+          email: this.email, // dùng email, không phải username
+          password: this.password,
+        });
 
-          if (!response.ok) {
-            alert(data?.error || "Đăng nhập thất bại!");
-            return;
-          }
+        const data = response.data;
 
-          localStorage.setItem("auth_token", data.token);
-          localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
 
-          alert("Đăng nhập thành công!");
-          this.$router.push("/quan-li-chi-tieu");
-        } catch (error) {
+        alert("Đăng nhập thành công!");
+        this.$router.push("/quan-li-chi-tieu");
+      } catch (error) {
+        if (error.response) {
+          alert(error.response.data?.error || "Đăng nhập thất bại!");
+        } else {
           alert("Lỗi kết nối máy chủ!");
-          console.error(error);
         }
-      },
-      togglePassword() {
-        this.showPassword = !this.showPassword;
-      },
+        console.error(error);
+      }
     },
-  };
-  </script>
+    togglePassword() {
+      this.showPassword = !this.showPassword;
+    },
+  },
+};
+
+</script>
+
 
 <style scoped>
 /* Reset cơ bản */

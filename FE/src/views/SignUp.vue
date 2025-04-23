@@ -1,135 +1,136 @@
 <template>
-    <section id="register" class="section">
-      <div class="auth-wrapper">
-        <div class="modal-header">
-          <img
-            src="https://cdn-resize-img.vietcetera.com/_next/image?url=https%3A%2F%2Fimg.vietcetera.com%2Fuploads%2Fimages%2F28-dec-2021%2Finfina-feature-1640679969588.jpg&q=80&w=1536"
-            alt="Logo"
-            class="modal-logo"
-          />
-          <h2>Đăng kí</h2>
-        </div>
-        <form class="auth-form" @submit.prevent="handleRegister">
-          <div class="form-group">
-            <label for="register-name">Họ và tên</label>
-            <input
-              type="text"
-              id="register-name"
-              v-model="ten"
-              required
-              placeholder="Nhập họ và tên"
-            />
-          </div>
-          <div class="form-group">
-            <label for="register-email">Email</label>
-            <input
-              type="email"
-              id="register-email"
-              v-model="email"
-              required
-              placeholder="Nhập email"
-            />
-          </div>
-          <div class="form-group password-group">
-            <label for="register-password">Mật khẩu</label>
-            <div class="password-wrapper">
-              <input
-                :type="showPassword ? 'text' : 'password'"
-                id="register-password"
-                v-model="password"
-                required
-                placeholder="Nhập mật khẩu"
-              />
-              <span class="toggle-password" @click="togglePassword">
-                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-              </span>
-            </div>
-          </div>
-          <div class="form-group password-group">
-            <label for="register-confirm-password">Xác nhận mật khẩu</label>
-            <div class="password-wrapper">
-              <input
-                :type="showConfirmPassword ? 'text' : 'password'"
-                id="register-confirm-password"
-                v-model="confirmPassword"
-                required
-                placeholder="Xác nhận mật khẩu"
-              />
-              <span class="toggle-password" @click="toggleConfirmPassword">
-                <i :class="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-              </span>
-            </div>
-          </div>
-          <button type="submit" class="btn-primary">Đăng ký</button>
-        </form>
-        <div class="auth-links">
-          <p>
-            Bạn đã có tài khoản? <router-link to="/login">Đăng nhập ngay</router-link>
-          </p>
-        </div>
+  <section id="register" class="section">
+    <div class="auth-wrapper">
+      <div class="modal-header">
+        <img
+          src="https://cdn-resize-img.vietcetera.com/_next/image?url=https%3A%2F%2Fimg.vietcetera.com%2Fuploads%2Fimages%2F28-dec-2021%2Finfina-feature-1640679969588.jpg&q=80&w=1536"
+          alt="Logo"
+          class="modal-logo"
+        />
+        <h2>Đăng ký</h2>
       </div>
-    </section>
-  </template>
 
-  <script>
-  export default {
-    name: "RegisterPage",
-    data() {
-      return {
-        ten: "",
+      <form class="auth-form" @submit.prevent="handleRegister">
+        <div class="form-group">
+          <label for="username">Tên đăng nhập</label>
+          <input type="text" id="username" v-model="form.username" required placeholder="Tên đăng nhập" />
+        </div>
+        <div class="form-group">
+          <label for="fullName">Họ và tên</label>
+          <input type="text" id="fullName" v-model="form.fullName" required placeholder="Họ và tên" />
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" v-model="form.email" required placeholder="Email" />
+        </div>
+        <div class="form-group">
+          <label for="phone">Số điện thoại</label>
+          <input type="text" id="phone" v-model="form.phone" placeholder="Số điện thoại" />
+        </div>
+        <div class="form-group">
+          <label for="address">Địa chỉ</label>
+          <input type="text" id="address" v-model="form.address" placeholder="Địa chỉ" />
+        </div>
+        <div class="form-group password-group">
+          <label for="password">Mật khẩu</label>
+          <div class="password-wrapper">
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              id="password"
+              v-model="form.password"
+              required
+              placeholder="Mật khẩu"
+            />
+            <span class="toggle-password" @click="togglePassword">
+              <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </span>
+          </div>
+        </div>
+        <div class="form-group password-group">
+          <label for="confirmPassword">Xác nhận mật khẩu</label>
+          <div class="password-wrapper">
+            <input
+              :type="showConfirmPassword ? 'text' : 'password'"
+              id="confirmPassword"
+              v-model="confirmPassword"
+              required
+              placeholder="Xác nhận mật khẩu"
+            />
+            <span class="toggle-password" @click="toggleConfirmPassword">
+              <i :class="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">Đăng ký</button>
+      </form>
+
+      <div class="auth-links">
+        <p>Bạn đã có tài khoản? <router-link to="/login">Đăng nhập ngay</router-link></p>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script>
+import axios from "axios";
+
+export default {
+  name: "RegisterPage",
+  data() {
+    return {
+      form: {
+        username: "",
+        fullName: "",
         email: "",
         password: "",
-        confirmPassword: "",
-        showPassword: false,
-        showConfirmPassword: false,
-      };
-    },
-    methods: {
-      async handleRegister() {
-        if (this.password !== this.confirmPassword) {
-          alert("Mật khẩu xác nhận không khớp!");
-          return;
-        }
+        phone: "",
+        address: "",
+      },
+      confirmPassword: "",
+      showPassword: false,
+      showConfirmPassword: false,
+    };
+  },
+  methods: {
+    async handleRegister() {
+      if (this.form.password !== this.confirmPassword) {
+        alert("Mật khẩu xác nhận không khớp!");
+        return;
+      }
 
-        try {
-          const response = await fetch("/api/register", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              ten: this.ten,
-              email: this.email,
-              password: this.password,
-            }),
-          });
+      try {
+        const response = await axios.post("http://localhost:8000/api/register", this.form, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-          const data = await response.json();
-
-          if (!response.ok) {
-            const errorMsg = data?.errors
-              ? Object.values(data.errors).flat().join("\n")
-              : "Đăng ký thất bại!";
-            alert(errorMsg);
-            return;
-          }
-
-          alert("Đăng ký thành công!");
-          this.$router.push("/login");
-        } catch (error) {
+        alert("Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
+        this.$router.push("/login");
+      } catch (error) {
+        if (error.response && error.response.data) {
+          const data = error.response.data;
+          const errorMsg = data.errors
+            ? Object.values(data.errors).flat().join("\n")
+            : data.message || "Đăng ký thất bại!";
+          alert(errorMsg);
+        } else {
           alert("Lỗi kết nối máy chủ!");
-          console.error(error);
         }
-      },
-      togglePassword() {
-        this.showPassword = !this.showPassword;
-      },
-      toggleConfirmPassword() {
-        this.showConfirmPassword = !this.showConfirmPassword;
-      },
+      }
     },
-  };
-  </script>
+    togglePassword() {
+      this.showPassword = !this.showPassword;
+    },
+    toggleConfirmPassword() {
+      this.showConfirmPassword = !this.showConfirmPassword;
+    },
+  },
+};
+</script>
+
+
 
 
   <style scoped>
