@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExampleController;
+use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\UserController;
 
 Route::get('/example', [ExampleController::class, 'index']);
@@ -33,19 +34,33 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Account
     Route::prefix('account')->group(function () {
-        Route::post('add', [AccountController::class, 'store']);
+        // Route::post('add', [AccountController::class, 'store']);
+        Route::post('/', [AccountController::class, 'store']);
         Route::get('/', [AccountController::class, 'index']);
         Route::get('/{id}', [AccountController::class, 'edit']);
-        Route::put('/update', [AccountController::class, 'update']);
+        // Route::put('/update', [AccountController::class, 'update']);
+        Route::put('/{id}', [AccountController::class, 'update']);
         Route::delete('/{id}', [AccountController::class, 'destroy']);
     });
 
-
+    // Category
     Route::prefix('categories')->group(function () {
         Route::post('add', [CategoryController::class, 'store']);
         Route::get('/', [CategoryController::class, 'index']);
         Route::get('/{id}', [CategoryController::class, 'edit']);
-        Route::put('/update', [CategoryController::class, 'update']);
+        Route::put('/{id}', [CategoryController::class, 'update']);
         Route::delete('/{id}', [CategoryController::class, 'destroy']);
     });
+
+    //expense
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/expenses', [App\Http\Controllers\ExpenseController::class, 'index']);
+        Route::post('/expenses', [App\Http\Controllers\ExpenseController::class, 'store']);
+    });
+    //income
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/incomes', [IncomeController::class, 'index']);
+        Route::post('/incomes', [IncomeController::class, 'store']);
+    });
+
 });

@@ -59,7 +59,7 @@ class UserController extends Controller
      *         description="Cập nhật hồ sơ thành công",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Cập nhật hồ sơ thành công"),
-     *             @OA\Property(property="user", type="object", 
+     *             @OA\Property(property="user", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="username", type="string", example="user1"),
      *                 @OA\Property(property="email", type="string", format="email", example="user1@example.com"),
