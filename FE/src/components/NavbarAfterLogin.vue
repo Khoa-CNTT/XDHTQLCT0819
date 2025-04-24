@@ -8,9 +8,12 @@
         <div class="nav-menu">
           <ul class="nav-list">
             <li><router-link to="/quan-li-chi-tieu" class="nav-link">Trang chủ</router-link></li>
-            <li><router-link to="/nhat-ki-chi-tieu" class="nav-link">Nhật ký</router-link></li>
+            <li><router-link to="/nhat-ki-chi-tieu" class="nav-link">Lịch</router-link></li>
             <li><router-link to="/muc-tieu" class="nav-link">Mục tiêu</router-link></li>
             <li><router-link to="/bao-cao" class="nav-link">Thống kê</router-link></li>
+            <li><router-link to="/quan-ly-danh-muc" class="nav-link">Danh mục</router-link></li>
+            <li><router-link to="/quan-ly-nguoi-dung" class="nav-link">Người dùng</router-link></li>
+            <li><router-link to="/quan-ly-tai-khoan" class="nav-link">Tài khoản</router-link></li>
             <li><a href="#" class="nav-link" @click.prevent="logout">Đăng xuất</a></li>
           </ul>
         </div>

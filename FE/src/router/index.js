@@ -7,6 +7,9 @@ import ExpenseManagement from "@/views/ExpenseManagement.vue";
 import Transaction from "@/views/Transaction.vue";
 import Target from "@/views/Target.vue";
 import Report from "@/views/Report.vue";
+import EditUser from "@/views/EditUser.vue"; 
+import Category from "@/views/Category.vue";
+import Account from "@/views/Account.vue";
 
 const routes = [
   {
@@ -52,6 +55,24 @@ const routes = [
     name: "bao-cao",
     component: Report,
     meta: { requiresAuth: true },
+  },
+   {
+    path: "/quan-ly-nguoi-dung",
+    name: "quan-ly-nguoi-dung",
+    component: EditUser,
+    meta: { requiresAuth: true }, // bảo vệ bằng middleware login
+  },
+  {
+    path: "/quan-ly-danh-muc",
+    name: "quan-ly-danh-muc",
+    component: Category,
+    meta: { requiresAuth: true }, 
+  },
+  {
+    path: "/quan-ly-tai-khoan",
+    name: "quan-ly-tai-khoan",
+    component: Account,
+    meta: { requiresAuth: true }, 
   },
 ];
 
