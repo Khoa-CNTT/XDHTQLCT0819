@@ -24,6 +24,11 @@
       </div>
     </div>
 
+    <!-- Thông báo thành công -->
+    <div v-if="showSuccessMessage" class="alert-box success">
+      <p>{{ successMessage }}</p>
+    </div>
+
     <!-- Danh sách danh mục chi tiêu -->
     <div class="expense-list">
       <h3 class="list-title">Danh sách danh mục chi tiêu</h3>
@@ -31,7 +36,7 @@
         class="expense-item"
         v-for="(group, index) in filteredExpenses"
         :key="index"
-        @click="showDetailModal(group.category)"
+        @click="showDetailModal(group.category.id)"
       >
         <div class="item-icon"><i :class="group.category.icon"></i></div>
         <div class="item-details ms-3">
@@ -42,29 +47,30 @@
       </div>
     </div>
 
-    <!-- Modal thêm thu nhập -->
-    <div v-if="showIncomeModal" class="modal-overlay">
+    <!-- Modal chi tiết danh mục -->
+    <div v-if="showDetail" class="modal-overlay">
       <div class="modal">
-        <h2 class="modal-title">Thêm thu nhập</h2>
-        <form @submit.prevent="addIncome" class="modal-form">
-          <div class="form-group">
-            <label>Nhập số tiền</label>
-            <input type="number" v-model="income.amount" required />
+        <h2 class="modal-title">Chi tiết danh mục: {{ selectedCategory.name }}</h2>
+        <div class="detail-list">
+          <div v-for="expense in selectedCategoryExpenses" :key="expense.id" class="detail-item">
+            <div class="detail-info">
+              <span class="detail-purpose">{{ expense.note }}</span>
+              <span class="detail-amount">-{{ expense.amount.toLocaleString() }}</span>
+            </div>
+            <div class="detail-date">
+              <span class="day">{{ formatDay(expense.date) }}</span>
+              <span class="month-year">{{ formatMonthYear(expense.date) }}</span>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Ghi chú</label>
-            <textarea v-model="income.note"></textarea>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="cancel-button" @click="showIncomeModal = false">Huỷ</button>
-            <button type="submit" class="add-button">Thêm</button>
-          </div>
-        </form>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="cancel-button" @click="showDetail = false">Đóng</button>
+        </div>
       </div>
     </div>
 
     <!-- Modal thêm chi tiêu -->
-    <div v-if="showModal" class="modal-overlay">
+    <div v-if="showExpenseModal" class="modal-overlay">
       <div class="modal">
         <h2 class="modal-title">Thêm chi tiêu</h2>
         <form @submit.prevent="addExpense" class="modal-form">
@@ -94,17 +100,39 @@
             <textarea v-model="newExpense.note"></textarea>
           </div>
           <div class="modal-actions">
-            <button type="button" class="cancel-button" @click="showModal = false">Huỷ</button>
+            <button type="button" class="cancel-button" @click="closeExpenseModal">Huỷ</button>
             <button type="submit" class="add-button">Thêm</button>
           </div>
         </form>
       </div>
     </div>
 
-    <button class="open-modal-button" @click="showModal = true">
+    <!-- Modal thêm thu nhập -->
+    <div v-if="showIncomeModal" class="modal-overlay">
+      <div class="modal">
+        <h2 class="modal-title">Thêm thu nhập</h2>
+        <form @submit.prevent="addIncome" class="modal-form">
+          <div class="form-group">
+            <label>Nhập số tiền</label>
+            <input type="number" v-model="income.amount" required />
+          </div>
+          <div class="form-group">
+            <label>Ghi chú</label>
+            <textarea v-model="income.note"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="cancel-button" @click="closeIncomeModal">Huỷ</button>
+            <button type="submit" class="add-button">Thêm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Nút mở modal -->
+    <button class="open-modal-button" @click="openExpenseModal">
       <i class="fas fa-plus"></i>
     </button>
-    <button class="open-modal-button" style="right: 80px" @click="showIncomeModal = true">
+    <button class="open-modal-button" style="right: 80px" @click="openIncomeModal">
       <i class="fas fa-coins"></i>
     </button>
   </div>
@@ -116,9 +144,12 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      showModal: false,
+      showSuccessMessage: false, 
+      successMessage: '',       
       showIncomeModal: false,
+      showExpenseModal: false,
       showDetail: false,
+      selectedCategoryExpenses: [],
       selectedCategory: null,
       searchQuery: '',
       newExpense: { amount: '', category_id: '', date: '', time: '', note: '' },
@@ -126,7 +157,7 @@ export default {
       categoryList: [],
       expenseList: [],
       incomeList: []
-    }
+    };
   },
   computed: {
     groupedExpenses() {
@@ -158,6 +189,13 @@ export default {
     }
   },
   methods: {
+    showSuccessNotification(message) {
+      this.successMessage = message;
+      this.showSuccessMessage = true;
+      setTimeout(() => {
+        this.showSuccessMessage = false;
+      }, 3000);
+    },
     async fetchCategories() {
       const res = await axios.get('/api/categories', {
         headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
@@ -181,8 +219,9 @@ export default {
         headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
       });
       this.newExpense = { amount: '', category_id: '', date: '', time: '', note: '' };
-      this.showModal = false;
+      this.showExpenseModal = false;
       this.fetchExpenses();
+      this.showSuccessNotification('Thêm chi tiêu thành công!');
     },
     async addIncome() {
       await axios.post('/api/incomes', this.income, {
@@ -191,14 +230,15 @@ export default {
       this.income = { amount: '', note: '' };
       this.showIncomeModal = false;
       this.fetchIncomes();
+      this.showSuccessNotification('Thêm thu nhập thành công!');
     },
-    searchCategory() {},
-    showDetailModal(category) {
-      const group = this.groupedExpenses.find(g => g.category.id === category.id);
-      if (group) {
-        this.selectedCategory = { ...group.category, expenses: group.expenses };
-        this.showDetail = true;
-      }
+    async showDetailModal(categoryId) {
+      const res = await axios.get(`/api/expenses/category/${categoryId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+      });
+      this.selectedCategoryExpenses = res.data;
+      this.selectedCategory = this.categoryList.find(cat => cat.id === categoryId); // Lưu thông tin danh mục đã chọn
+      this.showDetail = true;
     },
     formatDay(dateStr) {
       return new Date(dateStr).getDate();
@@ -207,6 +247,18 @@ export default {
       const d = new Date(dateStr);
       return `${d.toLocaleDateString('vi-VN', { weekday: 'long' })}, ${d.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}`;
     },
+    openIncomeModal() {
+      this.showIncomeModal = true;  // Mở Modal thêm thu nhập
+    },
+    closeIncomeModal() {
+      this.showIncomeModal = false; // Đóng Modal thêm thu nhập
+    },
+    openExpenseModal() {
+      this.showExpenseModal = true; // Mở Modal thêm chi tiêu
+    },
+    closeExpenseModal() {
+      this.showExpenseModal = false; // Đóng Modal thêm chi tiêu
+    }
   },
   mounted() {
     this.fetchCategories();
@@ -214,11 +266,52 @@ export default {
     this.fetchIncomes();
   }
 };
+
+
 </script>
 
 
   
   <style scoped>
+  /* Thông báo alert */
+  .alert-box {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #28a745;  /* Màu xanh lá */
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 2000;  /* Đảm bảo thông báo hiển thị trên cùng */
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+  animation: fadeOut 3s forwards;
+}
+
+/* Hiệu ứng fade-out */
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Các thông báo lỗi hay cảnh báo khác (nếu cần) */
+.alert-box.success {
+  background-color: #28a745; /* Màu xanh lá */
+}
+
+.alert-box.error {
+  background-color: #dc3545; /* Màu đỏ */
+}
   /* Reset cơ bản */
   html, body {
     margin: 0;
