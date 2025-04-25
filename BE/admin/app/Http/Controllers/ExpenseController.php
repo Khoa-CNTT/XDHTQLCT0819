@@ -37,4 +37,18 @@ class ExpenseController extends Controller
 
         return response()->json($expense->load('category'), 201);
     }
+    public function getExpensesByCategory($categoryId)
+    {
+        $category = Category::find($categoryId);
+
+        if (!$category) {
+            return response()->json(['error' => 'Danh mục không tồn tại'], 404);
+        }
+
+        $expenses = Expense::where('category_id', $categoryId)
+            ->where('user_id', Auth::id()) // Kiểm tra cho người dùng hiện tại
+            ->get();
+
+        return response()->json($expenses);
+    }
 }

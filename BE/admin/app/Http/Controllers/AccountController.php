@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use PhpParser\Node\Stmt\Return_;
 
 class AccountController extends Controller
 {
-   
+
     /**
      * @OA\Get(
      *     path="/api/accounts",
@@ -91,12 +93,21 @@ class AccountController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|unique:accounts,name|max:255',
             'type' => 'required|in:vietinbank,mbank,sacombank,crypto,vietcombank,vpbank,agribank',
-            'number_card' => 'required|integer|unique:accounts,number_card',
+            'number_card' => 'required|integer',
             'expired' => 'required|date|unique:accounts,expired',
-            'pin_code' => 'required|integer|unique:accounts,pin_code',
+            'pin_code' => 'required|integer',
         ]);
 
+        $check = Account::where('number_card', $request->number_card)
+                        ->where('type', $request->type)
+                        ->first();
+
+        if($check) {
+            return response()->json(['message' => 'Tài khoản đã tồn tại'], 422);
+        }
+
         if ($validator->fails()) {
+            Log::info(['errors' => $validator->errors()]);
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
@@ -215,11 +226,11 @@ class AccountController extends Controller
         }
 
         $request->validate([
-            'name' => 'sometimes|string|unique:accounts,name,' . $account->id,
-            'type' => 'sometimes|in:vietinbank,mbank,sacombank,crypto,vietcombank,vpbank,agribank',
-            'number_card' => 'sometimes|integer|unique:accounts,number_card,' . $account->id,
-            'expired' => 'sometimes|date|unique:accounts,expired,' . $account->id,
-            'pin_code' => 'sometimes|integer|unique:accounts,pin_code,' . $account->id,
+            'name'          => 'sometimes|string|unique:accounts,name,' . $account->id,
+            'type'          => 'sometimes|in:vietinbank,mbank,sacombank,crypto,vietcombank,vpbank,agribank',
+            'number_card'   => 'sometimes|integer|unique:accounts,number_card,' . $account->id,
+            'expired'       => 'sometimes|date|unique:accounts,expired,' . $account->id,
+            'pin_code'      => 'sometimes|integer|unique:accounts,pin_code,' . $account->id,
         ]);
 
         $account->update($request->only(['name', 'type', 'number_card', 'expired', 'pin_code']));
