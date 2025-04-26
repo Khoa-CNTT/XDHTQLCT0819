@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('users', [UserController::class, 'index']);
     Route::get('/user/{id}', [UserController::class, 'edit']);
     Route::put('/user/update-profile', [UserController::class, 'updateProfile']);
-    Route::put('/user/avatar', [UserController::class, 'updateAvatar']);
+    Route::post('/user/avatar', [UserController::class, 'updateAvatar']);
     Route::delete('/user/{id}', [UserController::class, 'destroy']);
 
 
@@ -52,11 +52,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [CategoryController::class, 'destroy']);
     });
 
-    //expense
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/expenses', [App\Http\Controllers\ExpenseController::class, 'index']);
-        Route::post('/expenses', [App\Http\Controllers\ExpenseController::class, 'store']);
-    });
+        // api.php
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::get('/expenses', [App\Http\Controllers\ExpenseController::class, 'index']);
+            Route::post('/expenses', [App\Http\Controllers\ExpenseController::class, 'store']);
+            Route::get('/expenses/category/{categoryId}', [App\Http\Controllers\ExpenseController::class, 'getExpensesByCategory']);
+        });
+
     //income
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/incomes', [IncomeController::class, 'index']);
