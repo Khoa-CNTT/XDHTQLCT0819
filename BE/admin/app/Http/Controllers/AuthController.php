@@ -154,26 +154,34 @@ class AuthController extends Controller
      * )
      */
 
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
-
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password) || !$user->isActived) {
-            return response()->json(['error' => 'Không được phép đăng nhập'], 401);
-        }
-
-        $token = $user->createToken('API Token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Đăng nhập thành công',
-            'token' => $token
-        ]);
-    }
+     public function login(Request $request)
+     {
+         $request->validate([
+             'email' => 'required|email',
+             'password' => 'required'
+         ]);
+     
+         $user = User::where('email', $request->email)->first();
+     
+         if (!$user) {
+             return response()->json(['error' => 'Email không tồn tại'], 401);
+         }
+     
+         if (!Hash::check($request->password, $user->password)) {
+             return response()->json(['error' => 'Mật khẩu không chính xác'], 401);
+         }
+     
+         if (!$user->isActived) {
+             return response()->json(['error' => 'Tài khoản chưa được kích hoạt'], 401);
+         }
+     
+         $token = $user->createToken('API Token')->plainTextToken;
+     
+         return response()->json([
+             'message' => 'Đăng nhập thành công',
+             'token' => $token
+         ]);
+     }     
 
  
     public function logout(Request $request)

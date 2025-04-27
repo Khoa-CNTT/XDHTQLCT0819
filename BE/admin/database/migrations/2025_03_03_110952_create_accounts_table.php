@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('name')->unique();
+            $table->string('name'); // KHÔNG cần unique
             $table->enum('type', [
                 'vietinbank',
                 'mbank',
@@ -21,9 +21,10 @@ return new class extends Migration
                 'vpbank',
                 'agribank'
             ]);
-            $table->string('number_card')->unique();
+            $table->string('number_card'); // Bỏ unique ở đây
             $table->date('expired');
             $table->string('pin_code');
+            $table->unique(['type', 'number_card']); // Unique đúng yêu cầu
             $table->timestamps();
         });
     }
