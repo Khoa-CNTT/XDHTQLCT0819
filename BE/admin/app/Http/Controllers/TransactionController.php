@@ -34,7 +34,7 @@ class TransactionController extends Controller
             $body = $response->getBody()->getContents();
 
             Log::info('MB API Response Status Code: ' . $statusCode);
-            Log::info('MB API Raw Response: ' . $body);
+    
 
             return response()->json([
                 'success' => $statusCode === 200,
