@@ -945,6 +945,392 @@
                 }
             }
         },
+        "/api/transactions": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Lấy danh sách giao dịch",
+                "operationId": "6581469356772e7a74a0d79897544f1a",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Ngày giao dịch",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2025-01-01"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Tháng giao dịch",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "month",
+                            "example": "2025-01"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "description": "Năm giao dịch",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2025
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách giao dịch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Lỗi hệ thống"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Tạo giao dịch mới",
+                "operationId": "ab765dced58cfe2f620929db31452145",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "account_id": {
+                                        "description": "ID của tài khoản (nullable)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "category_id": {
+                                        "description": "ID của danh mục (nullable)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "amount": {
+                                        "description": "Số tiền giao dịch",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1000
+                                    },
+                                    "transaction_date": {
+                                        "description": "Ngày giao dịch",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-01-01"
+                                    },
+                                    "type": {
+                                        "description": "Loại giao dịch",
+                                        "type": "string",
+                                        "enum": [
+                                            "cash",
+                                            "transfer"
+                                        ],
+                                        "example": "cash"
+                                    },
+                                    "address": {
+                                        "description": "Địa chỉ giao dịch",
+                                        "type": "string",
+                                        "example": "Hà Nội"
+                                    },
+                                    "recurring_transaction": {
+                                        "description": "Giao dịch định kỳ",
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "description": {
+                                        "description": "Mô tả giao dịch (nullable)",
+                                        "type": "string",
+                                        "example": "Thanh toán hóa đơn"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tạo giao dịch thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Thêm giao dịch thành công."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Dữ liệu không hợp lệ"
+                    },
+                    "500": {
+                        "description": "Lỗi hệ thống"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/transactions/{id}": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Lấy thông tin giao dịch",
+                "operationId": "3c2ffaa6fd4a5b2cb56798ad9f9ded64",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của giao dịch",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lấy thông tin giao dịch thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Lấy thông tin giao dịch thành công."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy giao dịch"
+                    },
+                    "500": {
+                        "description": "Lỗi hệ thống"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Cập nhật giao dịch",
+                "operationId": "a3de6e068b921a033fb998246070466a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của giao dịch",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "account_id": {
+                                        "description": "ID của tài khoản (nullable)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "category_id": {
+                                        "description": "ID của danh mục (nullable)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "amount": {
+                                        "description": "Số tiền giao dịch",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1500
+                                    },
+                                    "transaction_date": {
+                                        "description": "Ngày giao dịch",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-01-15"
+                                    },
+                                    "type": {
+                                        "description": "Loại giao dịch",
+                                        "type": "string",
+                                        "enum": [
+                                            "cash",
+                                            "transfer"
+                                        ],
+                                        "example": "transfer"
+                                    },
+                                    "address": {
+                                        "description": "Địa chỉ giao dịch",
+                                        "type": "string",
+                                        "example": "TP. Hồ Chí Minh"
+                                    },
+                                    "recurring_transaction": {
+                                        "description": "Giao dịch định kỳ",
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "description": {
+                                        "description": "Mô tả giao dịch (nullable)",
+                                        "type": "string",
+                                        "example": "Nộp tiền"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật giao dịch thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cập nhật giao dịch thành công."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy giao dịch"
+                    },
+                    "422": {
+                        "description": "Dữ liệu không hợp lệ"
+                    },
+                    "500": {
+                        "description": "Lỗi hệ thống"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Xóa giao dịch",
+                "operationId": "5b95ee78a4db85f35f43b2b4eea85447",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của giao dịch",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa giao dịch thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Xóa giao dịch thành công."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy giao dịch"
+                    },
+                    "500": {
+                        "description": "Lỗi hệ thống"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users": {
             "get": {
                 "tags": [
@@ -1274,6 +1660,10 @@
         {
             "name": "Categories",
             "description": "Categories"
+        },
+        {
+            "name": "Transactions",
+            "description": "Transactions"
         },
         {
             "name": "User",

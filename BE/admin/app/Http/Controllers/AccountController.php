@@ -99,10 +99,10 @@ class AccountController extends Controller
         ]);
 
         $check = Account::where('number_card', $request->number_card)
-                        ->where('type', $request->type)
-                        ->first();
+            ->where('type', $request->type)
+            ->first();
 
-        if($check) {
+        if ($check) {
             return response()->json(['message' => 'Tài khoản đã tồn tại'], 422);
         }
 
