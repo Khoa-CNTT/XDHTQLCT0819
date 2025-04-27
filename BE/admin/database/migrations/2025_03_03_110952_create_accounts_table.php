@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('name')->unique();
+            $table->string('name');
             $table->enum('type', [
                 'vietinbank',
                 'mbank',
@@ -21,7 +21,7 @@ return new class extends Migration
                 'vpbank',
                 'agribank'
             ]);
-            $table->string('number_card')->unique();
+            $table->string('number_card');
             $table->date('expired');
             $table->string('pin_code');
             $table->timestamps();
