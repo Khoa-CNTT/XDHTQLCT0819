@@ -7,8 +7,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExampleController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ZaloPayController;
 
 Route::get('/example', [ExampleController::class, 'index']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -17,6 +20,15 @@ Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail']);
 Route::get('/reset-password', [AuthController::class, 'resetShow']);
 Route::post('/reset-password', [AuthController::class, 'reset']);
 Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
+// Test API
+Route::get('/transactions/mbbank', [TransactionController::class, 'fetchMBBankTransactions']);
+
+Route::get('/zalo/banks', [ZaloPayController::class, 'getBanks']);
+Route::post('/zalo/payment', [ZaloPayController::class, 'payment']);
+Route::post('/zalo/callback', [ZaloPayController::class, 'handleCallback']);
+Route::get('/zalo/transactions', [ZaloPayController::class, 'getTransactionHistory']);
+
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -32,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/user/{id}', [UserController::class, 'destroy']);
 
 
+
     // Account
     Route::prefix('account')->group(function () {
         // Route::post('add', [AccountController::class, 'store']);
@@ -43,6 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [AccountController::class, 'destroy']);
     });
 
+
     // Category
     Route::prefix('categories')->group(function () {
         Route::post('add', [CategoryController::class, 'store']);
@@ -52,17 +66,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [CategoryController::class, 'destroy']);
     });
 
-        // api.php
-        Route::middleware('auth:sanctum')->group(function () {
-            Route::get('/expenses', [App\Http\Controllers\ExpenseController::class, 'index']);
-            Route::post('/expenses', [App\Http\Controllers\ExpenseController::class, 'store']);
-            Route::get('/expenses/category/{categoryId}', [App\Http\Controllers\ExpenseController::class, 'getExpensesByCategory']);
-        });
+    // api.php
+    Route::prefix('expenses')->group(function () {
+        Route::get('/', [ExpenseController::class, 'index']);
+        Route::post('/add', [ExpenseController::class, 'store']);
+        Route::get('/expenses/category/{categoryId}', [ExpenseController::class, 'getExpensesByCategory']);
+    });
+
+    Route::prefix('transaction')->group(function () {
+        Route::get('/', [TransactionController::class, 'index']);
+        Route::post('/add', [TransactionController::class, 'store']);
+        Route::get('/{id}', [TransactionController::class, 'edit']);
+        Route::put('/{id}', [TransactionController::class, 'update']);
+        Route::delete('/{id}', [TransactionController::class, 'destroy']);
+    });
+
 
     //income
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('incomes')->group(function () {
         Route::get('/incomes', [IncomeController::class, 'index']);
         Route::post('/incomes', [IncomeController::class, 'store']);
     });
-
 });
