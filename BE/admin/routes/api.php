@@ -11,7 +11,6 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ZaloPayController;
 
 Route::get('/example', [ExampleController::class, 'index']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -21,14 +20,6 @@ Route::get('/reset-password', [AuthController::class, 'resetShow']);
 Route::post('/reset-password', [AuthController::class, 'reset']);
 Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 // Test API
-Route::get('/transactions/mbbank', [TransactionController::class, 'fetchMBBankTransactions']);
-
-Route::get('/zalo/banks', [ZaloPayController::class, 'getBanks']);
-Route::post('/zalo/payment', [ZaloPayController::class, 'payment']);
-Route::post('/zalo/callback', [ZaloPayController::class, 'handleCallback']);
-Route::get('/zalo/transactions', [ZaloPayController::class, 'getTransactionHistory']);
-
-
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -51,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [AccountController::class, 'index']);
         Route::get('/{id}', [AccountController::class, 'edit']);
         Route::put('/{id}', [AccountController::class, 'update']);
+        Route::put('/set-primary-account/{id}', [AccountController::class, 'setPrimaryAccount']);
         Route::delete('/{id}', [AccountController::class, 'destroy']);
     });
 
@@ -77,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [TransactionController::class, 'edit']);
         Route::put('/{id}', [TransactionController::class, 'update']);
         Route::delete('/{id}', [TransactionController::class, 'destroy']);
+        Route::get('/mbbank', [TransactionController::class, 'fetchMBBankTransactions']);
     });
 
 
