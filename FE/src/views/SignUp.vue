@@ -74,6 +74,7 @@
 
 <script>
 import axios from "axios";
+import { useToast } from "vue-toastification";
 
 export default {
   name: "RegisterPage",
@@ -90,12 +91,22 @@ export default {
       confirmPassword: "",
       showPassword: false,
       showConfirmPassword: false,
+      toast: null, // 👈 Thêm toast vào data
     };
   },
+  created() {
+    this.toast = useToast(); // 👈 Khởi tạo toast ở đây để dùng được trong methods
+  },
   methods: {
+    togglePassword() {
+      this.showPassword = !this.showPassword;
+    },
+    toggleConfirmPassword() {
+      this.showConfirmPassword = !this.showConfirmPassword;
+    },
     async handleRegister() {
       if (this.form.password !== this.confirmPassword) {
-        alert("Mật khẩu xác nhận không khớp!");
+        this.toast.error("❌ Mật khẩu xác nhận không khớp!");
         return;
       }
 
@@ -106,29 +117,24 @@ export default {
           },
         });
 
-        alert("Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
+        this.toast.success("🎉 Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
         this.$router.push("/login");
       } catch (error) {
         if (error.response && error.response.data) {
           const data = error.response.data;
           const errorMsg = data.errors
             ? Object.values(data.errors).flat().join("\n")
-            : data.message || "Đăng ký thất bại!";
-          alert(errorMsg);
+            : data.message || "❌ Đăng ký thất bại!";
+          this.toast.error(errorMsg);
         } else {
-          alert("Lỗi kết nối máy chủ!");
+          this.toast.error("⚠️ Lỗi kết nối máy chủ!");
         }
       }
-    },
-    togglePassword() {
-      this.showPassword = !this.showPassword;
-    },
-    toggleConfirmPassword() {
-      this.showConfirmPassword = !this.showConfirmPassword;
     },
   },
 };
 </script>
+
 
 
 
@@ -154,13 +160,13 @@ export default {
 }
 .section::before {
     content: '';
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width:  100vw;
+    height: 100vh;
     background: rgba(255, 249, 249, 0.3);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(10px);
     z-index: 1;
   }
   .section > * {

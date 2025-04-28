@@ -109,6 +109,8 @@
 
 <script>
 import axios from "axios";
+import Swal from 'sweetalert2';
+import { useToast } from 'vue-toastification';
 
 export default {
   name: "UserManagementRocker",
@@ -157,6 +159,7 @@ export default {
           this.isEditing = true;
       },
       async submitEdit() {
+          const toast = useToast();
           try {
               const payload = {
                   username: this.selectedUser.username,
@@ -171,8 +174,6 @@ export default {
               if (this.avatarFile) {
                   const formData = new FormData();
                   formData.append("avatar", this.avatarFile);
-                  console.log(formData);
-                  
                   await axios.post("/api/user/avatar", formData, {
                       headers: {
                           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
@@ -182,15 +183,14 @@ export default {
               }
               this.isEditing = false;
               this.fetchUsers();
-              alert("Cập nhật thành công!");
+              toast.success("✅ Cập nhật thành công!");
           } catch (error) {
-              alert("Cập nhật thất bại!");
+              toast.error("❌ Cập nhật thất bại!");
               console.error(error);
           }
       },
       onAvatarSelected(e) {
           this.avatarFile = e.target.files[0];
-          
       },
       cancelEdit() {
           this.selectedUser = null;
@@ -198,16 +198,29 @@ export default {
           this.isEditing = false;
       },
       async deleteUser(id) {
-          if (!confirm("Xoá người dùng này?")) return;
-          try {
-              await axios.delete(`/api/user/${id}`, {
-                  headers: { Authorization: `Bearer ${localStorage.getItem("auth_token")}` },
-              });
-              this.users = this.users.filter(u => u.id !== id);
-              alert("Xoá thành công!");
-          } catch (err) {
-              alert("Xoá thất bại!");
-              console.error(err);
+          const toast = useToast();
+          const result = await Swal.fire({
+              title: 'Xác nhận xoá',
+              text: '⚠️ Bạn có chắc chắn muốn xoá người dùng này không?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Xoá',
+              cancelButtonText: 'Huỷ',
+          });
+
+          if (result.isConfirmed) {
+              try {
+                  await axios.delete(`/api/user/${id}`, {
+                      headers: { Authorization: `Bearer ${localStorage.getItem("auth_token")}` },
+                  });
+                  this.users = this.users.filter(u => u.id !== id);
+                  toast.success("🗑️ Xoá thành công!");
+              } catch (err) {
+                  toast.error("❌ Xoá thất bại!");
+                  console.error(err);
+              }
           }
       },
       nextPage() {
@@ -222,6 +235,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .modal-backdrop {

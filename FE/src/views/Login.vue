@@ -36,9 +36,12 @@
           </div>
         </div>
         <div class="auth-links">
-          <p><router-link to="/forgot-password">Quên mật khẩu?</router-link></p>
+          <p><router-link to="/forgot-password">Quên mật khẩu?</router-link></p>  
         </div>
         <button type="submit" class="btn-primary">Đăng nhập</button>
+        <div class="auth-links">
+          <p>Chưa có tài khoản? <router-link to="/sign-up">Đăng ký ngay</router-link></p>   
+        </div>
       </form>
     </div>
   </section>
@@ -46,6 +49,7 @@
 
 <script>
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 
 export default {
   name: "LoginPage",
@@ -57,10 +61,18 @@ export default {
     };
   },
   methods: {
+    togglePassword() {
+      this.showPassword = !this.showPassword;
+    },
     async handleLogin() {
+      const toast = useToast();
+      if (!this.email || !this.password) {
+        toast.warning("⚠️ Vui lòng nhập đầy đủ email và mật khẩu!");
+        return;
+      }
       try {
         const response = await axios.post("http://localhost:8000/api/login", {
-          email: this.email, // dùng email, không phải username
+          email: this.email,
           password: this.password,
         });
 
@@ -69,24 +81,18 @@ export default {
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        alert("Đăng nhập thành công!");
+        toast.success("🎉 Đăng nhập thành công!");
         this.$router.push("/quan-li-chi-tieu");
       } catch (error) {
-        if (error.response) {
-          alert(error.response.data?.error || "Đăng nhập thất bại!");
-        } else {
-          alert("Lỗi kết nối máy chủ!");
-        }
+        const errorMsg = error.response?.data?.error || "❌ Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.";
+        toast.error(errorMsg);
         console.error(error);
       }
     },
-    togglePassword() {
-      this.showPassword = !this.showPassword;
-    },
   },
 };
-
 </script>
+
 
 
 <style scoped>

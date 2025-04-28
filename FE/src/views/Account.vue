@@ -93,11 +93,13 @@
 
 <script>
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 
 export default {
   name: 'AccountManagementRocker',
   data() {
     return {
+      toast: useToast(), // ✅ Sử dụng Toastification
       search: '',
       showForm: false,
       isEditing: false,
@@ -114,40 +116,51 @@ export default {
   },
   computed: {
     filteredAccounts() {
-      return this.accounts.filter(acc => acc.name.toLowerCase().includes(this.search.toLowerCase()));
+      return this.accounts.filter(acc =>
+        acc.name.toLowerCase().includes(this.search.toLowerCase())
+      );
     }
   },
   methods: {
     convertToSao(pin) {
-        return  "*".repeat(pin.length);
-    }, 
+      return "*".repeat(pin.toString().length);
+    },
 
     changPass(value) {
       value.is_return = !value.is_return;
     },
 
     async fetchAccounts() {
-      const res = await axios.get('/api/account', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      this.accounts = res.data;
-      this.accounts.forEach((value, index) => {
-        value.is_return = 1;
-      });
+      try {
+        const res = await axios.get('/api/account', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        this.accounts = res.data;
+        this.accounts.forEach((acc) => {
+          acc.is_return = 1;
+        });
+      } catch (err) {
+        console.error(err);
+        this.toast.error('❌ Không thể tải danh sách tài khoản.');
+      }
     },
+
     formatDate(date) {
       return new Date(date).toLocaleDateString('vi-VN');
     },
+
     openAddForm() {
       this.showForm = true;
       this.isEditing = false;
       this.form = { id: null, name: '', type: '', number_card: '', expired: '', pin_code: '' };
     },
+
     openEditForm(account) {
       this.showForm = true;
       this.isEditing = true;
       this.form = { ...account };
     },
+
     async submitForm() {
       try {
         const payload = { ...this.form };
@@ -155,23 +168,25 @@ export default {
           await axios.put(`/api/account/${this.form.id}`, payload, {
             headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
           });
-          alert('✅ Cập nhật tài khoản thành công!');
+          this.toast.success('✅ Cập nhật tài khoản thành công!');
         } else {
           await axios.post('/api/account', payload, {
             headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
           });
-          alert('✅ Thêm tài khoản thành công!');
+          this.toast.success('✅ Thêm tài khoản thành công!');
         }
         this.showForm = false;
         this.fetchAccounts();
       } catch (err) {
         console.error(err);
-        alert('❌ Thao tác thất bại. Vui lòng kiểm tra dữ liệu hoặc thử lại sau.');
+        this.toast.error('❌ Thao tác thất bại. Vui lòng kiểm tra dữ liệu hoặc thử lại sau.');
       }
     },
+
     cancelForm() {
       this.showForm = false;
     },
+
     async deleteAccount(id) {
       if (!confirm('⚠️ Bạn có chắc chắn muốn xoá tài khoản này?')) return;
       try {
@@ -179,10 +194,10 @@ export default {
           headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
         });
         this.fetchAccounts();
-        alert('🗑️ Xoá tài khoản thành công!');
+        this.toast.success('🗑️ Xoá tài khoản thành công!');
       } catch (err) {
         console.error(err);
-        alert('❌ Xoá thất bại!');
+        this.toast.error('❌ Xoá thất bại!');
       }
     }
   },
