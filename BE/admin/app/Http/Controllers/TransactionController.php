@@ -21,52 +21,40 @@ class TransactionController extends Controller
                 "PASSWORD"  => "Letronghuy113+",
                 "DAY_BEGIN" => Carbon::today()->format('d/m/Y'),
                 "DAY_END"   => Carbon::today()->format('d/m/Y'),
-                "NUMBER_MB" => "4089041077265163"
+                "NUMBER_MB" => "0983057130"
             ];
 
             Log::info('MB API Request Payload:', $payload);
 
+       
             $response = $client->post('https://api-mb.dzmid.io.vn/api/transactions', [
-                'json' => $payload,
+                'json' => $payload, 
             ]);
 
-            $statusCode = $response->getStatusCode();
-            $body = $response->getBody()->getContents();
+            $data = json_decode($response->getBody(), true); 
 
-            Log::info('MB API Response Status Code: ' . $statusCode);
-            Log::info('MB API Raw Response: ' . $body);
+      
+            Log::info('MB API Response Data: ', $data['data']['transactionHistoryList']);
 
             return response()->json([
-                'success' => $statusCode === 200,
-                'status_code' => $statusCode,
-                'data' => json_decode($body, true)
+                'success' => true,
+                'data' => $data['data']['transactionHistoryList'] 
             ]);
-        } catch (RequestException $e) {
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
             Log::error('MB API Request Exception: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'error' => 'Request to MB API failed. Please try again later.'
+                'error' => 'Gửi yêu cầu tới MB Bank thất bại. Vui lòng thử lại sau.'
             ], 500);
         } catch (\Exception $e) {
             Log::error('MB API General Exception: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'error' => 'An unexpected error occurred. Please try again later.'
+                'error' => 'Có lỗi xảy ra. Vui lòng thử lại sau.'
             ], 500);
         }
-    }
-
-    private function detectTransactionType($description)
-    {
-        $description = strtolower($description);
-        if (str_contains($description, 'chuyển') || str_contains($description, 'thanh toán')) {
-            return 'expense';
-        } elseif (str_contains($description, 'nộp') || str_contains($description, 'nhận')) {
-            return 'income';
-        }
-        return 'income';
     }
 
     /**

@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use PhpParser\Node\Stmt\Return_;
 
 class AccountController extends Controller
 {
@@ -29,10 +27,10 @@ class AccountController extends Controller
      *                 @OA\Property(property="id", type="string", example=1),
      *                 @OA\Property(property="user_id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="Tài khoản chính"),
-     *                 @OA\Property(property="type", type="string", example="vietcombank"),
+     *                 @OA\Property(property="type", type="string", example="mbank"),
      *                 @OA\Property(property="number_card", type="integer", example=123456789),
      *                 @OA\Property(property="expired", type="string", format="date", example="2030-12-31"),
-     *                 @OA\Property(property="pin_code", type="integer", example=1234)
+     *                 @OA\Property(property="password", type="string", example=1234)
      *             )
      *         )
      *     )
@@ -58,12 +56,12 @@ class AccountController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "type", "number_card", "expired", "pin_code"},
+     *             required={"name", "type", "number_card", "expired", "password"},
      *             @OA\Property(property="name", type="string", example="Tài khoản chính"),
-     *             @OA\Property(property="type", type="string", example="vietcombank"),
+     *             @OA\Property(property="type", type="string", example="mbank"),
      *             @OA\Property(property="number_card", type="integer", example=123456789),
      *             @OA\Property(property="expired", type="string", format="date", example="2030-12-31"),
-     *             @OA\Property(property="pin_code", type="integer", example=1234)
+     *             @OA\Property(property="password", type="string", example=1234)
      *         )
      *     ),
      *     @OA\Response(
@@ -75,10 +73,10 @@ class AccountController extends Controller
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="user_id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="Tài khoản chính"),
-     *                 @OA\Property(property="type", type="string", example="vietcombank"),
+     *                 @OA\Property(property="type", type="string", example="mbank"),
      *                 @OA\Property(property="number_card", type="integer", example=123456789),
      *                 @OA\Property(property="expired", type="string", format="date", example="2030-12-31"),
-     *                 @OA\Property(property="pin_code", type="integer", example=1234)
+     *                 @OA\Property(property="password", type="string", example=1234)
      *             )
      *         )
      *     ),
@@ -92,10 +90,10 @@ class AccountController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|unique:accounts,name|max:255',
-            'type' => 'required|in:vietinbank,mbank,sacombank,crypto,vietcombank,vpbank,agribank',
-            'number_card' => 'required|integer',
+            'type' => 'required|in:mbank',
+            'number_card' => 'required|string',
             'expired' => 'required|date|unique:accounts,expired',
-            'pin_code' => 'required|integer',
+            'password' => 'required|string',
         ]);
 
         $check = Account::where('number_card', $request->number_card)
@@ -112,7 +110,8 @@ class AccountController extends Controller
         }
 
         $data = $request->all();
-        $data['user_id'] = Auth::id(); // Lấy user_id từ người dùng đang đăng nhập
+        $data['user_id'] = Auth::id();
+        $data['password'] = bcrypt($request->password);
 
         $account = Account::create($data);
 
@@ -139,10 +138,10 @@ class AccountController extends Controller
      *             @OA\Property(property="id", type="integer", example=1),
      *             @OA\Property(property="user_id", type="integer", example=1),
      *             @OA\Property(property="name", type="string", example="Tài khoản chính"),
-     *             @OA\Property(property="type", type="string", example="vietcombank"),
+     *             @OA\Property(property="type", type="string", example="mbank"),
      *             @OA\Property(property="number_card", type="integer", example=123456789),
      *             @OA\Property(property="expired", type="string", format="date", example="2030-12-31"),
-     *             @OA\Property(property="pin_code", type="integer", example=1234)
+     *             @OA\Property(property="password", type="string", example=1234)
      *         )
      *     ),
      *     @OA\Response(
@@ -182,10 +181,10 @@ class AccountController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             @OA\Property(property="name", type="string", example="Tài khoản chính sửa đổi"),
-     *             @OA\Property(property="type", type="string", example="vietcombank"),
+     *             @OA\Property(property="type", type="string", example="mbank"),
      *             @OA\Property(property="number_card", type="integer", example=987654321),
      *             @OA\Property(property="expired", type="string", format="date", example="2035-01-01"),
-     *             @OA\Property(property="pin_code", type="integer", example=4321)
+     *             @OA\Property(property="password", type="string", example=4321)
      *         )
      *     ),
      *     @OA\Response(
@@ -197,10 +196,10 @@ class AccountController extends Controller
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="user_id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="Tài khoản chính sửa đổi"),
-     *                 @OA\Property(property="type", type="string", example="vietcombank"),
+     *                 @OA\Property(property="type", type="string", example="mbank"),
      *                 @OA\Property(property="number_card", type="integer", example=987654321),
      *                 @OA\Property(property="expired", type="string", format="date", example="2035-01-01"),
-     *                 @OA\Property(property="pin_code", type="integer", example=4321)
+     *                 @OA\Property(property="password", type="string", example=4321)
      *             )
      *         )
      *     ),
@@ -227,13 +226,13 @@ class AccountController extends Controller
 
         $request->validate([
             'name'          => 'sometimes|string|unique:accounts,name,' . $account->id,
-            'type'          => 'sometimes|in:vietinbank,mbank,sacombank,crypto,vietcombank,vpbank,agribank',
+            'type'          => 'sometimes|in:mbank',
             'number_card'   => 'sometimes|integer|unique:accounts,number_card,' . $account->id,
             'expired'       => 'sometimes|date|unique:accounts,expired,' . $account->id,
-            'pin_code'      => 'sometimes|integer|unique:accounts,pin_code,' . $account->id,
+            'password'      => 'sometimes|integer|unique:accounts,password,' . $account->id,
         ]);
 
-        $account->update($request->only(['name', 'type', 'number_card', 'expired', 'pin_code']));
+        $account->update($request->only(['name', 'type', 'number_card', 'expired', 'password']));
 
         return response()->json(['message' => 'Cập nhật tài khoản thành công', 'account' => $account]);
     }
@@ -277,5 +276,69 @@ class AccountController extends Controller
 
         $account->delete();
         return response()->json(['message' => 'Xóa tài khoản thành công']);
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/account/set-primary-account/{id}",
+     *     summary="Thiết lập tài khoản chính",
+     *     tags={"Account"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID của tài khoản cần thiết lập làm tài khoản chính",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Tài khoản đã được thiết lập thành tài khoản chính",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Tài khoản đã được thiết lập thành tài khoản chính")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Yêu cầu không hợp lệ",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="error", type="string", example="Không tìm thấy tài khoản")
+     *         )
+     *     )
+     * )
+     */
+
+
+    public function setPrimaryAccount($id)
+    {
+        try {
+            Account::where('user_id', auth()->user()->id)->update(['is_primary' => false]);
+
+            $account = Account::where('id', $id)->update(['is_primary' => true]);
+
+            if ($account === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản không tồn tại hoặc không thể cập nhật.'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tài khoản chính đã được cập nhật thành công.',
+                'data' => Account::where('id', $id)->first()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi cập nhật tài khoản chính: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra, vui lòng thử lại sau.'
+            ], 500);
+        }
     }
 }

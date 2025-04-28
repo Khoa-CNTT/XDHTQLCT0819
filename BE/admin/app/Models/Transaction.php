@@ -17,7 +17,6 @@ class Transaction extends Model
         'transaction_date',
         'type',
         'address',
-        'recurring_transaction',
         'description'
     ];
 }

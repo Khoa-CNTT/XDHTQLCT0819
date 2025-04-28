@@ -12,18 +12,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->enum('type', [
-                'vietinbank',
-                'mbank',
-                'sacombank',
-                'crypto',
-                'vietcombank',
-                'vpbank',
-                'agribank'
-            ]);
+            $table->string('password');
             $table->string('number_card');
+            $table->enum('type', [
+                'mbank',
+            ]);
             $table->date('expired');
-            $table->string('pin_code');
+            $table->date('pin_code')->nullable();
+            $table->boolean('is_primary')->default(false);
             $table->timestamps();
         });
     }

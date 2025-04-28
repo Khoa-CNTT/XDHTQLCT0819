@@ -39,7 +39,7 @@
                                             },
                                             "type": {
                                                 "type": "string",
-                                                "example": "vietcombank"
+                                                "example": "mbank"
                                             },
                                             "number_card": {
                                                 "type": "integer",
@@ -50,8 +50,8 @@
                                                 "format": "date",
                                                 "example": "2030-12-31"
                                             },
-                                            "pin_code": {
-                                                "type": "integer",
+                                            "password": {
+                                                "type": "string",
                                                 "example": 1234
                                             }
                                         },
@@ -84,7 +84,7 @@
                                     "type",
                                     "number_card",
                                     "expired",
-                                    "pin_code"
+                                    "password"
                                 ],
                                 "properties": {
                                     "name": {
@@ -93,7 +93,7 @@
                                     },
                                     "type": {
                                         "type": "string",
-                                        "example": "vietcombank"
+                                        "example": "mbank"
                                     },
                                     "number_card": {
                                         "type": "integer",
@@ -104,8 +104,8 @@
                                         "format": "date",
                                         "example": "2030-12-31"
                                     },
-                                    "pin_code": {
-                                        "type": "integer",
+                                    "password": {
+                                        "type": "string",
                                         "example": 1234
                                     }
                                 },
@@ -141,7 +141,7 @@
                                                 },
                                                 "type": {
                                                     "type": "string",
-                                                    "example": "vietcombank"
+                                                    "example": "mbank"
                                                 },
                                                 "number_card": {
                                                     "type": "integer",
@@ -152,8 +152,8 @@
                                                     "format": "date",
                                                     "example": "2030-12-31"
                                                 },
-                                                "pin_code": {
-                                                    "type": "integer",
+                                                "password": {
+                                                    "type": "string",
                                                     "example": 1234
                                                 }
                                             },
@@ -216,7 +216,7 @@
                                         },
                                         "type": {
                                             "type": "string",
-                                            "example": "vietcombank"
+                                            "example": "mbank"
                                         },
                                         "number_card": {
                                             "type": "integer",
@@ -227,8 +227,8 @@
                                             "format": "date",
                                             "example": "2030-12-31"
                                         },
-                                        "pin_code": {
-                                            "type": "integer",
+                                        "password": {
+                                            "type": "string",
                                             "example": 1234
                                         }
                                     },
@@ -277,7 +277,7 @@
                                     },
                                     "type": {
                                         "type": "string",
-                                        "example": "vietcombank"
+                                        "example": "mbank"
                                     },
                                     "number_card": {
                                         "type": "integer",
@@ -288,8 +288,8 @@
                                         "format": "date",
                                         "example": "2035-01-01"
                                     },
-                                    "pin_code": {
-                                        "type": "integer",
+                                    "password": {
+                                        "type": "string",
                                         "example": 4321
                                     }
                                 },
@@ -325,7 +325,7 @@
                                                 },
                                                 "type": {
                                                     "type": "string",
-                                                    "example": "vietcombank"
+                                                    "example": "mbank"
                                                 },
                                                 "number_card": {
                                                     "type": "integer",
@@ -336,8 +336,8 @@
                                                     "format": "date",
                                                     "example": "2035-01-01"
                                                 },
-                                                "pin_code": {
-                                                    "type": "integer",
+                                                "password": {
+                                                    "type": "string",
                                                     "example": 4321
                                                 }
                                             },
@@ -399,6 +399,74 @@
                     },
                     "404": {
                         "description": "Không tìm thấy tài khoản"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/account/set-primary-account/{id}": {
+            "put": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Thiết lập tài khoản chính",
+                "operationId": "9f383c71b3265af503df949361136e37",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của tài khoản cần thiết lập làm tài khoản chính",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tài khoản đã được thiết lập thành tài khoản chính",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tài khoản đã được thiết lập thành tài khoản chính"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Yêu cầu không hợp lệ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Không tìm thấy tài khoản"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

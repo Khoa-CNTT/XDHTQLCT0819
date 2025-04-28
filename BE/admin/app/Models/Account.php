@@ -14,10 +14,12 @@ class Account extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'password',
         'type',
         'number_card',
         'expired',
-        'pin_code',
+        'pin_code'
+
     ];
     public function user()
     {
