@@ -2,44 +2,96 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
-use GuzzleHttp\Exception\RequestException;
 
 class TransactionController extends Controller
 {
+
     public function fetchMBBankTransactions()
     {
         try {
-            $client = new \GuzzleHttp\Client();
+            $account = Account::where('user_id', auth()->user()->id)
+                ->where('is_primary', true)
+                ->first();
+
+            if (!$account) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Không tìm thấy tài khoản chính. Vui lòng thiết lập tài khoản chính.'
+                ], 400);
+            }
 
             $payload = [
-                "USERNAME"  => "0983057130",
-                "PASSWORD"  => "Letronghuy113+",
+                "USERNAME"  => $account->number_card,
+                "PASSWORD"  => $account->password,
                 "DAY_BEGIN" => Carbon::today()->format('d/m/Y'),
                 "DAY_END"   => Carbon::today()->format('d/m/Y'),
-                "NUMBER_MB" => "0983057130"
+                "NUMBER_MB" => $account->number_card
             ];
 
             Log::info('MB API Request Payload:', $payload);
 
-       
+            $client = new \GuzzleHttp\Client();
             $response = $client->post('https://api-mb.dzmid.io.vn/api/transactions', [
-                'json' => $payload, 
+                'json' => $payload,
             ]);
 
-            $data = json_decode($response->getBody(), true); 
+            $data = json_decode($response->getBody(), true);
 
-      
-            Log::info('MB API Response Data: ', $data['data']['transactionHistoryList']);
+            if ($data['success'] && isset($data['data']['transactionHistoryList'])) {
+                $transactions = $data['data']['transactionHistoryList'];
+
+                foreach ($transactions as $transaction) {
+                    $amount = (float)($transaction['debitAmount'] ?: $transaction['creditAmount']);
+
+                    try {
+                        $transaction_date = Carbon::createFromFormat('d/m/Y H:i:s', $transaction['transactionDate'])->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        Log::error('Error parsing transaction date: ' . $transaction['transactionDate']);
+                        continue;
+                    }
+
+                    Log::info('Saving transaction:', [
+                        'user_id' => auth()->user()->id,
+                        'account_id' => $account->id,
+                        'amount' => $amount,
+                        'transaction_date' => $transaction_date,
+                        'description' => $transaction['description'],
+                        'address' => $transaction['addDescription'] ?? null
+                    ]);
+
+                    try {
+                        Transaction::create([
+                            'user_id' => auth()->user()->id,
+                            'account_id' => $account->id,
+                            'category_id' => null,
+                            'amount' => $amount,
+                            'transaction_date' => $transaction_date,
+                            'type' => 'transfer',
+                            'description' => $transaction['description'],
+                            'address' => $transaction['addDescription'] ?? null,
+                        ]);
+                        Log::info('Transaction saved: ' . $transaction['refNo']);
+                    } catch (\Exception $e) {
+                        Log::error('Error saving transaction: ' . $e->getMessage());
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transactions fetched and saved successfully.'
+                ]);
+            }
 
             return response()->json([
-                'success' => true,
-                'data' => $data['data']['transactionHistoryList'] 
-            ]);
+                'success' => false,
+                'error' => 'Không có giao dịch nào để tải về.'
+            ], 400);
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             Log::error('MB API Request Exception: ' . $e->getMessage());
 
@@ -56,6 +108,9 @@ class TransactionController extends Controller
             ], 500);
         }
     }
+
+
+
 
     /**
      * @OA\Get(
@@ -148,7 +203,6 @@ class TransactionController extends Controller
      *             @OA\Property(property="transaction_date", type="string", format="date", example="2025-01-01", description="Ngày giao dịch"),
      *             @OA\Property(property="type", type="string", enum={"cash", "transfer"}, example="cash", description="Loại giao dịch"),
      *             @OA\Property(property="address", type="string", example="Hà Nội", description="Địa chỉ giao dịch"),
-     *             @OA\Property(property="recurring_transaction", type="boolean", example=true, description="Giao dịch định kỳ"),
      *             @OA\Property(property="description", type="string", example="Thanh toán hóa đơn", description="Mô tả giao dịch (nullable)")
      *         )
      *     ),
@@ -168,15 +222,25 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         try {
+            $account = Account::where('user_id', auth()->user()->id)
+                ->where('is_primary', true)
+                ->first();
+
+            if (!$account) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Không tìm thấy tài khoản chính. Vui lòng thiết lập tài khoản chính.'
+                ], 400);
+            }
+
             $validator = Validator::make($request->all(), [
-                'account_id'            => 'nullable|exists:accounts,id',
-                'category_id'           => 'nullable|exists:categories,id',
-                'amount'                => 'required|numeric|min:0',
-                'transaction_date'      => 'required|date',
-                'type'                  => 'required|in:cash,transfer',
-                'address'               => 'required|string|max:255',
-                'recurring_transaction' => 'required|boolean',
-                'description'           => 'nullable|string',
+                'account_id'       => 'nullable|exists:accounts,id',
+                'category_id'      => 'nullable|exists:categories,id',
+                'amount'           => 'required|numeric|min:0',
+                'transaction_date' => 'nullable|date',
+                'type'             => 'required|in:cash,transfer',
+                'address' => 'nullable|string|max:255',
+                'description'      => 'nullable|string',
             ]);
 
             if ($validator->fails()) {
@@ -188,8 +252,9 @@ class TransactionController extends Controller
             }
 
             $data = $validator->validated();
-            $data['user_id'] = auth()->id();
-
+            $data['user_id'] = auth()->user()->id;
+            $data['transaction_date'] = $data['transaction_date'] ?? now()->toDateString();
+            $data['account_id'] = $account->id;
             $transaction = Transaction::create($data);
 
             return response()->json([
@@ -198,14 +263,14 @@ class TransactionController extends Controller
                 'data'    => $transaction
             ]);
         } catch (\Exception $e) {
-            Log::error('Lỗi khi tải giao dịch:: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
-                'error' => 'Không thể lấy giao dịch tại thời điểm này. Vui lòng thử lại sau'
+                'error' => $e->getMessage(),
+                'message' => 'Thêm giao dịch thành công.',
             ], 500);
         }
     }
+
 
     /**
      * @OA\Get(

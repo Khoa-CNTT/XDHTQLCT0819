@@ -19,7 +19,8 @@ Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail']);
 Route::get('/reset-password', [AuthController::class, 'resetShow']);
 Route::post('/reset-password', [AuthController::class, 'reset']);
 Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
-// Test API
+// Exception 
+Route::middleware('auth:sanctum')->get('/mb-bank', [TransactionController::class, 'fetchMBBankTransactions']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -49,7 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Category
     Route::prefix('categories')->group(function () {
-        Route::post('add', [CategoryController::class, 'store']);
+        Route::post('/', [CategoryController::class, 'store']);
         Route::get('/', [CategoryController::class, 'index']);
         Route::get('/{id}', [CategoryController::class, 'edit']);
         Route::put('/{id}', [CategoryController::class, 'update']);
@@ -65,13 +66,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('transaction')->group(function () {
         Route::get('/', [TransactionController::class, 'index']);
-        Route::post('/add', [TransactionController::class, 'store']);
+        Route::post('/', [TransactionController::class, 'store']);
         Route::get('/{id}', [TransactionController::class, 'edit']);
         Route::put('/{id}', [TransactionController::class, 'update']);
         Route::delete('/{id}', [TransactionController::class, 'destroy']);
-        Route::get('/mbbank', [TransactionController::class, 'fetchMBBankTransactions']);
     });
-
 
     //income
     Route::prefix('incomes')->group(function () {
