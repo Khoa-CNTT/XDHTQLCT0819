@@ -1129,11 +1129,6 @@
                                         "type": "string",
                                         "example": "Hà Nội"
                                     },
-                                    "recurring_transaction": {
-                                        "description": "Giao dịch định kỳ",
-                                        "type": "boolean",
-                                        "example": true
-                                    },
                                     "description": {
                                         "description": "Mô tả giao dịch (nullable)",
                                         "type": "string",

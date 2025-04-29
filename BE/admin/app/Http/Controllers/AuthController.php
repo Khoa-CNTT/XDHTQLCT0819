@@ -52,7 +52,7 @@ class AuthController extends Controller
             $validator = Validator::make($request->all(), [
                 'fullName' => 'required|string',
                 'email' => 'required|email|unique:users,email',
-                'password' => 'required|min:6',
+                'password' => 'required|min:8',
                 'phone' => 'nullable|unique:users,phone',
                 'username' => 'required|unique:users,username',
             ], [
@@ -355,8 +355,6 @@ class AuthController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        return response()->json([
-            'message' => 'Password reset successfully'
-        ]);
+        return redirect()->away(env('FRONTEND_LOGIN_URL', 'http://127.0.0.1:8080/login'));
     }
 }

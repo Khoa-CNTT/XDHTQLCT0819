@@ -67,6 +67,7 @@ class CategoryController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'slug' => 'required|unique:categories,slug',
             'type' => 'required|in:income,expense',
             'icon' => 'nullable|string|max:255',
         ]);
@@ -160,6 +161,7 @@ class CategoryController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'slug' => 'required|unique:categories,slug',
             'type' => 'required|in:income,expense',
             'icon' => 'nullable|string|max:255',
         ]);
