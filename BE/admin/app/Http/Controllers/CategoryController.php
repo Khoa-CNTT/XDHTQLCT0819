@@ -76,7 +76,8 @@ class CategoryController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $data = $request->only(['name', 'type', 'icon']);
+
+        $data = $request->only(['name','slug', 'type', 'icon']);
         $data['user_id'] = Auth::id();
 
         $category = Category::create($data);
