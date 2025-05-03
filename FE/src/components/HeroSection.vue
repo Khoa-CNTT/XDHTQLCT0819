@@ -268,9 +268,10 @@ export default {
   text-align: center;
   /* margin-top: 3rem; */
   background-color: #0ea5e9;
-  padding: 2rem;
+  padding: 2rem 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
   border-radius: 1rem;
-  max-width: 1500px;
 }
 
 .cta-title {

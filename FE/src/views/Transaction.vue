@@ -1,361 +1,240 @@
 <template>
-    <div class="transaction-page">
-      <!-- Bộ lọc thời gian -->
-      <div class="filter-section">
-        <div class="calendar-wrapper">
-          <button @click="prevMonth" class="nav-arrow"><</button>
-          <span class="month-year">Tháng {{ selectedMonth }} năm {{ selectedYear }}</span>
-          <button @click="nextMonth" class="nav-arrow">></button>
+  <div class="transaction-page">
+    <!-- Bộ lọc thời gian -->
+    <div class="filter-section">
+      <div class="calendar-wrapper">
+        <button @click="prevMonth" class="nav-arrow"><</button>
+        <span class="month-year">Tháng {{ selectedMonth }} năm {{ selectedYear }}</span>
+        <button @click="nextMonth" class="nav-arrow">></button>
+      </div>
+      <div class="calendar">
+        <div class="calendar-header">
+          <div class="day-header" v-for="day in weekDays" :key="day">{{ day }}</div>
         </div>
-        <div class="calendar">
-          <div class="calendar-header">
-            <span v-for="day in daysOfWeek" :key="day" class="day-header">{{ day }}</span>
-          </div>
-          <div class="calendar-body">
-            <span
-              v-for="day in calendarDays"
-              :key="day.date"
-              class="calendar-day"
-              :class="{ 'selected': isSelected(day.date), 'today': isToday(day.date) }"
-              @click="selectDay(day.date)"
-            >
-              {{ day.day }}
-            </span>
-          </div>
-        </div>
-        <div class="filter-buttons">
-          <button
-            :class="{ active: filterType === 'day' }"
-            @click="setFilter('day')"
+        <div class="calendar-body">
+          <div
+            v-for="(day, index) in calendarDays"
+            :key="index"
+            class="calendar-day"
+            :class="{ today: isToday(day.date), selected: isSelectedDay(day.date) }"
+            @click="selectDay(day.date)"
           >
-            Hôm nay
-          </button>
-          <button
-            :class="{ active: filterType === 'week' }"
-            @click="setFilter('week')"
-          >
-            Tuần này
-          </button>
-          <button
-            :class="{ active: filterType === 'month' }"
-            @click="setFilter('month')"
-          >
-            Tháng này
-          </button>
-        </div>
-      </div>
-  
-      <!-- Thông tin tài chính -->
-      <div class="finance-info">
-        <div class="info-card income-card">
-          <span class="label">Thu Nhập:</span>
-          <span class="value income">{{ formatNumber(totalIncome) }}</span>
-        </div>
-        <div class="info-card expense-card">
-          <span class="label">Chi tiêu:</span>
-          <span class="value expense">{{ formatNumber(totalExpense) }}</span>
-        </div>
-      </div>
-  
-      <!-- Danh sách giao dịch -->
-      <div class="transaction-list">
-        <h3 class="list-title">Theo dõi chi tiêu</h3>
-        <p class="subtitle">Xem chi tiêu của bạn theo biểu đồ</p>
-        <div
-          class="transaction-item"
-          v-for="(category, index) in filteredCategories"
-          :key="index"
-          @click="showDetailModal(category)"
-        >
-          <div class="item-icon">
-            <i :class="category.icon"></i>
-          </div>
-          <div class="item-details">
-            <span class="category">{{ category.name }}</span>
-            <span class="amount negative">{{ category.total }}</span>
-          </div>
-          <div class="item-action">
-            <i class="fas fa-chevron-right"></i>
-          </div>
-        </div>
-        <p v-if="filteredCategories.length === 0" class="no-data">
-          Không có giao dịch nào trong khoảng thời gian này.
-        </p>
-      </div>
-  
-      <!-- Modal chi tiết danh mục -->
-      <div v-if="showDetail" class="modal-overlay">
-        <div class="modal detail-modal">
-          <h2 class="modal-title">{{ selectedCategory.name }}</h2>
-          <div class="detail-list">
-            <div
-              class="detail-item"
-              v-for="(expense, index) in selectedCategory.expenses"
-              :key="index"
-            >
-              <div class="detail-date">
-                <span class="day">{{ expense.day }}</span>
-                <span class="month-year">{{ expense.monthYear }}</span>
-              </div>
-              <div class="detail-info">
-                <span class="detail-purpose">{{ expense.purpose }}</span>
-                <span class="detail-amount negative">{{ expense.amount }}</span>
-                <span class="detail-note">{{ expense.note }}</span>
-              </div>
-            </div>
-          </div>
-          <div class="modal-actions">
-            <button class="cancel-button" @click="showDetail = false">Đóng</button>
+            {{ day.label }}
           </div>
         </div>
       </div>
-  
-      <!-- Nút mở modal thêm chi tiêu -->
-      <button class="open-modal-button" @click="$router.push('/quan-li-chi-tieu')">
-        <i class="fas fa-plus"></i>
-      </button>
+      <div class="filter-buttons">
+        <button :class="{ active: filterType === 'day' }" @click="setFilter('day')">Hôm nay</button>
+        <button :class="{ active: filterType === 'week' }" @click="setFilter('week')">Tuần này</button>
+        <button :class="{ active: filterType === 'month' }" @click="setFilter('month')">Tháng này</button>
+        <button class="btn-fetch" @click="fetchMBTransactions">Tải giao dịch MB Bank</button>
+      </div>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'Transaction',
-    data() {
-      return {
-        showDetail: false,
-        selectedCategory: null,
-        selectedDate: new Date(2025, 2, 19), // Đặt mặc định là 19/3/2025 để kiểm tra
-        selectedMonth: 3, // Tháng 3
-        selectedYear: 2025,
-        filterType: 'day', // Mặc định là 'day' để kiểm tra ngày 19/3/2025
-        daysOfWeek: ['THỨ 2', 'THỨ 3', 'THỨ 4', 'THỨ 5', 'THỨ 6', 'THỨ 7', 'CHỦ NHẬT'],
-        categories: [
-          {
-            name: 'Ăn uống',
-            icon: 'fa-solid fa-utensils',
-            total: '-200,000',
-            expenses: [
-              {
-                day: '2',
-                monthYear: 'Thứ Sáu tháng 3 năm 2025',
-                purpose: 'Ăn uống',
-                amount: '-50,000 VND',
-                note: 'Mua đồ ăn sáng',
-                date: new Date(2025, 2, 2), // Tháng 3 là 2
-              },
-              {
-                day: '19',
-                monthYear: 'Thứ Bảy tháng 3 năm 2025',
-                purpose: 'Ăn uống',
-                amount: '-65,000 VND',
-                note: 'Ăn trưa với bạn',
-                date: new Date(2025, 2, 19), // Tháng 3 là 2
-              },
-              {
-                day: '11',
-                monthYear: 'Thứ Sáu tháng 3 năm 2025',
-                purpose: 'Ăn uống',
-                amount: '-10,000 VND',
-                note: 'Mua nước uống',
-                date: new Date(2025, 2, 11), // Tháng 3 là 2
-              },
-            ],
-          },
-          {
-            name: 'Di chuyển',
-            icon: 'fa-solid fa-car-side',
-            total: '-50,000',
-            expenses: [
-              {
-                day: '19',
-                monthYear: 'Thứ Bảy tháng 3 năm 2025',
-                purpose: 'Di chuyển',
-                amount: '-15,000 VND',
-                note: 'Đi xe buýt',
-                date: new Date(2025, 2, 19), // Tháng 3 là 2
-              },
-              {
-                day: '11',
-                monthYear: 'Thứ Sáu tháng 3 năm 2025',
-                purpose: 'Di chuyển',
-                amount: '-10,000 VND',
-                note: 'Đi xe ôm',
-                date: new Date(2025, 2, 11), // Tháng 3 là 2
-              },
-              {
-                day: '12',
-                monthYear: 'Thứ Tư tháng 3 năm 2025',
-                purpose: 'Di chuyển',
-                amount: '-100,000 VND',
-                note: 'Đổ xăng xe máy',
-                date: new Date(2025, 2, 12), // Tháng 3 là 2
-              },
-            ],
-          },
-          {
-            name: 'Mua sắm',
-            icon: 'fa-solid fa-cart-shopping',
-            total: '-540,000',
-            expenses: [
-              {
-                day: '12',
-                monthYear: 'Thứ Tư tháng 3 năm 2025',
-                purpose: 'Mua sắm',
-                amount: '-100,000 VND',
-                note: 'Mua quần áo',
-                date: new Date(2025, 2, 12), // Tháng 3 là 2
-              },
-            ],
-          },
-        ],
-      };
+
+    <!-- Thông tin tài chính -->
+    <div class="finance-info">
+      <div class="info-card income-card">
+        <span class="label">Thu Nhập:</span>
+        <span class="value income">{{ formatNumber(totalIncome) }} VND</span>
+      </div>
+      <div class="info-card expense-card">
+        <span class="label">Chi tiêu:</span>
+        <span class="value expense">{{ formatNumber(totalExpense) }} VND</span>
+      </div>
+    </div>
+
+    <!-- Danh sách giao dịch thu nhập -->
+    <div class="transaction-list">
+      <h3 class="list-title">Danh sách thu nhập</h3>
+      <div v-for="(txn, index) in filteredIncomes" :key="'income-' + index" class="transaction-item">
+        <div class="item-details">
+          <div>
+            <span class="category">{{ txn.note || 'Không có mô tả' }}</span>
+            <div class="note">{{ formatDate(txn.created_at) }}</div>
+          </div>
+          <div class="amount income">{{ formatNumber(txn.amount) }} VND</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danh sách giao dịch chi tiêu -->
+    <div class="transaction-list">
+      <h3 class="list-title">Danh sách chi tiêu</h3>
+      <div v-for="(txn, index) in filteredExpenses" :key="'expense-' + index" class="transaction-item">
+        <div class="item-details">
+          <div>
+            <span class="category">{{ txn.note || 'Không có mô tả' }}</span>
+            <div class="note">{{ formatDate(txn.date || txn.transaction_date) }}</div>
+          </div>
+          <div class="amount negative">{{ formatNumber(txn.amount) }} VND</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nút mở modal thêm chi tiêu -->
+    <button class="open-modal-button" @click="$router.push('/quan-li-chi-tieu')">
+      <i class="fas fa-plus"></i>
+    </button>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  name: 'TransactionPage',
+  data() {
+    return {
+      expenses: [],
+      incomes: [],
+      selectedDate: new Date(),
+      selectedMonth: new Date().getMonth() + 1,
+      selectedYear: new Date().getFullYear(),
+      filterType: 'day'
+    };
+  },
+  computed: {
+    weekDays() {
+      return ['THỨ 2', 'THỨ 3', 'THỨ 4', 'THỨ 5', 'THỨ 6', 'THỨ 7', 'CHỦ NHẬT'];
     },
-    computed: {
-      calendarDays() {
-        const firstDayOfMonth = new Date(this.selectedYear, this.selectedMonth - 1, 1);
-        const lastDayOfMonth = new Date(this.selectedYear, this.selectedMonth, 0);
-        const daysInMonth = lastDayOfMonth.getDate();
-        const firstDayIndex = (firstDayOfMonth.getDay() + 6) % 7; // Điều chỉnh để thứ 2 là ngày đầu tuần
-        const days = [];
-  
-        // Thêm các ngày trống trước ngày đầu tiên của tháng
-        for (let i = 0; i < firstDayIndex; i++) {
-          days.push({ day: '', date: null });
-        }
-  
-        // Thêm các ngày trong tháng
-        for (let day = 1; day <= daysInMonth; day++) {
-          days.push({
-            day,
-            date: new Date(this.selectedYear, this.selectedMonth - 1, day),
-          });
-        }
-  
-        return days;
-      },
-      filteredCategories() {
-        return this.categories.map(category => {
-          const filteredExpenses = category.expenses.filter(expense => {
-            const expenseDate = new Date(expense.date);
-            console.log(`Filter Type: ${this.filterType}`); // Debug filterType
-            console.log(`Expense Date: ${expenseDate.toISOString()}, Selected Date: ${this.selectedDate.toISOString()}`); // Debug
-  
-            if (this.filterType === 'day') {
-              const isSameDay =
-                expenseDate.getDate() === this.selectedDate.getDate() &&
-                expenseDate.getMonth() === this.selectedDate.getMonth() &&
-                expenseDate.getFullYear() === this.selectedDate.getFullYear();
-              console.log(`Filter Day - Is Same Day: ${isSameDay}`); // Debug
-              return isSameDay;
-            } else if (this.filterType === 'week') {
-              const startOfWeek = new Date(this.selectedDate);
-              startOfWeek.setDate(this.selectedDate.getDate() - ((this.selectedDate.getDay() + 6) % 7)); // Thứ 2 là ngày đầu tuần
-              const endOfWeek = new Date(startOfWeek);
-              endOfWeek.setDate(startOfWeek.getDate() + 6); // Chủ nhật là ngày cuối tuần
-              console.log(`Filter Week - Start: ${startOfWeek.toISOString()}, End: ${endOfWeek.toISOString()}`); // Debug
-              return expenseDate >= startOfWeek && expenseDate <= endOfWeek;
-            } else if (this.filterType === 'month') {
-              return (
-                expenseDate.getMonth() === this.selectedDate.getMonth() &&
-                expenseDate.getFullYear() === this.selectedDate.getFullYear()
-              );
-            }
-            return true;
-          });
-  
-          const total = filteredExpenses.reduce((sum, expense) => {
-            const amount = parseInt(expense.amount.replace(/[^0-9-]/g, ''), 10);
-            return sum + amount;
-          }, 0);
-  
-          return {
-            ...category,
-            expenses: filteredExpenses,
-            total: this.formatNumber(total),
-          };
-        }).filter(category => category.expenses.length > 0);
-      },
-      totalIncome() {
-        return 0; // Giả lập thu nhập, bạn có thể thay đổi logic nếu có dữ liệu thu nhập
-      },
-      totalExpense() {
-        return this.filteredCategories.reduce((sum, category) => {
-          const amount = parseInt(category.total.replace(/[^0-9-]/g, ''), 10);
-          return sum + amount;
-        }, 0);
-      },
+    calendarDays() {
+      const days = [];
+      const year = this.selectedYear;
+      const month = this.selectedMonth - 1;
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+
+      const startDayOfWeek = (firstDay.getDay() + 6) % 7;
+      for (let i = 0; i < startDayOfWeek; i++) {
+        days.push({ label: '', date: null });
+      }
+
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(year, month, d);
+        days.push({ label: d, date });
+      }
+
+      return days;
     },
-    methods: {
-      prevMonth() {
-        if (this.selectedMonth === 1) {
-          this.selectedMonth = 12;
-          this.selectedYear--;
-        } else {
-          this.selectedMonth--;
-        }
-        this.selectedDate = new Date(this.selectedYear, this.selectedMonth - 1, 1);
-      },
-      nextMonth() {
-        if (this.selectedMonth === 12) {
-          this.selectedMonth = 1;
-          this.selectedYear++;
-        } else {
-          this.selectedMonth++;
-        }
-        this.selectedDate = new Date(this.selectedYear, this.selectedMonth - 1, 1);
-      },
-      selectDay(date) {
-        if (date) {
-          this.selectedDate = date;
-          this.filterType = 'day';
-          console.log(`Selected Date: ${this.selectedDate.toISOString()}`); // Debug
-        }
-      },
-      isSelected(date) {
-        if (!date) return false;
+    filteredIncomes() {
+      return this.incomes.filter(i => this.matchFilter(new Date(i.created_at)));
+    },
+    filteredExpenses() {
+      return this.expenses.filter(e => this.matchFilter(new Date(e.date || e.transaction_date)));
+    },
+    totalIncome() {
+      return this.filteredIncomes.reduce((sum, i) => sum + parseFloat(i.amount), 0);
+    },
+    totalExpense() {
+      return this.filteredExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+    }
+  },
+  methods: {
+    matchFilter(date) {
+      const d = new Date(date);
+      if (this.filterType === 'day') {
+        return d.toDateString() === this.selectedDate.toDateString();
+      } else if (this.filterType === 'week') {
+        const start = new Date(this.selectedDate);
+        start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        return d >= start && d <= end;
+      } else if (this.filterType === 'month') {
         return (
-          date.getDate() === this.selectedDate.getDate() &&
-          date.getMonth() === this.selectedDate.getMonth() &&
-          date.getFullYear() === this.selectedDate.getFullYear()
+          d.getMonth() + 1 === this.selectedMonth &&
+          d.getFullYear() === this.selectedYear
         );
-      },
-      isToday(date) {
-        if (!date) return false;
-        const today = new Date();
-        return (
-          date.getDate() === today.getDate() &&
-          date.getMonth() === today.getMonth() &&
-          date.getFullYear() === today.getFullYear()
-        );
-      },
-      setFilter(type) {
-        this.filterType = type;
-        const today = new Date(2025, 2, 23); // Giả lập ngày hiện tại là 23/3/2025 để kiểm tra
-        if (type === 'day') {
-          this.selectedDate = today;
-        } else if (type === 'week') {
-          this.selectedDate = today;
-          // Đảm bảo tuần bắt đầu từ thứ 2 và kết thúc vào chủ nhật
-          const startOfWeek = new Date(today);
-          startOfWeek.setDate(today.getDate() - ((today.getDay() + 6) % 7)); // Thứ 2
-          this.selectedDate = startOfWeek;
-        } else if (type === 'month') {
-          this.selectedDate = today;
-          this.selectedMonth = today.getMonth() + 1;
-          this.selectedYear = today.getFullYear();
-        }
-        console.log(`Set Filter: ${type}, Selected Date: ${this.selectedDate.toISOString()}`); // Debug
-      },
-      formatNumber(number) {
-        return number.toLocaleString('vi-VN');
-      },
-      showDetailModal(category) {
-        this.selectedCategory = category;
-        this.showDetail = true;
-      },
+      }
+      return true;
     },
-  };
-  </script>
+    isToday(date) {
+      if (!date) return false;
+      const today = new Date();
+      return new Date(date).toDateString() === today.toDateString();
+    },
+    isSelectedDay(date) {
+      if (!date) return false;
+      return new Date(date).toDateString() === this.selectedDate.toDateString();
+    },
+    selectDay(date) {
+      if (date) {
+        this.selectedDate = new Date(date);
+        this.filterType = 'day';
+      }
+    },
+    async fetchExpensesAndIncomes() {
+      try {
+        const [expensesRes, incomesRes] = await Promise.all([
+          axios.get('/api/expenses', {
+            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+          }),
+          axios.get('/api/incomes', {
+            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+          })
+        ]);
+        this.expenses = expensesRes.data;
+        this.incomes = incomesRes.data;
+      } catch (err) {
+        console.error('❌ Lỗi tải chi tiêu/thu nhập', err);
+      }
+    },
+    async fetchMBTransactions() {
+      try {
+        await axios.get('/api/mb-bank', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        alert('✅ Đã tải giao dịch từ MB Bank');
+        await this.fetchExpensesAndIncomes();
+      } catch (err) {
+        console.error(err);
+        alert('❌ Lỗi tải giao dịch MB Bank');
+      }
+    },
+    prevMonth() {
+      if (this.selectedMonth === 1) {
+        this.selectedMonth = 12;
+        this.selectedYear--;
+      } else {
+        this.selectedMonth--;
+      }
+      this.selectedDate = new Date(this.selectedYear, this.selectedMonth - 1, 1);
+    },
+    nextMonth() {
+      if (this.selectedMonth === 12) {
+        this.selectedMonth = 1;
+        this.selectedYear++;
+      } else {
+        this.selectedMonth++;
+      }
+      this.selectedDate = new Date(this.selectedYear, this.selectedMonth - 1, 1);
+    },
+    setFilter(type) {
+      this.filterType = type;
+      const today = new Date();
+      this.selectedDate = today;
+      this.selectedMonth = today.getMonth() + 1;
+      this.selectedYear = today.getFullYear();
+    },
+    formatNumber(n) {
+      return parseFloat(n).toLocaleString('vi-VN');
+    },
+    formatDate(dateStr) {
+      if (!dateStr) return 'Không xác định';
+      const d = new Date(dateStr);
+      return isNaN(d) ? 'Không hợp lệ' : d.toLocaleDateString('vi-VN');
+    }
+  },
+  mounted() {
+    this.fetchExpensesAndIncomes();
+  }
+};
+</script>
+
+<style scoped>
+/* Keep styles unchanged from your existing FE */
+</style>
+
   
   <style scoped>
   /* Reset cơ bản */
