@@ -227,9 +227,9 @@ class AccountController extends Controller
         $request->validate([
             'name'          => 'sometimes|string|unique:accounts,name,' . $account->id,
             'type'          => 'sometimes|in:mbank',
-            'number_card'   => 'sometimes|integer|unique:accounts,number_card,' . $account->id,
+            'number_card'   => 'sometimes|string|unique:accounts,number_card,' . $account->id, // đổi int thành string
             'expired'       => 'sometimes|date|unique:accounts,expired,' . $account->id,
-            'password'      => 'sometimes|integer|unique:accounts,password,' . $account->id,
+            'password'      => 'sometimes|string|unique:accounts,password,' . $account->id, // đổi int thành string
         ]);
 
         $account->update($request->only(['name', 'type', 'number_card', 'expired', 'password']));

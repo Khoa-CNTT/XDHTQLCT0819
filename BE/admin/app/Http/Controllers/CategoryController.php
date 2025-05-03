@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use OpenApi\Annotations as OA;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -63,30 +64,61 @@ class CategoryController extends Controller
      *     )
      * )
      */
+    // public function store(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'name' => 'required|string|max:255',
+    //         'slug' => 'required|unique:categories,slug',
+    //         'type' => 'required|in:income,expense',
+    //         'icon' => 'nullable|string|max:255',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json(['errors' => $validator->errors()], 422);
+    //     }
+
+
+    //     $data = $request->only(['name','slug', 'type', 'icon']);
+    //     $data['user_id'] = Auth::id();
+
+    //     $category = Category::create($data);
+
+    //     return response()->json([
+    //         'message' => 'Tạo danh mục thành công',
+    //         'category' => $category
+    //     ]);
+    // }
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'slug' => 'required|unique:categories,slug',
-            'type' => 'required|in:income,expense',
-            'icon' => 'nullable|string|max:255',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'type' => 'required|in:income,expense',
+        'icon' => 'nullable|string|max:255',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-
-        $data = $request->only(['name','slug', 'type', 'icon']);
-        $data['user_id'] = Auth::id();
-
-        $category = Category::create($data);
-
-        return response()->json([
-            'message' => 'Tạo danh mục thành công',
-            'category' => $category
-        ]);
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
+
+    $slug = Str::slug($request->name);
+    $slugExists = Category::where('slug', $slug)->exists();
+    if ($slugExists) {
+        $slug .= '-' . time(); // Tránh trùng slug
+    }
+
+    $category = Category::create([
+        'name' => $request->name,
+        'slug' => $slug,
+        'type' => $request->type,
+        'icon' => $request->icon,
+        'user_id' => Auth::id(),
+    ]);
+
+    return response()->json([
+        'message' => 'Tạo danh mục thành công',
+        'category' => $category
+    ]);
+}
 
     /**
      * @OA\Get(
@@ -150,34 +182,76 @@ class CategoryController extends Controller
      *     )
      * )
      */
+    // public function update(Request $request, $id)
+    // {
+    //     $category = Category::where('id', $id)
+    //         ->where('user_id', Auth::id())
+    //         ->first();
+
+    //     if (!$category) {
+    //         return response()->json(['message' => 'Không tìm thấy danh mục'], 404);
+    //     }
+
+    //     $validator = Validator::make($request->all(), [
+    //         'name' => 'required|string|max:255',
+    //         'slug' => 'required|unique:categories,slug',
+    //         'type' => 'required|in:income,expense',
+    //         'icon' => 'nullable|string|max:255',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json(['errors' => $validator->errors()], 422);
+    //     }
+
+    //     $category->update($request->only(['name', 'type', 'icon']));
+
+    //     return response()->json([
+    //         'message' => 'Cập nhật danh mục thành công',
+    //         'category' => $category
+    //     ]);
+    // }
     public function update(Request $request, $id)
-    {
-        $category = Category::where('id', $id)
-            ->where('user_id', Auth::id())
-            ->first();
+{
+    // Tìm danh mục thuộc user hiện tại
+    $category = Category::where('id', $id)
+        ->where('user_id', Auth::id())
+        ->first();
 
-        if (!$category) {
-            return response()->json(['message' => 'Không tìm thấy danh mục'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'slug' => 'required|unique:categories,slug',
-            'type' => 'required|in:income,expense',
-            'icon' => 'nullable|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $category->update($request->only(['name', 'type', 'icon']));
-
-        return response()->json([
-            'message' => 'Cập nhật danh mục thành công',
-            'category' => $category
-        ]);
+    if (!$category) {
+        return response()->json(['message' => 'Không tìm thấy danh mục'], 404);
     }
+
+    // Validate
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'type' => 'required|in:income,expense',
+        'icon' => 'nullable|string|max:255',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    // Tạo slug từ name
+    $slug = Str::slug($request->name);
+    $slugExists = Category::where('slug', $slug)->where('id', '!=', $category->id)->exists();
+    if ($slugExists) {
+        $slug .= '-' . time();
+    }
+
+    // Cập nhật dữ liệu
+    $category->update([
+        'name' => $request->name,
+        'slug' => $slug,
+        'type' => $request->type,
+        'icon' => $request->icon,
+    ]);
+
+    return response()->json([
+        'message' => 'Cập nhật danh mục thành công',
+        'category' => $category
+    ]);
+}
 
     /**
      * @OA\Delete(

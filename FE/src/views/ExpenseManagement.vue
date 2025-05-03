@@ -16,11 +16,11 @@
     <div class="finance-info">
       <div class="info-card income-card">
         <span class="label">Thu Nhập:</span>
-        <span class="value income">{{ totalIncome.toLocaleString() }}</span>
+        <span class="value income">{{ formatCurrency(totalIncome) }}</span>
       </div>
       <div class="info-card balance-card">
         <span class="label">Số dư hiện tại:</span>
-        <span class="value balance">{{ balance.toLocaleString() }}</span>
+        <span class="value balance">{{ formatCurrency(balance) }}</span>
       </div>
     </div>
 
@@ -41,7 +41,7 @@
         <div class="item-icon"><i :class="group.category.icon"></i></div>
         <div class="item-details ms-3">
           <span class="category">{{ group.category.name }}</span>
-          <span class="amount negative">-{{ group.total.toLocaleString() }}</span>
+          <span class="amount negative">-{{ formatCurrency(group.total) }}</span>
         </div>
         <div class="item-action ms-3"><i class="fas fa-chevron-right"></i></div>
       </div>
@@ -55,7 +55,7 @@
           <div v-for="expense in selectedCategoryExpenses" :key="expense.id" class="detail-item">
             <div class="detail-info">
               <span class="detail-purpose">{{ expense.note }}</span>
-              <span class="detail-amount">-{{ expense.amount.toLocaleString() }}</span>
+              <span class="detail-amount">-{{ formatCurrency(expense.amount) }}</span>
             </div>
             <div class="detail-date">
               <span class="day">{{ formatDay(expense.date) }}</span>
@@ -69,14 +69,14 @@
       </div>
     </div>
 
-    <!-- Modal thêm chi tiêu -->
-    <div v-if="showExpenseModal" class="modal-overlay">
+     <!-- Modal thêm chi tiêu -->
+     <div v-if="showExpenseModal" class="modal-overlay">
       <div class="modal">
         <h2 class="modal-title">Thêm chi tiêu</h2>
         <form @submit.prevent="addExpense" class="modal-form">
           <div class="form-group">
             <label>Nhập số tiền</label>
-            <input type="number" v-model="newExpense.amount" required />
+            <input type="text" v-model="newExpense.amount" @input="formatExpenseAmount" required />
           </div>
           <div class="form-group">
             <label>Danh mục</label>
@@ -114,7 +114,7 @@
         <form @submit.prevent="addIncome" class="modal-form">
           <div class="form-group">
             <label>Nhập số tiền</label>
-            <input type="number" v-model="income.amount" required />
+            <input type="text" v-model="income.amount" @input="formatIncomeAmount" required />
           </div>
           <div class="form-group">
             <label>Ghi chú</label>
@@ -129,23 +129,27 @@
     </div>
 
     <!-- Nút mở modal -->
-    <button class="open-modal-button" @click="openExpenseModal">
-      <i class="fas fa-plus"></i>
-    </button>
-    <button class="open-modal-button" style="right: 80px" @click="openIncomeModal">
-      <i class="fas fa-coins"></i>
-    </button>
+    <div class="action-buttons">
+      <button class="action-btn" @click="openIncomeModal">
+        <i class="fas fa-coins"></i>
+        <span class="tooltip-text">Thêm thu nhập</span>
+      </button>
+      <button class="action-btn" @click="openExpenseModal">
+        <i class="fas fa-plus"></i>
+        <span class="tooltip-text">Thêm chi tiêu</span>
+      </button>
+    </div>
+
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 
 export default {
   data() {
     return {
-      showSuccessMessage: false, 
-      successMessage: '',       
       showIncomeModal: false,
       showExpenseModal: false,
       showDetail: false,
@@ -189,56 +193,109 @@ export default {
     }
   },
   methods: {
+    formatCurrency(amount) {
+      return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
+    },
+    unformatCurrency(formattedAmount) {
+      return formattedAmount.toString().replace(/\./g, '');
+    },
+    formatExpenseAmount() {
+      const raw = this.newExpense.amount.toString().replace(/\D/g, '');
+      this.newExpense.amount = raw ? new Intl.NumberFormat('vi-VN').format(raw) : '';
+    },
+    formatIncomeAmount() {
+      const raw = this.income.amount.toString().replace(/\D/g, '');
+      this.income.amount = raw ? new Intl.NumberFormat('vi-VN').format(raw) : '';
+    },
     showSuccessNotification(message) {
-      this.successMessage = message;
-      this.showSuccessMessage = true;
-      setTimeout(() => {
-        this.showSuccessMessage = false;
-      }, 3000);
+      const toast = useToast();
+      toast.success(message);
+    },
+    showErrorNotification(message) {
+      const toast = useToast();
+      toast.error(message);
     },
     async fetchCategories() {
-      const res = await axios.get('/api/categories', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      this.categoryList = res.data.filter(cat => cat.type === 'expense');
+      try {
+        const res = await axios.get('/api/categories', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+        });
+        this.categoryList = res.data.filter(cat => cat.type === 'expense');
+      } catch (error) {
+        this.showErrorNotification("Lỗi khi tải danh mục!");
+      }
     },
     async fetchExpenses() {
-      const res = await axios.get('/api/expenses', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      this.expenseList = res.data;
+      try {
+        const res = await axios.get('/api/expenses', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+        });
+        this.expenseList = res.data;
+      } catch (error) {
+        this.showErrorNotification("Lỗi khi tải chi tiêu!");
+      }
     },
     async fetchIncomes() {
-      const res = await axios.get('/api/incomes', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      this.incomeList = res.data;
-    },
+        try {
+          const res = await axios.get('/api/incomes', {
+            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+          });
+          this.incomeList = res.data;
+        } catch (error) {
+          console.error(error);
+          this.showErrorNotification("Lỗi khi tải thu nhập!");
+        }
+      },
     async addExpense() {
-      await axios.post('/api/expenses', this.newExpense, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      this.newExpense = { amount: '', category_id: '', date: '', time: '', note: '' };
-      this.showExpenseModal = false;
-      this.fetchExpenses();
-      this.showSuccessNotification('Thêm chi tiêu thành công!');
+      try {
+        const payload = {
+          ...this.newExpense,
+          amount: this.unformatCurrency(this.newExpense.amount)
+        };
+        await axios.post('/api/expenses', payload, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+        });
+        this.newExpense = { amount: '', category_id: '', date: '', time: '', note: '' };
+        this.showExpenseModal = false;
+        this.fetchExpenses();
+        this.showSuccessNotification('🎉 Thêm chi tiêu thành công!');
+      } catch (error) {
+        this.showErrorNotification('❌ Thêm chi tiêu thất bại!');
+      }
     },
-    async addIncome() {
-      await axios.post('/api/incomes', this.income, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      this.income = { amount: '', note: '' };
-      this.showIncomeModal = false;
-      this.fetchIncomes();
-      this.showSuccessNotification('Thêm thu nhập thành công!');
-    },
+          async addIncome() {
+        try {
+          const payload = {
+            amount: this.unformatCurrency(this.income.amount),
+            note: this.income.note
+          };
+          await axios.post('/api/incomes', payload, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+          });
+          this.income = { amount: '', note: '' };
+          this.showIncomeModal = false;
+          await this.fetchIncomes();
+          this.showSuccessNotification('💰 Thêm thu nhập thành công!');
+        } catch (error) {
+          if (error.response?.status === 422) {
+            const messages = Object.values(error.response.data.errors).flat().join(', ');
+            this.showErrorNotification(`❌ Lỗi: ${messages}`);
+          } else {
+            this.showErrorNotification('❌ Thêm thu nhập thất bại!');
+          }
+        }
+      },
     async showDetailModal(categoryId) {
-      const res = await axios.get(`/api/expenses/category/${categoryId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
-      });
-      this.selectedCategoryExpenses = res.data;
-      this.selectedCategory = this.categoryList.find(cat => cat.id === categoryId); // Lưu thông tin danh mục đã chọn
-      this.showDetail = true;
+      try {
+        const res = await axios.get(`/api/expenses/category/${categoryId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` },
+        });
+        this.selectedCategoryExpenses = res.data;
+        this.selectedCategory = this.categoryList.find(cat => cat.id === categoryId);
+        this.showDetail = true;
+      } catch (error) {
+        this.showErrorNotification("Không thể tải chi tiết danh mục.");
+      }
     },
     formatDay(dateStr) {
       return new Date(dateStr).getDate();
@@ -248,16 +305,16 @@ export default {
       return `${d.toLocaleDateString('vi-VN', { weekday: 'long' })}, ${d.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}`;
     },
     openIncomeModal() {
-      this.showIncomeModal = true;  // Mở Modal thêm thu nhập
+      this.showIncomeModal = true;
     },
     closeIncomeModal() {
-      this.showIncomeModal = false; // Đóng Modal thêm thu nhập
+      this.showIncomeModal = false;
     },
     openExpenseModal() {
-      this.showExpenseModal = true; // Mở Modal thêm chi tiêu
+      this.showExpenseModal = true;
     },
     closeExpenseModal() {
-      this.showExpenseModal = false; // Đóng Modal thêm chi tiêu
+      this.showExpenseModal = false;
     }
   },
   mounted() {
@@ -266,8 +323,6 @@ export default {
     this.fetchIncomes();
   }
 };
-
-
 </script>
 
 
@@ -782,4 +837,58 @@ export default {
       font-size: 0.9rem;
     }
   }
+  .action-buttons {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+
+.action-btn {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.action-btn:hover {
+  background-color: #059669;
+  transform: scale(1.1);
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: max-content;
+  background-color: #374151;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 10px;
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: opacity 0.3s;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.action-btn:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
   </style>

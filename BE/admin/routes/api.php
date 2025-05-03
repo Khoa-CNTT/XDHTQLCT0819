@@ -57,12 +57,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [CategoryController::class, 'destroy']);
     });
 
-    // api.php
     Route::prefix('expenses')->group(function () {
         Route::get('/', [ExpenseController::class, 'index']);
-        Route::post('/add', [ExpenseController::class, 'store']);
-        Route::get('/expenses/category/{categoryId}', [ExpenseController::class, 'getExpensesByCategory']);
+        Route::post('/', [ExpenseController::class, 'store']); // ✅ sửa lại endpoint đúng chuẩn
+        Route::get('/category/{categoryId}', [ExpenseController::class, 'getExpensesByCategory']);
     });
+    
 
     Route::prefix('transaction')->group(function () {
         Route::get('/', [TransactionController::class, 'index']);
@@ -74,7 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //income
     Route::prefix('incomes')->group(function () {
-        Route::get('/incomes', [IncomeController::class, 'index']);
-        Route::post('/incomes', [IncomeController::class, 'store']);
+        Route::get('/', [IncomeController::class, 'index']); // ✅ sửa lại endpoint đúng chuẩn
+        Route::post('/', [IncomeController::class, 'store']); // ✅ sửa lại endpoint đúng chuẩn
     });
 });

@@ -46,7 +46,7 @@ class ExpenseController extends Controller
         }
 
         $expenses = Expense::where('category_id', $categoryId)
-            ->where('user_id', Auth::id()) // Kiểm tra cho người dùng hiện tại
+            ->where('user_id', Auth::id()) 
             ->get();
 
         return response()->json($expenses);
