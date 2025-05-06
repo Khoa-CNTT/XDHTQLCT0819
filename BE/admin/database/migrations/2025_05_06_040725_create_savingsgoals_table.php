@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('end_day');
             $table->double('savings_percentage');
             $table->double('save_money_today')->default(0);
+            $table->string('note')->nullable();
             $table->timestamps();
         });
     }

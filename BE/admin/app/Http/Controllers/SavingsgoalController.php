@@ -103,6 +103,12 @@ class SavingsgoalController extends Controller
     {
         try {
             $goal = Savingsgoal::where('user_id', auth()->id())->findOrFail($id);
+            $start = Carbon::parse($goal->start_day);
+            $end = Carbon::parse($goal->end_day);
+            $now = Carbon::now();
+
+            $goal->duration_days = $start->diffInDays($end);
+            $goal->remaining_days = $now->diffInDays($end, false);
 
             return response()->json([
                 'success' => true,

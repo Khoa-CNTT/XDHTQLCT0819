@@ -243,7 +243,7 @@ class AuthController extends Controller
         $user->save();
 
         return response()->json([
-            'message' => 'Password changed successfully'
+            'message' => 'Mật khẩu đã được thay đổi thành công'
         ]);
     }
 
