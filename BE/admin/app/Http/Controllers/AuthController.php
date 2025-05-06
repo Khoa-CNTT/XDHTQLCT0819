@@ -148,7 +148,9 @@ class AuthController extends Controller
         $user->verify_token = null;
         $user->save();
 
-        return response()->json(['message' => 'Tài khoản đã được kích hoạt thành công.']);
+        session()->flash('status', 'Tài khoản đã được kích hoạt thành công.');
+
+        return redirect()->to(env('FRONTEND_LOGIN_URL', 'http://127.0.0.1:8080/login'));
     }
 
     /**
@@ -358,5 +360,6 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Mật khẩu đã được đặt lại thành công',
             'redirect_url' => env('FRONTEND_LOGIN_URL', 'http://127.0.0.1:8080/login')
-        ]);    }
+        ]);
+    }
 }
