@@ -1,5 +1,5 @@
 <template>
-  <div class="rocker-account">
+  <div class="rocker-account container-fluid px-2">
     <div class="card shadow-sm mb-4">
       <div class="card-body d-flex justify-content-between align-items-center">
         <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Quản lý tài khoản</h5>
@@ -7,24 +7,29 @@
       </div>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm mb-4">
       <div class="card-body">
-        <input
-          type="text"
-          v-model="search"
-          class="form-control mb-3"
-          placeholder="Tìm kiếm tài khoản..."
-        />
+        <div class="row mb-3 g-2">
+          <div class="col-md-6">
+            <input v-model="search" type="text" class="form-control" placeholder="Tìm kiếm tài khoản..." />
+          </div>
+          <div class="col-md-6">
+            <select v-model="filterType" class="form-select">
+              <option value="">Tất cả loại tài khoản</option>
+              <option value="mbank">MB Bank</option>
+            </select>
+          </div>
+        </div>
         <div class="table-responsive">
-          <table class="table table-striped">
+          <table class="table table-striped align-middle">
             <thead>
               <tr>
                 <th>#</th>
-                <th>Tên tài khoản</th>
+                <th>Tên</th>
                 <th>Loại</th>
                 <th>Số thẻ</th>
                 <th>Hết hạn</th>
-                <th>PIN</th>
+                <th>Chính</th>
                 <th>Hành động</th>
               </tr>
             </thead>
@@ -32,15 +37,26 @@
               <tr v-for="(acc, index) in filteredAccounts" :key="acc.id">
                 <td>{{ index + 1 }}</td>
                 <td>{{ acc.name }}</td>
-                <td>{{ acc.type }}</td>
+                <!-- <td><img v-if="acc.type === 'mbank'" src="/images/mbbank.png" alt="MB" width="24" class="me-1" />{{ acc.type }}</td> -->
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <img :src="getAccountIcon(acc.type)" :alt="acc.type" width="24" height="24" style="object-fit: contain" />
+                    <span>{{ getDisplayType(acc.type) }}</span>
+                  </div>
+                </td>
                 <td>{{ acc.number_card }}</td>
                 <td>{{ formatDate(acc.expired) }}</td>
-                <td v-if="acc.is_return" v-on:click="changPass(acc)">{{ convertToSao(acc.pin_code) }}</td>
-                <td v-else v-on:click="changPass(acc)">{{ acc.pin_code }}</td>
+                <td>
+                  <span v-if="acc.is_primary" class="badge bg-success">Chính</span>
+                  <button v-else class="btn btn-sm btn-outline-secondary" @click="setPrimary(acc.id)">Chọn</button>
+                </td>
                 <td>
                   <button class="btn btn-sm btn-warning me-2" @click="openEditForm(acc)">Sửa</button>
                   <button class="btn btn-sm btn-danger" @click="deleteAccount(acc.id)">Xoá</button>
                 </td>
+              </tr>
+              <tr v-if="filteredAccounts.length === 0">
+                <td colspan="7" class="text-center">Không có tài khoản phù hợp</td>
               </tr>
             </tbody>
           </table>
@@ -59,27 +75,21 @@
           <div class="mb-3">
             <label class="form-label">Loại</label>
             <select v-model="form.type" class="form-select" required>
-              <option value="">-- Chọn loại --</option>
-              <option value="vietcombank">Vietcombank</option>
-              <option value="vietinbank">Vietinbank</option>
+              <option disabled value="">-- Chọn loại --</option>
               <option value="mbank">MB Bank</option>
-              <option value="sacombank">Sacombank</option>
-              <option value="vpbank">VPBank</option>
-              <option value="agribank">Agribank</option>
-              <option value="crypto">Crypto</option>
             </select>
           </div>
           <div class="mb-3">
             <label class="form-label">Số thẻ</label>
-            <input v-model.number="form.number_card" type="number" class="form-control" required />
+            <input v-model="form.number_card" type="text" class="form-control" required />
           </div>
           <div class="mb-3">
             <label class="form-label">Ngày hết hạn</label>
             <input v-model="form.expired" type="date" class="form-control" required />
           </div>
           <div class="mb-3">
-            <label class="form-label">PIN</label>
-            <input v-model.number="form.pin_code" type="number" class="form-control" required />
+            <label class="form-label">Mật khẩu (PIN)</label>
+            <input v-model="form.password" type="password" class="form-control" required />
           </div>
           <div class="d-flex justify-content-end gap-2">
             <button type="button" class="btn btn-secondary" @click="cancelForm">Huỷ</button>
@@ -93,12 +103,15 @@
 
 <script>
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 
 export default {
   name: 'AccountManagementRocker',
   data() {
     return {
+      toast: useToast(),
       search: '',
+      filterType: '',
       showForm: false,
       isEditing: false,
       form: {
@@ -107,46 +120,67 @@ export default {
         type: '',
         number_card: '',
         expired: '',
-        pin_code: ''
+        password: ''
       },
       accounts: []
     };
   },
   computed: {
     filteredAccounts() {
-      return this.accounts.filter(acc => acc.name.toLowerCase().includes(this.search.toLowerCase()));
+      return this.accounts.filter(acc => {
+        return (
+          acc.name.toLowerCase().includes(this.search.toLowerCase()) &&
+          (!this.filterType || acc.type === this.filterType)
+        );
+      });
     }
   },
   methods: {
-    convertToSao(pin) {
-        return  "*".repeat(pin.length);
-    }, 
-
-    changPass(value) {
-      value.is_return = !value.is_return;
-    },
-
-    async fetchAccounts() {
-      const res = await axios.get('/api/account', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      this.accounts = res.data;
-      this.accounts.forEach((value, index) => {
-        value.is_return = 1;
-      });
-    },
     formatDate(date) {
       return new Date(date).toLocaleDateString('vi-VN');
     },
+
+    getDisplayType(type) {
+    const map = {
+      mbank: 'MB Bank',
+      vcb: 'Vietcombank',
+      tpbank: 'TPBank',
+      crypto: 'Crypto Wallet',
+      cash: 'Tiền mặt'
+    };
+    return map[type] || type;
+  },
+  getAccountIcon(type) {
+    const iconMap = {
+      mbank: '/images/mbbank.png',
+      vcb: '/images/vietcombank.png',
+      tpbank: '/images/tpbank.png',
+      crypto: '/images/crypto.png',
+      cash: '/images/cash.png'
+    };
+    return iconMap[type] || '/images/default-bank.png';
+  },
+
     openAddForm() {
       this.showForm = true;
       this.isEditing = false;
-      this.form = { id: null, name: '', type: '', number_card: '', expired: '', pin_code: '' };
+      this.form = { id: null, name: '', type: '', number_card: '', expired: '', password: '' };
     },
     openEditForm(account) {
       this.showForm = true;
       this.isEditing = true;
-      this.form = { ...account };
+      this.form = { ...account, password: '' };
+    },
+    async fetchAccounts() {
+      try {
+        const res = await axios.get('/api/account', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        this.accounts = res.data;
+      } catch (err) {
+        console.error(err);
+        this.toast.error('❌ Không thể tải tài khoản.');
+      }
     },
     async submitForm() {
       try {
@@ -155,34 +189,51 @@ export default {
           await axios.put(`/api/account/${this.form.id}`, payload, {
             headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
           });
-          alert('✅ Cập nhật tài khoản thành công!');
+          this.toast.success('✅ Cập nhật tài khoản thành công!');
         } else {
           await axios.post('/api/account', payload, {
             headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
           });
-          alert('✅ Thêm tài khoản thành công!');
+          this.toast.success('✅ Thêm tài khoản thành công!');
         }
         this.showForm = false;
-        this.fetchAccounts();
+        await this.fetchAccounts();
       } catch (err) {
         console.error(err);
-        alert('❌ Thao tác thất bại. Vui lòng kiểm tra dữ liệu hoặc thử lại sau.');
+        if (err.response?.status === 422) {
+          const messages = Object.values(err.response.data.errors || {}).flat().join(', ');
+          this.toast.error(`❌ Lỗi: ${messages}`);
+        } else {
+          this.toast.error('❌ Thao tác thất bại!');
+        }
       }
     },
     cancelForm() {
       this.showForm = false;
     },
     async deleteAccount(id) {
-      if (!confirm('⚠️ Bạn có chắc chắn muốn xoá tài khoản này?')) return;
+      if (!confirm('⚠️ Xác nhận xoá tài khoản?')) return;
       try {
         await axios.delete(`/api/account/${id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
         });
-        this.fetchAccounts();
-        alert('🗑️ Xoá tài khoản thành công!');
+        await this.fetchAccounts();
+        this.toast.success('🗑️ Đã xoá tài khoản!');
       } catch (err) {
         console.error(err);
-        alert('❌ Xoá thất bại!');
+        this.toast.error('❌ Không thể xoá!');
+      }
+    },
+    async setPrimary(id) {
+      try {
+        await axios.put(`/api/account/set-primary-account/${id}`, {}, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+        });
+        this.toast.success('⭐ Đã thiết lập tài khoản chính!');
+        await this.fetchAccounts();
+      } catch (err) {
+        console.error(err);
+        this.toast.error('❌ Không thể cập nhật tài khoản chính!');
       }
     }
   },
@@ -207,7 +258,7 @@ export default {
 }
 .modal-content {
   background: white;
-  border-radius: 10px;
+  border-radius: 12px;
   max-width: 500px;
   width: 100%;
 }
