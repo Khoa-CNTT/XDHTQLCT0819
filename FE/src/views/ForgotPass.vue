@@ -7,7 +7,7 @@
           alt="Logo"
           class="modal-logo"
         />
-        <h2>Quên mật khẩu</h2>
+        <h2>Đổi mật khẩu</h2>
       </div>
         <form class="auth-form" @submit.prevent="handleForgotPassword">
           <div class="form-group">
@@ -32,9 +32,6 @@
   </template>
   
   <script>
-  import axios from "axios";
-  import { useToast } from "vue-toastification";
-  
   export default {
     name: "ForgotPasswordPage",
     data() {
@@ -43,25 +40,16 @@
       };
     },
     methods: {
-      async handleForgotPassword() {
-        const toast = useToast();  // ✅ Gọi ở đây, không cần this.$toast
-
-        try {
-          const response = await axios.post("http://localhost:8000/api/forgot-password", {
-            email: this.email,
-          });
-  
-          toast.success("🎉 Yêu cầu đã được gửi! Vui lòng kiểm tra email của bạn.");
-          // this.$router.push('/login');
-        } catch (error) {
-          const errorMsg = error.response?.data?.message || "❌ Gửi yêu cầu thất bại!";
-          toast.error(errorMsg);
-        }
+      handleForgotPassword() {
+        // Logic xử lý quên mật khẩu (gửi email khôi phục)
+        console.log("Gửi yêu cầu khôi phục mật khẩu cho:", this.email);
+        // Ví dụ: Hiển thị thông báo và chuyển hướng
+        alert("Yêu cầu đã được gửi! Vui lòng kiểm tra email của bạn.");
+        // this.$router.push('/login');
       },
     },
   };
   </script>
-  
   
   <style scoped>
   /* Đảm bảo phần tử cha không bị ảnh hưởng bởi style toàn cục */

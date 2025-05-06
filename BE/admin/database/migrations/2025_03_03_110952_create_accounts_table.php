@@ -11,15 +11,19 @@ return new class extends Migration
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('name');
-            $table->string('password');
-            $table->string('number_card');
+            $table->string('name')->unique();
             $table->enum('type', [
+                'vietinbank',
                 'mbank',
+                'sacombank',
+                'crypto',
+                'vietcombank',
+                'vpbank',
+                'agribank'
             ]);
+            $table->string('number_card')->unique();
             $table->date('expired');
-            $table->date('pin_code')->nullable();
-            $table->boolean('is_primary')->default(false);
+            $table->string('pin_code');
             $table->timestamps();
         });
     }
