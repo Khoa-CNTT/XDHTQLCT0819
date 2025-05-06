@@ -4,7 +4,6 @@ import { Select, Input, TextArea } from "core/components/layout-utils"
 import { mount, render } from "enzyme"
 import * as JsonSchemaComponents from "core/plugins/json-schema-5/components/json-schema-components"
 import { foldType } from "core/plugins/json-schema-2020-12-samples/fn/index"
-import { makeIsFileUploadIntended } from "core/plugins/oas3/fn"
 
 const components = {...JsonSchemaComponents, Select, Input, TextArea}
 
@@ -13,16 +12,6 @@ const getComponentStub = (name) => {
 
   return null
 }
-
-const getSystemStub = () => ({
-  getConfigs: () => ({
-    fileUploadMediaTypes: [],
-  }),
-  fn: {
-    hasSchemaType: () => {},
-    isFileUploadIntendedOAS30: () => {},
-  },
-})
 
 describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
   describe("strings", function() {
@@ -37,7 +26,6 @@ describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
           jsonSchema202012: {
             foldType,
           },
-          isFileUploadIntended: makeIsFileUploadIntended(getSystemStub)
         },
         schema: Immutable.fromJS({
           type: "string",
@@ -65,7 +53,6 @@ describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
           jsonSchema202012: {
             foldType,
           },
-          isFileUploadIntended: makeIsFileUploadIntended(getSystemStub)
         },
         schema: Immutable.fromJS({
           type: "string",
@@ -91,7 +78,6 @@ describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
           jsonSchema202012: {
             foldType,
           },
-          isFileUploadIntended: makeIsFileUploadIntended(getSystemStub)
         },
         required: true,
         schema: Immutable.fromJS({
@@ -120,7 +106,6 @@ describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
           jsonSchema202012: {
             foldType,
           },
-          isFileUploadIntended: makeIsFileUploadIntended(getSystemStub)
         },
         schema: Immutable.fromJS({
           type: "boolean"
@@ -148,7 +133,6 @@ describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
           jsonSchema202012: {
             foldType,
           },
-          isFileUploadIntended: makeIsFileUploadIntended(getSystemStub)
         },
         schema: Immutable.fromJS({
           type: "boolean",
@@ -176,7 +160,6 @@ describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
           jsonSchema202012: {
             foldType,
           },
-          isFileUploadIntended: makeIsFileUploadIntended(getSystemStub)
         },
         schema: Immutable.fromJS({
           type: "boolean",
@@ -205,7 +188,6 @@ describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
           jsonSchema202012: {
             foldType,
           },
-          isFileUploadIntended: makeIsFileUploadIntended(getSystemStub)
         },
         required: true,
         schema: Immutable.fromJS({
@@ -237,7 +219,6 @@ describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
           jsonSchema202012: {
             foldType,
           },
-          isFileUploadIntended: makeIsFileUploadIntended(getSystemStub)
         },
         errors: List(),
         schema: Immutable.fromJS({
@@ -271,7 +252,6 @@ describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
           jsonSchema202012: {
             foldType,
           },
-          isFileUploadIntended: makeIsFileUploadIntended(getSystemStub)
         },
         schema: Immutable.fromJS({
           type: "NotARealType"
@@ -298,7 +278,6 @@ describe("<JsonSchemaComponents.JsonSchemaForm/>", function(){
           jsonSchema202012: {
             foldType,
           },
-          isFileUploadIntended: makeIsFileUploadIntended(getSystemStub)
         },
         schema: Immutable.fromJS({
           type: "NotARealType",

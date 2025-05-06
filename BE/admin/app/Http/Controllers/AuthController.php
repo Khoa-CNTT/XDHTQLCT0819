@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator;
-
 
 
 class AuthController extends Controller
@@ -48,62 +46,42 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'fullName' => 'required|string',
-                'email' => 'required|email|unique:users,email',
-                'password' => 'required|min:8',
-                'phone' => 'nullable|unique:users,phone',
-                'username' => 'required|unique:users,username',
-            ], [
-                'email.unique' => 'Email đã tồn tại. Vui lòng chọn email khác.',
-                'phone.unique' => 'Số điện thoại đã tồn tại. Vui lòng chọn số điện thoại khác.',
-                'username.unique' => 'Tên người dùng đã tồn tại. Vui lòng chọn tên người dùng khác.',
-            ]);
+        $request->validate([
+            'fullName' => 'required|string',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6',
+            'phone' => 'nullable|unique:users',
+        ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'error' => $validator->errors()->all()
-                ], 400);
-            }
+        $user = User::create([
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'fullName'  => $request->fullName,
+            'phone' => $request->phone,
+            'monthly_income' => 0,
+            'monthly_customer_spending' => 0,
+            'currency' => 'VND',
+            'isActived' => false,
+            'isBlocked' => false,
+            'address' => $request->address,
+            'avatar' => null,
+        ]);
 
-            $user = User::create([
-                'username' => $request->username,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'fullName'  => $request->fullName,
-                'phone' => $request->phone,
-                'monthly_income' => 0,
-                'monthly_customer_spending' => 0,
-                'currency' => 'VND',
-                'isActived' => false,
-                'isBlocked' => false,
-                'address' => $request->address,
-                'avatar' => null,
-            ]);
+        $token = $user->createToken('thisprivate')->plainTextToken;
 
-            $token = $user->createToken('thisprivate')->plainTextToken;
+        $verifyToken = Str::random(60);
+        $user->verify_token = $verifyToken;
+        $user->save();
 
-            $verifyToken = Str::random(60);
-            $user->verify_token = $verifyToken;
-            $user->save();
+        Mail::to($user->email)->send(new VerifyEmailMail($user, $verifyToken));
 
-            Mail::to($user->email)->send(new VerifyEmailMail($user, $verifyToken));
-
-            return response()->json([
-                'message' => 'Đăng ký thành công, vui lòng kiểm tra email để kích hoạt tài khoản.',
-                'user' => $user,
-                'token' => $token
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Có lỗi xảy ra, vui lòng thử lại.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Đăng ký thành công, vui lòng kiểm tra email để kích hoạt tài khoản.',
+            'user' => $user,
+            'token' => $token
+        ]);
     }
-
-
 
 
     /**
@@ -148,9 +126,7 @@ class AuthController extends Controller
         $user->verify_token = null;
         $user->save();
 
-        session()->flash('status', 'Tài khoản đã được kích hoạt thành công.');
-
-        return redirect()->to(env('FRONTEND_LOGIN_URL', 'http://127.0.0.1:8080/login'));
+        return response()->json(['message' => 'Tài khoản đã được kích hoạt thành công.']);
     }
 
     /**
@@ -187,16 +163,8 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
-            return response()->json(['error' => 'Email không tồn tại'], 401);
-        }
-
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json(['error' => 'Mật khẩu không chính xác'], 401);
-        }
-
-        if (!$user->isActived) {
-            return response()->json(['error' => 'Tài khoản chưa được kích hoạt'], 401);
+        if (!$user || !Hash::check($request->password, $user->password) || !$user->isActived) {
+            return response()->json(['error' => 'Không được phép đăng nhập'], 401);
         }
 
         $token = $user->createToken('API Token')->plainTextToken;
@@ -207,7 +175,7 @@ class AuthController extends Controller
         ]);
     }
 
-
+ 
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -243,7 +211,7 @@ class AuthController extends Controller
         $user->save();
 
         return response()->json([
-            'message' => 'Mật khẩu đã được thay đổi thành công'
+            'message' => 'Password changed successfully'
         ]);
     }
 
@@ -358,8 +326,7 @@ class AuthController extends Controller
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return response()->json([
-            'message' => 'Mật khẩu đã được đặt lại thành công',
-            'redirect_url' => env('FRONTEND_LOGIN_URL', 'http://127.0.0.1:8080/login')
+            'message' => 'Password reset successfully'
         ]);
     }
 }

@@ -9,11 +9,8 @@ import wrapComponents from "./wrap-components"
 import * as actions from "./actions"
 import * as selectors from "./selectors"
 import reducers from "./reducers"
-import { makeIsFileUploadIntended } from "./fn"
 
-export default function ({ getSystem }) {
-  const isFileUploadIntended = makeIsFileUploadIntended(getSystem)
-
+export default function () {
   return {
     components,
     wrapComponents,
@@ -30,10 +27,6 @@ export default function ({ getSystem }) {
         reducers,
         selectors: { ...selectors },
       },
-    },
-    fn: {
-      isFileUploadIntended,
-      isFileUploadIntendedOAS30: isFileUploadIntended,
     },
   }
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('phone')->unique()->nullable();
             $table->string('fullName')->nullable();
-            $table->enum('role', ['admin', 'user'])->default('user');
+            $table->string('role')->default('user');
             $table->boolean('isActived')->default(false);
             $table->boolean('isBlocked')->default(false);
             $table->string('address')->nullable();

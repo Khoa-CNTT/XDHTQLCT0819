@@ -9,9 +9,6 @@ import { Bar, Pie } from 'vue-chartjs';
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement } from 'chart.js';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import Toast from 'vue-toastification';
-import 'vue-toastification/dist/index.css';
-
 
 // Đăng ký các thành phần của Chart.js
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement);
@@ -25,9 +22,4 @@ app.component('Pie', Pie);
 // Đăng ký VueDatePicker toàn cục
 app.component('VueDatePicker', VueDatePicker);
 
-app.use(Toast);             
-app.use(router);
-app.use(store);
-app.mount("#app");    
-
-
+app.use(store).use(router).mount("#app");

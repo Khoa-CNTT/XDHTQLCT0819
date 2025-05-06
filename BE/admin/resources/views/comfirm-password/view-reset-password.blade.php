@@ -422,25 +422,22 @@
                 $.ajax({
                     url: '/api/reset-password',
                     type: 'POST',
-                     data: {
-                         email: email,
-                         token: token,
-                         password: password,
-                         password_confirmation: confirmPassword,
-                         _token: '{{ csrf_token() }}'
-                     },
-                     success: function (response) {
-                         alert(response.message);
-                         if (response.redirect_url) {
-                             window.location.href = response.redirect_url;
-                         }
-                     },
-                     error: function (xhr) {
-                         const error = xhr.responseJSON?.error || 'Đã có lỗi xảy ra.';
-                         alert(error);
-                     }
-});
-
+                    data: {
+                        email: email,
+                        token: token,
+                        password: password,
+                        password_confirmation: confirmPassword, 
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function (response) {
+                        alert(response.message);
+                        window.location.href = '/api/login'; 
+                    },
+                    error: function (xhr) {
+                        const error = xhr.responseJSON.error || 'Đã có lỗi xảy ra.';
+                        alert(error);
+                    }
+                });
             });
         });
     </script>

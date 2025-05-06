@@ -105,13 +105,21 @@ const RequestBody = ({
   }
   requestBodyErrors = List.isList(requestBodyErrors) ? requestBodyErrors : List()
 
-  const isFileUploadIntended = fn.isFileUploadIntended(
-    mediaTypeValue?.get("schema"),
-    contentType
-  )
+  if(!mediaTypeValue.size) {
+    return null
+  }
+
+  const isObjectContent = mediaTypeValue.getIn(["schema", "type"]) === "object"
+  const isBinaryFormat = mediaTypeValue.getIn(["schema", "format"]) === "binary"
+  const isBase64Format = mediaTypeValue.getIn(["schema", "format"]) === "base64"
 
   if(
-    isFileUploadIntended
+    contentType === "application/octet-stream"
+    || contentType.indexOf("image/") === 0
+    || contentType.indexOf("audio/") === 0
+    || contentType.indexOf("video/") === 0
+    || isBinaryFormat
+    || isBase64Format
   ) {
     const Input = getComponent("Input")
 
@@ -123,13 +131,6 @@ const RequestBody = ({
 
     return <Input type={"file"} onChange={handleFile} />
   }
-
-
-  if (!mediaTypeValue.size) {
-    return null
-  }
-
-  const isObjectContent = fn.hasSchemaType(mediaTypeValue.get("schema"), "object")
 
   if (
     isObjectContent &&
@@ -189,11 +190,11 @@ const RequestBody = ({
                 initialValue = JSON.parse(initialValue)
               }
 
-              const isFileUploadIntended = fn.isFileUploadIntended(schema)
+              const isFile = type === "string" && (format === "binary" || format === "base64")
 
               const jsonSchemaForm = <JsonSchemaForm
                 fn={fn}
-                dispatchInitialValue={!isFileUploadIntended}
+                dispatchInitialValue={!isFile}
                 schema={schema}
                 description={key}
                 getComponent={getComponent}

@@ -28,7 +28,7 @@
   .footer-after-login {
     width: 100%;
     background-color: #0ea5e9; /* Màu xanh nổi bật */
-    padding: 1px 0; /* Padding đều cho phần Footer */
+    padding: 20px 0; /* Padding đều cho phần Footer */
     text-align: center; /* Căn giữa văn bản */
     position: relative;
     z-index: 1;
@@ -36,7 +36,7 @@
   
   .footer-bottom p {
     color: #ffffff; /* Màu chữ trắng */
-    font-size: 1.1rem; /* Cỡ chữ vừa phải */
+    font-size: 1rem; /* Cỡ chữ vừa phải */
     font-weight: 400; /* Độ đậm chữ trung bình */
     margin: 0;
     padding: 10px 0; /* Padding nhẹ để văn bản dễ đọc */
@@ -61,7 +61,7 @@
     }
   
     .footer-bottom p {
-      font-size: 1.2rem; /* Giảm cỡ chữ trên các thiết bị di động */
+      font-size: 0.9rem; /* Giảm cỡ chữ trên các thiết bị di động */
     }
   }
   </style>
