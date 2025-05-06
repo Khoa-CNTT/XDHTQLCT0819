@@ -7,9 +7,7 @@ import PropTypes from "prop-types"
 import * as propTypes from "../../../prop-types"
 
 const DependentRequired = ({ dependentRequired }) => {
-  if (!Array.isArray(dependentRequired) || dependentRequired.length === 0) {
-    return null
-  }
+  if (dependentRequired.length === 0) return null
 
   return (
     <div className="json-schema-2020-12-keyword json-schema-2020-12-keyword--dependentRequired">

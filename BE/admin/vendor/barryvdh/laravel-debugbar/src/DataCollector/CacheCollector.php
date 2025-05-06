@@ -3,7 +3,6 @@
 namespace Barryvdh\Debugbar\DataCollector;
 
 use DebugBar\DataCollector\TimeDataCollector;
-use DebugBar\DataFormatter\HasDataFormatter;
 use Illuminate\Cache\Events\CacheEvent;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
@@ -13,8 +12,6 @@ use Illuminate\Events\Dispatcher;
 
 class CacheCollector extends TimeDataCollector
 {
-    use HasDataFormatter;
-
     /** @var bool */
     protected $collectValues;
 
@@ -42,11 +39,7 @@ class CacheCollector extends TimeDataCollector
 
         if (isset($params['value'])) {
             if ($this->collectValues) {
-                if ($this->isHtmlVarDumperUsed()) {
-                    $params['value'] = $this->getVarDumper()->renderVar($params['value']);
-                } else {
-                    $params['value'] = htmlspecialchars($this->getDataFormatter()->formatVar($params['value']));
-                }
+                $params['value'] = htmlspecialchars($this->getDataFormatter()->formatVar($event->value));
             } else {
                 unset($params['value']);
             }

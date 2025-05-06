@@ -55,7 +55,6 @@ import {
   isBooleanJSONSchema,
   getSchemaKeywords,
   makeGetExtensionKeywords,
-  hasSchemaType,
 } from "./fn"
 import { JSONSchemaPathContext, JSONSchemaLevelContext } from "./context"
 import {
@@ -144,7 +143,6 @@ const JSONSchema202012Plugin = ({ getSystem, fn }) => {
         useLevel,
         getSchemaKeywords,
         getExtensionKeywords: makeGetExtensionKeywords(fnAccessor),
-        hasSchemaType,
       },
     },
   }
