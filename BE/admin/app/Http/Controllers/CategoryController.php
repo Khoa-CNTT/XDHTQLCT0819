@@ -5,37 +5,31 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use OpenApi\Annotations as OA;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
-    /**
-     * @OA\Get(
-     *     path="/api/categories",
-     *     summary="Lấy danh sách danh mục",
-     *     tags={"Categories"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Danh sách danh mục",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="name", type="string"),
-     *                 @OA\Property(property="type", type="string"),
-     *                 @OA\Property(property="icon", type="string"),
-     *                 @OA\Property(property="user_id", type="integer")
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::where('user_id', Auth::id())->get();
+        $query = Category::where('user_id', Auth::id());
+
+        if ($request->has('type') && in_array($request->type, ['income', 'expense'])) {
+            $query->where('type', $request->type);
+        }
+
+        $categories = $query->get();
+
+        foreach ($categories as $category) {
+            $total = DB::table('transactions')
+                ->where('category_id', $category->id)
+                ->where('user_id', Auth::id())
+                ->sum('amount');
+
+            $category->total_amount = $total ?: 0;
+        }
+
         return response()->json($categories);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\Category;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
@@ -34,8 +35,6 @@ class TransactionController extends Controller
                 "NUMBER_MB" => $account->number_card
             ];
 
-            Log::info('MB API Request Payload:', $payload);
-
             $client = new \GuzzleHttp\Client();
             $response = $client->post('https://api-mb.dzmid.io.vn/api/transactions', [
                 'json' => $payload,
@@ -52,39 +51,34 @@ class TransactionController extends Controller
                     try {
                         $transaction_date = Carbon::createFromFormat('d/m/Y H:i:s', $transaction['transactionDate'])->format('Y-m-d');
                     } catch (\Exception $e) {
-                        Log::error('Error parsing transaction date: ' . $transaction['transactionDate']);
+                        Log::error('Lỗi khi phân tích ngày giao dịch: ' . $transaction['transactionDate']);
                         continue;
                     }
 
-                    Log::info('Saving transaction:', [
-                        'user_id' => auth()->user()->id,
-                        'account_id' => $account->id,
-                        'amount' => $amount,
-                        'transaction_date' => $transaction_date,
-                        'description' => $transaction['description'],
-                        'address' => $transaction['addDescription'] ?? null
-                    ]);
+                    $transaction_type = $this->determineTransactionType($transaction['description'], $transaction['debitAmount'], $transaction['creditAmount']);
 
+                    $category = $this->determineCategoryFromDescription($transaction['description']);
                     try {
                         Transaction::create([
                             'user_id' => auth()->user()->id,
                             'account_id' => $account->id,
-                            'category_id' => null,
+                            'category_id' => $category ? $category->id : null,
                             'amount' => $amount,
                             'transaction_date' => $transaction_date,
                             'type' => 'transfer',
+                            'transaction_type' => $transaction_type ?? null,
                             'description' => $transaction['description'],
                             'address' => $transaction['addDescription'] ?? null,
                         ]);
-                        Log::info('Transaction saved: ' . $transaction['refNo']);
+                        Log::info('Giao dịch đã được lưu: ' . $transaction['refNo']);
                     } catch (\Exception $e) {
-                        Log::error('Error saving transaction: ' . $e->getMessage());
+                        Log::error('Lỗi khi lưu giao dịch: ' . $e->getMessage());
                     }
                 }
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Transactions fetched and saved successfully.'
+                    'message' => 'Đã lấy và lưu giao dịch thành công.'
                 ]);
             }
 
@@ -93,14 +87,14 @@ class TransactionController extends Controller
                 'error' => 'Không có giao dịch nào để tải về.'
             ], 400);
         } catch (\GuzzleHttp\Exception\RequestException $e) {
-            Log::error('MB API Request Exception: ' . $e->getMessage());
+            Log::error('Lỗi yêu cầu MB API: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
                 'error' => 'Gửi yêu cầu tới MB Bank thất bại. Vui lòng thử lại sau.'
             ], 500);
         } catch (\Exception $e) {
-            Log::error('MB API General Exception: ' . $e->getMessage());
+            Log::error('Lỗi chung MB API: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -108,6 +102,7 @@ class TransactionController extends Controller
             ], 500);
         }
     }
+
 
     public function index(Request $request)
     {
@@ -131,6 +126,11 @@ class TransactionController extends Controller
                 $query->whereYear('transaction_date', '=', $year);
             }
 
+            if ($request->has('transaction_type')) {
+                $transactionType = $request->input('transaction_type');
+                $query->where('transaction_type', $transactionType);
+            }
+
             $transactions = $query->get();
 
             return response()->json([
@@ -138,7 +138,7 @@ class TransactionController extends Controller
                 'data' => $transactions
             ]);
         } catch (\Exception $e) {
-            Log::error('Lỗi khi tải giao dịch:: ' . $e->getMessage());
+            Log::error('Lỗi khi tải giao dịch: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -146,6 +146,7 @@ class TransactionController extends Controller
             ], 500);
         }
     }
+
 
     public function store(Request $request)
     {
@@ -167,6 +168,7 @@ class TransactionController extends Controller
                 'amount'           => 'required|numeric|min:0',
                 'transaction_date' => 'nullable|date',
                 'type'             => 'required|in:cash,transfer',
+                'transaction_type' => 'required|in:income,expense',
                 'address' => 'nullable|string|max:255',
                 'description'      => 'nullable|string',
             ]);
@@ -228,6 +230,7 @@ class TransactionController extends Controller
                 'amount'                => 'required|numeric|min:0',
                 'transaction_date'      => 'required|date',
                 'type'                  => 'required|in:cash,transfer',
+                'transaction_type'      => 'required|in:income,expense',
                 'address'               => 'required|string|max:255',
                 'recurring_transaction' => 'required|boolean',
                 'description'           => 'nullable|string',
@@ -277,5 +280,104 @@ class TransactionController extends Controller
                 'error' => 'Không thể lấy giao dịch tại thời điểm này. Vui lòng thử lại sau'
             ], 500);
         }
+    }
+
+
+    public function determineTransactionType($description, $debitAmount, $creditAmount)
+    {
+        if ($creditAmount > 0) {
+            return 'income';
+        }
+
+        if ($debitAmount > 0) {
+            return 'expense';
+        }
+
+        $expenseKeywords = [
+            'an',
+            'chuyen tien',
+            'mua',
+            'thanh toan',
+            'chi',
+            'thuc pham',
+            'thue',
+            'giam gia',
+            'rut tien',
+            'dich vu',
+            'thanh toán',
+            'nha hang',
+            'mua sắm',
+            'cafe',
+            'giam gia',
+            'chi tiêu',
+            'quà tặng'
+        ];
+
+        $incomeKeywords = [
+            'thuong',
+            'chuyen khoan',
+            'deposit',
+            'bonus',
+            'thu',
+            'thu nhap',
+            'thuong lai',
+            'lương',
+            'tiền thưởng',
+            'lãi suất',
+            'thanh toán',
+            'cổ tức',
+            'tiền gửi',
+            'thu nhập'
+        ];
+
+        foreach ($expenseKeywords as $keyword) {
+            if (stripos($description, $keyword) !== false) {
+                return 'expense';
+            }
+        }
+
+        foreach ($incomeKeywords as $keyword) {
+            if (stripos($description, $keyword) !== false) {
+                return 'income';
+            }
+        }
+
+        return null;
+    }
+
+
+    public function determineCategoryFromDescription($description)
+    {
+        $categoryKeywords = [
+            'an-uong' => ['an trua', 'restaurant', 'cafe', 'di an'],
+            'van-chuyen' => ['taxi', 'bus', 'xang', 'xe'],
+            'mua-sam' => ['quan ao', 'dien tu', 'mua sam'],
+            'giai-tri' => ['phim', 'su kien', 'game', 'am nhac', 'bai hat', 'hoat dong vui choi'],
+            'hoa-don' => ['tien dien', 'nuoc', 'hoa don dien thoai'],
+            'y-te' => ['thuoc', 'benh vien', 'kham'],
+            'giao-duc' => ['hoc phi', 'truong', 'khoa hoc'],
+            'dau-tu' => ['chung khoan', 'bat dong san', 'quy'],
+            'vay-muon' => ['vay', 'lai suat', 'no'],
+            'khac' => ['qua tang', 'tu thien', 'khoan khac'],
+            'thuong' => ['bonus', 'thuong', 'khen thuong'],
+            'chuyen-di' => ['tour', 'di du lich', 've may bay'],
+            'tieu-dung' => ['thuc pham', 'do uong', 'gia dung', 'mua sam tieu dung'],
+            'bao-hiem' => ['bao hiem', 'baohiem', 'bao hiem xe'],
+            'tien-mat' => ['rut tien', 'nap tien', 'thanh toan tien mat'],
+            'chuyen-khoan' => ['chuyen khoan', 'chuyen tien'],
+            'mua-online' => ['mua hang', 'mua online', 'shopping online'],
+            'thanh-toan-online' => ['pay', 'trang thanh toan', 'mua hang online'],
+            'du-lich' => ['du lich', 'phuot', 'tour du lich'],
+        ];
+
+        foreach ($categoryKeywords as $categorySlug => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (stripos($description, $keyword) !== false) {
+                    return Category::where('slug', $categorySlug)->first();
+                }
+            }
+        }
+
+        return null;
     }
 }

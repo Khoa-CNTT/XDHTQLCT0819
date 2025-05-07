@@ -15,6 +15,7 @@ class Transaction extends Model
         'category_id',
         'amount',
         'transaction_date',
+        'transaction_type',
         'type',
         'address',
         'description'

@@ -268,52 +268,6 @@
                 }
             }
         },
-        "/api/categories": {
-            "get": {
-                "tags": [
-                    "Categories"
-                ],
-                "summary": "Lấy danh sách danh mục",
-                "operationId": "3f5817a34833d0a1f4af4548dd3aeaba",
-                "responses": {
-                    "200": {
-                        "description": "Danh sách danh mục",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "id": {
-                                                "type": "integer"
-                                            },
-                                            "name": {
-                                                "type": "string"
-                                            },
-                                            "type": {
-                                                "type": "string"
-                                            },
-                                            "icon": {
-                                                "type": "string"
-                                            },
-                                            "user_id": {
-                                                "type": "integer"
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/example": {
             "get": {
                 "summary": "Lấy danh sách example",
@@ -330,10 +284,6 @@
         {
             "name": "Auth",
             "description": "Auth"
-        },
-        {
-            "name": "Categories",
-            "description": "Categories"
         }
     ],
     "components": {

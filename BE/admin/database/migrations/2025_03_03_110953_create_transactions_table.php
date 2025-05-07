@@ -16,6 +16,7 @@ return new class extends Migration
             $table->decimal('amount', 15, 2);
             $table->date('transaction_date');
             $table->enum('type', ['cash', 'transfer']);
+            $table->enum('transaction_type', ['income', 'expense'])->nullable();
             $table->string('address')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
