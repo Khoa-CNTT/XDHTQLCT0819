@@ -34,9 +34,6 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
     Route::put('/user/update-profile', [UserController::class, 'updateProfile']);
     Route::post('/user/avatar', [UserController::class, 'updateAvatar']);
 
-
-
-
     // Account
     Route::prefix('account')->group(function () {
         Route::post('/', [AccountController::class, 'store']);
