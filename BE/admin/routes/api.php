@@ -23,7 +23,7 @@ Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 // Exception 
 Route::middleware('auth:sanctum')->get('/mb-bank', [TransactionController::class, 'fetchMBBankTransactions']);
 
-Route::middleware('auth:sanctum', 'role:admin,user')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
 
@@ -52,17 +52,10 @@ Route::middleware('auth:sanctum', 'role:admin,user')->group(function () {
     Route::prefix('categories')->group(function () {
         Route::post('/', [CategoryController::class, 'store']);
         Route::get('/', [CategoryController::class, 'index']);
-        Route::get('/{id}', [CategoryController::class, 'edit']);
+        Route::get('/{id}', [CategoryController::class, 'show']);
         Route::put('/{id}', [CategoryController::class, 'update']);
         Route::delete('/{id}', [CategoryController::class, 'destroy']);
     });
-
-    Route::prefix('expenses')->group(function () {
-        Route::get('/', [ExpenseController::class, 'index']);
-        Route::post('/', [ExpenseController::class, 'store']);
-        Route::get('/category/{categoryId}', [ExpenseController::class, 'getExpensesByCategory']);
-    });
-
 
     Route::prefix('transaction')->group(function () {
         Route::get('/', [TransactionController::class, 'index']);
@@ -71,6 +64,15 @@ Route::middleware('auth:sanctum', 'role:admin,user')->group(function () {
         Route::put('/{id}', [TransactionController::class, 'update']);
         Route::delete('/{id}', [TransactionController::class, 'destroy']);
     });
+
+    // Route::prefix('expenses')->group(function () {
+    //     Route::get('/', [ExpenseController::class, 'index']);
+    //     Route::post('/', [ExpenseController::class, 'store']);
+    //     Route::get('/category/{categoryId}', [ExpenseController::class, 'getExpensesByCategory']);
+    // });
+
+
+
 
     Route::prefix('saving-goals')->group(function () {
         Route::get('/', [SavingoalController::class, 'index']);
@@ -81,11 +83,11 @@ Route::middleware('auth:sanctum', 'role:admin,user')->group(function () {
         Route::put('/{id}/add-money', [SavingoalController::class, 'updateSaveMoney']);
     });
 
-    //income
-    Route::prefix('incomes')->group(function () {
-        Route::get('/', [IncomeController::class, 'index']);
-        Route::post('/', [IncomeController::class, 'store']);
-    });
+    // //income
+    // Route::prefix('incomes')->group(function () {
+    //     Route::get('/', [IncomeController::class, 'index']);
+    //     Route::post('/', [IncomeController::class, 'store']);
+    // });
 
     /////// ---------ADMIN------------------///////
     Route::middleware(['role:admin'])->group(function () {

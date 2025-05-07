@@ -168,7 +168,7 @@ class TransactionController extends Controller
                 'amount'           => 'required|numeric|min:0',
                 'transaction_date' => 'nullable|date',
                 'type'             => 'required|in:cash,transfer',
-                'transaction_type' => 'required|in:income,expense',
+                // 'transaction_type' => 'required|in:income,expense',
                 'address' => 'nullable|string|max:255',
                 'description'      => 'nullable|string',
             ]);
