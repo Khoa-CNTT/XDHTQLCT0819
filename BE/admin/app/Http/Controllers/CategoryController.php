@@ -76,8 +76,20 @@ class CategoryController extends Controller
             return response()->json(['message' => 'Không tìm thấy danh mục'], 404);
         }
 
-        return response()->json($category);
+        $transactions = DB::table('transactions')
+            ->where('category_id', $category->id)
+            ->where('user_id', Auth::id())
+            ->get();
+
+        $totalAmount = $transactions->sum('amount');
+
+        return response()->json([
+            'category' => $category,
+            'transactions' => $transactions,
+            'total_amount' => $totalAmount,
+        ]);
     }
+
 
 
     public function update(Request $request, $id)
