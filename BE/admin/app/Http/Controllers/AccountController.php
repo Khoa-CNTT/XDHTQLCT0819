@@ -11,31 +11,6 @@ use Illuminate\Support\Facades\Validator;
 class AccountController extends Controller
 {
 
-    /**
-     * @OA\Get(
-     *     path="/api/accounts",
-     *     summary="Lấy danh sách tài khoản của người dùng hiện tại",
-     *     tags={"Account"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Danh sách tài khoản",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="string", example=1),
-     *                 @OA\Property(property="user_id", type="integer", example=1),
-     *                 @OA\Property(property="name", type="string", example="Tài khoản chính"),
-     *                 @OA\Property(property="type", type="string", example="mbank"),
-     *                 @OA\Property(property="number_card", type="integer", example=123456789),
-     *                 @OA\Property(property="expired", type="string", format="date", example="2030-12-31"),
-     *                 @OA\Property(property="password", type="string", example=1234)
-     *             )
-     *         )
-     *     )
-     * )
-     */
     public function index()
     {
         $userId = Auth::id();
@@ -47,45 +22,6 @@ class AccountController extends Controller
         return response()->json($accounts);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/accounts",
-     *     summary="Tạo tài khoản mới",
-     *     tags={"Account"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name", "type", "number_card", "expired", "password"},
-     *             @OA\Property(property="name", type="string", example="Tài khoản chính"),
-     *             @OA\Property(property="type", type="string", example="mbank"),
-     *             @OA\Property(property="number_card", type="integer", example=123456789),
-     *             @OA\Property(property="expired", type="string", format="date", example="2030-12-31"),
-     *             @OA\Property(property="password", type="string", example=1234)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Tạo tài khoản thành công",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Tạo tài khoản thành công"),
-     *             @OA\Property(property="account", type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="user_id", type="integer", example=1),
-     *                 @OA\Property(property="name", type="string", example="Tài khoản chính"),
-     *                 @OA\Property(property="type", type="string", example="mbank"),
-     *                 @OA\Property(property="number_card", type="integer", example=123456789),
-     *                 @OA\Property(property="expired", type="string", format="date", example="2030-12-31"),
-     *                 @OA\Property(property="password", type="string", example=1234)
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Dữ liệu không hợp lệ"
-     *     )
-     * )
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -118,38 +54,7 @@ class AccountController extends Controller
         return response()->json(['message' => 'Tạo tài khoản thành công', 'account' => $account]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/accounts/{id}",
-     *     summary="Xem chi tiết một tài khoản",
-     *     tags={"Account"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID của tài khoản",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Thông tin tài khoản",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="id", type="integer", example=1),
-     *             @OA\Property(property="user_id", type="integer", example=1),
-     *             @OA\Property(property="name", type="string", example="Tài khoản chính"),
-     *             @OA\Property(property="type", type="string", example="mbank"),
-     *             @OA\Property(property="number_card", type="integer", example=123456789),
-     *             @OA\Property(property="expired", type="string", format="date", example="2030-12-31"),
-     *             @OA\Property(property="password", type="string", example=1234)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Không tìm thấy tài khoản"
-     *     )
-     * )
-     */
+  
     public function edit($id)
     {
         $userId = Auth::id();
@@ -164,55 +69,7 @@ class AccountController extends Controller
         return response()->json($account);
     }
 
-    /**
-     * @OA\Put(
-     *     path="/api/accounts/{id}",
-     *     summary="Cập nhật thông tin tài khoản",
-     *     tags={"Account"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID của tài khoản",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", example="Tài khoản chính sửa đổi"),
-     *             @OA\Property(property="type", type="string", example="mbank"),
-     *             @OA\Property(property="number_card", type="integer", example=987654321),
-     *             @OA\Property(property="expired", type="string", format="date", example="2035-01-01"),
-     *             @OA\Property(property="password", type="string", example=4321)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Cập nhật tài khoản thành công",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Cập nhật tài khoản thành công"),
-     *             @OA\Property(property="account", type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="user_id", type="integer", example=1),
-     *                 @OA\Property(property="name", type="string", example="Tài khoản chính sửa đổi"),
-     *                 @OA\Property(property="type", type="string", example="mbank"),
-     *                 @OA\Property(property="number_card", type="integer", example=987654321),
-     *                 @OA\Property(property="expired", type="string", format="date", example="2035-01-01"),
-     *                 @OA\Property(property="password", type="string", example=4321)
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Không tìm thấy tài khoản"
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Dữ liệu không hợp lệ"
-     *     )
-     * )
-     */
+   
     public function update(Request $request, $id)
     {
         $userId = Auth::id();
@@ -237,32 +94,7 @@ class AccountController extends Controller
         return response()->json(['message' => 'Cập nhật tài khoản thành công', 'account' => $account]);
     }
 
-    /**
-     * @OA\Delete(
-     *     path="/api/accounts/{id}",
-     *     summary="Xóa tài khoản",
-     *     tags={"Account"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID của tài khoản",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Xóa tài khoản thành công",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Xóa tài khoản thành công")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Không tìm thấy tài khoản"
-     *     )
-     * )
-     */
+  
     public function destroy($id)
     {
         $userId = Auth::id();
@@ -277,41 +109,6 @@ class AccountController extends Controller
         $account->delete();
         return response()->json(['message' => 'Xóa tài khoản thành công']);
     }
-
-    /**
-     * @OA\Put(
-     *     path="/api/account/set-primary-account/{id}",
-     *     summary="Thiết lập tài khoản chính",
-     *     tags={"Account"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID của tài khoản cần thiết lập làm tài khoản chính",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Tài khoản đã được thiết lập thành tài khoản chính",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Tài khoản đã được thiết lập thành tài khoản chính")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Yêu cầu không hợp lệ",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="error", type="string", example="Không tìm thấy tài khoản")
-     *         )
-     *     )
-     * )
-     */
-
 
     public function setPrimaryAccount($id)
     {

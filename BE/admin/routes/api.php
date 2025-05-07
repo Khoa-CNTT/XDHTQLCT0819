@@ -9,6 +9,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExampleController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\SavingoalController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 
@@ -29,11 +30,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-    Route::get('users', [UserController::class, 'index']);
     Route::get('/user/{id}', [UserController::class, 'edit']);
     Route::put('/user/update-profile', [UserController::class, 'updateProfile']);
     Route::post('/user/avatar', [UserController::class, 'updateAvatar']);
-    Route::delete('/user/{id}', [UserController::class, 'destroy']);
+
 
 
 
@@ -59,10 +59,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('expenses')->group(function () {
         Route::get('/', [ExpenseController::class, 'index']);
-        Route::post('/', [ExpenseController::class, 'store']); // ✅ sửa lại endpoint đúng chuẩn
+        Route::post('/', [ExpenseController::class, 'store']);
         Route::get('/category/{categoryId}', [ExpenseController::class, 'getExpensesByCategory']);
     });
-    
+
 
     Route::prefix('transaction')->group(function () {
         Route::get('/', [TransactionController::class, 'index']);
@@ -72,9 +72,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [TransactionController::class, 'destroy']);
     });
 
+    Route::prefix('saving-goals')->group(function () {
+        Route::get('/', [SavingoalController::class, 'index']);
+        Route::post('/', [SavingoalController::class, 'store']);
+        Route::get('/{id}', [SavingoalController::class, 'edit']);
+        Route::put('/{id}', [SavingoalController::class, 'update']);
+        Route::delete('/{id}', [SavingoalController::class, 'destroy']);
+        Route::put('/{id}/add-money', [SavingoalController::class, 'updateSaveMoney']);
+    });
+
     //income
     Route::prefix('incomes')->group(function () {
-        Route::get('/', [IncomeController::class, 'index']); // ✅ sửa lại endpoint đúng chuẩn
-        Route::post('/', [IncomeController::class, 'store']); // ✅ sửa lại endpoint đúng chuẩn
+        Route::get('/', [IncomeController::class, 'index']);
+        Route::post('/', [IncomeController::class, 'store']);
+    });
+
+    /////// ---------ADMIN------------------///////
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/users', [UserController::class, 'index']);
+        Route::delete('/user/{id}', [UserController::class, 'destroy']);
     });
 });
