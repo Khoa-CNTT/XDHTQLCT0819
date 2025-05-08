@@ -165,13 +165,9 @@ export default {
     },
     async fetchExpensesAndIncomes() {
       try {
-        const [expensesRes, incomesRes] = await Promise.all([
-          axios.get('/api/expenses', {
-            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
-          }),
-          axios.get('/api/incomes', {
-            headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
-          })
+        const [expensesRes, incomesRes] = await Promise.all([ 
+          axios.get('/api/expenses', { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }}),
+          axios.get('/api/incomes', { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }})
         ]);
         this.expenses = expensesRes.data;
         this.incomes = incomesRes.data;
@@ -231,11 +227,7 @@ export default {
 };
 </script>
 
-<style scoped>
-/* Keep styles unchanged from your existing FE */
-</style>
 
-  
   <style scoped>
   /* Reset cơ bản */
   html, body {

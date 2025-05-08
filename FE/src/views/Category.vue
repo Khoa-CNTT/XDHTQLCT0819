@@ -105,37 +105,60 @@ export default {
     }
   },
   watch: {
-    'form.name'(val) {
-      const name = val.toLowerCase();
-      if (name.includes('ăn') || name.includes('uống')) {
-        this.form.icon = 'fas fa-utensils';
-      } else if (name.includes('xe') || name.includes('di chuyển')) {
-        this.form.icon = 'fas fa-car-side';
-      } else if (name.includes('mua') || name.includes('sắm')) {
-        this.form.icon = 'fas fa-shopping-cart';
-      } else if (name.includes('lương') || name.includes('thu nhập')) {
-        this.form.icon = 'fas fa-wallet';
-      } else if (name.includes('đầu tư')) {
-        this.form.icon = 'fas fa-chart-line';
-      } else if (name.includes('giáo dục') || name.includes('học')) {
-        this.form.icon = 'fas fa-graduation-cap';
-      } else if (name.includes('sức khoẻ') || name.includes('khám') || name.includes('thuốc')) {
-        this.form.icon = 'fas fa-heartbeat';
-      } else if (name.includes('nhà') || name.includes('thuê') || name.includes('trọ')) {
-        this.form.icon = 'fas fa-home';
-      } else if (name.includes('điện') || name.includes('nước') || name.includes('internet')) {
-        this.form.icon = 'fas fa-bolt';
-      } else if (name.includes('con cái') || name.includes('trẻ')) {
-        this.form.icon = 'fas fa-child';
-      } else if (name.includes('giải trí') || name.includes('phim') || name.includes('chơi')) {
-        this.form.icon = 'fas fa-gamepad';
-      } else if (name.includes('quần áo') || name.includes('thời trang')) {
-        this.form.icon = 'fas fa-tshirt';
-      } else {
-        this.form.icon = '';
-      }
+  'form.name'(val) {
+    const name = val.toLowerCase();
+    if (name.includes('ăn') || name.includes('uống') || name.includes('restaurant') || name.includes('cafe') || name.includes('đi ăn')) {
+      this.form.icon = 'fas fa-utensils';
+    } else if (name.includes('xe') || name.includes('di chuyển') || name.includes('taxi') || name.includes('bus') || name.includes('xăng')) {
+      this.form.icon = 'fas fa-car-side';
+    } else if (name.includes('mua') || name.includes('sắm') || name.includes('quần áo') || name.includes('điện tử')) {
+      this.form.icon = 'fas fa-shopping-cart';
+    } else if (name.includes('lương') || name.includes('thu nhập') || name.includes('wallet')) {
+      this.form.icon = 'fas fa-wallet';
+    } else if (name.includes('đầu tư') || name.includes('chứng khoán') || name.includes('bất động sản') || name.includes('quỹ')) {
+      this.form.icon = 'fas fa-chart-line';
+    } else if (name.includes('giáo dục') || name.includes('học') || name.includes('học phí') || name.includes('trường') || name.includes('khoa học')) {
+      this.form.icon = 'fas fa-graduation-cap';
+    } else if (name.includes('sức khoẻ') || name.includes('khám') || name.includes('thuốc') || name.includes('bệnh viện')) {
+      this.form.icon = 'fas fa-heartbeat';
+    } else if (name.includes('nhà') || name.includes('thuê') || name.includes('trọ')) {
+      this.form.icon = 'fas fa-home';
+    } else if (name.includes('điện') || name.includes('nước') || name.includes('internet') || name.includes('hóa đơn điện thoại')) {
+      this.form.icon = 'fas fa-bolt';
+    } else if (name.includes('con cái') || name.includes('trẻ') || name.includes('trẻ em')) {
+      this.form.icon = 'fas fa-child';
+    } else if (name.includes('giải trí') || name.includes('phim') || name.includes('chơi') || name.includes('sự kiện') || name.includes('game')) {
+      this.form.icon = 'fas fa-gamepad';
+    } else if (name.includes('quần áo') || name.includes('thời trang')) {
+      this.form.icon = 'fas fa-tshirt';
+    } else if (name.includes('quà tặng') || name.includes('từ thiện') || name.includes('khoản khác')) {
+      this.form.icon = 'fas fa-gift';
+    } else if (name.includes('bonus') || name.includes('thưởng') || name.includes('khen thưởng')) {
+      this.form.icon = 'fas fa-gift';
+    } else if (name.includes('tour') || name.includes('đi du lịch') || name.includes('vé máy bay') || name.includes('phượt')) {
+      this.form.icon = 'fas fa-plane-departure';
+    } else if (name.includes('thực phẩm') || name.includes('đồ uống') || name.includes('gia dụng') || name.includes('mua sắm tiêu dùng')) {
+      this.form.icon = 'fas fa-cocktail';
+    } else if (name.includes('bảo hiểm') || name.includes('baohiem') || name.includes('bảo hiểm xe')) {
+      this.form.icon = 'fas fa-shield-alt';
+    } else if (name.includes('rút tiền') || name.includes('nạp tiền') || name.includes('thanh toán tiền mặt')) {
+      this.form.icon = 'fas fa-money-bill-wave';
+    } else if (name.includes('chuyển khoản') || name.includes('chuyển tiền')) {
+      this.form.icon = 'fas fa-exchange-alt';
+    } else if (name.includes('mua hàng') || name.includes('mua online') || name.includes('shopping online')) {
+      this.form.icon = 'fas fa-cart-plus';
+    } else if (name.includes('pay') || name.includes('trang thanh toán') || name.includes('mua hàng online')) {
+      this.form.icon = 'fas fa-credit-card';
+    } else if (name.includes('âm nhạc') || name.includes('bài hát') || name.includes('hoạt động vui chơi')) {
+      this.form.icon = 'fas fa-music';
+    } else if (name.includes('du lịch') || name.includes('tour du lịch') || name.includes('phượt')) {
+      this.form.icon = 'fas fa-umbrella-beach';
+    } else {
+      this.form.icon = '';
     }
-  },
+  }
+}
+,
   methods: {
     async fetchCategories() {
       const res = await axios.get('/api/categories', {

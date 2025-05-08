@@ -8,107 +8,241 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use App\Models\Expense;
+use App\Models\Income;
+use App\Models\Category; 
 
 class TransactionController extends Controller
 {
 
+    // public function fetchMBBankTransactions()
+    // {
+    //     try {
+    //         $account = Account::where('user_id', auth()->user()->id)
+    //             ->where('is_primary', true)
+    //             ->first();
+
+    //         if (!$account) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'error' => 'Không tìm thấy tài khoản chính. Vui lòng thiết lập tài khoản chính.'
+    //             ], 400);
+    //         }
+    //         // Tạo payload để gọi API MB Bank
+    //         $payload = [
+    //             "USERNAME"  => $account->number_card,
+    //             "PASSWORD"  => $account->password,
+    //             "DAY_BEGIN" => Carbon::today()->format('d/m/Y'),
+    //             "DAY_END"   => Carbon::today()->format('d/m/Y'),
+    //             "NUMBER_MB" => $account->number_card
+    //         ];
+
+    //         Log::info('MB API Request Payload:', $payload);
+
+    //         $client = new \GuzzleHttp\Client();
+    //         $response = $client->post('https://api-mb.dzmid.io.vn/api/transactions', [
+    //             'json' => $payload,
+    //         ]);
+
+    //         $data = json_decode($response->getBody(), true);
+
+    //         if ($data['success'] && isset($data['data']['transactionHistoryList'])) {
+    //             $transactions = $data['data']['transactionHistoryList'];
+
+    //             foreach ($transactions as $transaction) {
+    //                 $amount = (float)($transaction['debitAmount'] ?: $transaction['creditAmount']);
+    //                  // Định dạng ngày giao dịch từ API MB Bank
+    //                 try {
+    //                     $transaction_date = Carbon::createFromFormat('d/m/Y H:i:s', $transaction['transactionDate'])->format('Y-m-d');
+    //                 } catch (\Exception $e) {
+    //                     Log::error('Error parsing transaction date: ' . $transaction['transactionDate']);
+    //                     continue;
+    //                 }
+    //                   // Log thông tin trước khi lưu
+    //                 Log::info('Saving transaction:', [
+    //                     'user_id' => auth()->user()->id,
+    //                     'account_id' => $account->id,
+    //                     'amount' => $amount,
+    //                     'transaction_date' => $transaction_date,
+    //                     'description' => $transaction['description'],
+    //                     'address' => $transaction['addDescription'] ?? null
+    //                 ]);
+
+    //                 try {
+    //                     Transaction::create([
+    //                         'user_id' => auth()->user()->id,
+    //                         'account_id' => $account->id,
+    //                         'category_id' => null,
+    //                         'amount' => $amount,
+    //                         'transaction_date' => $transaction_date,
+    //                         'type' => 'transfer',
+    //                         'description' => $transaction['description'],
+    //                         'address' => $transaction['addDescription'] ?? null,
+    //                     ]);
+    //                     Log::info('Transaction saved: ' . $transaction['refNo']);
+    //                 } catch (\Exception $e) {
+    //                     Log::error('Error saving transaction: ' . $e->getMessage());
+    //                 }
+    //             }
+
+    //             return response()->json([
+    //                 'success' => true,
+    //                 'message' => 'Transactions fetched and saved successfully.'
+    //             ]);
+    //         }
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'error' => 'Không có giao dịch nào để tải về.'
+    //         ], 400);
+    //     } catch (\GuzzleHttp\Exception\RequestException $e) {
+    //         Log::error('MB API Request Exception: ' . $e->getMessage());
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'error' => 'Gửi yêu cầu tới MB Bank thất bại. Vui lòng thử lại sau.'
+    //         ], 500);
+    //     } catch (\Exception $e) {
+    //         Log::error('MB API General Exception: ' . $e->getMessage());
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'error' => 'Có lỗi xảy ra. Vui lòng thử lại sau.'
+    //         ], 500);
+    //     }
+    // }
+
     public function fetchMBBankTransactions()
-    {
-        try {
-            $account = Account::where('user_id', auth()->user()->id)
-                ->where('is_primary', true)
-                ->first();
+{
+    try {
+        $account = Account::where('user_id', auth()->user()->id)
+            ->where('is_primary', true)
+            ->first();
 
-            if (!$account) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Không tìm thấy tài khoản chính. Vui lòng thiết lập tài khoản chính.'
-                ], 400);
-            }
+        if (!$account) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Không tìm thấy tài khoản chính. Vui lòng thiết lập tài khoản chính.'
+            ], 400);
+        }
 
-            $payload = [
-                "USERNAME"  => $account->number_card,
-                "PASSWORD"  => $account->password,
-                "DAY_BEGIN" => Carbon::today()->format('d/m/Y'),
-                "DAY_END"   => Carbon::today()->format('d/m/Y'),
-                "NUMBER_MB" => $account->number_card
-            ];
+        $payload = [
+            "USERNAME"  => $account->number_card,
+            "PASSWORD"  => $account->password,
+            "DAY_BEGIN" => Carbon::today()->format('d/m/Y'),
+            "DAY_END"   => Carbon::today()->format('d/m/Y'),
+            "NUMBER_MB" => $account->number_card
+        ];
 
-            Log::info('MB API Request Payload:', $payload);
+        $client = new \GuzzleHttp\Client();
+        $response = $client->post('https://api-mb.dzmid.io.vn/api/transactions', [
+            'json' => $payload,
+        ]);
 
-            $client = new \GuzzleHttp\Client();
-            $response = $client->post('https://api-mb.dzmid.io.vn/api/transactions', [
-                'json' => $payload,
-            ]);
+        $data = json_decode($response->getBody(), true);
 
-            $data = json_decode($response->getBody(), true);
+        if ($data['success'] && isset($data['data']['transactionHistoryList'])) {
+            $transactions = $data['data']['transactionHistoryList'];
 
-            if ($data['success'] && isset($data['data']['transactionHistoryList'])) {
-                $transactions = $data['data']['transactionHistoryList'];
+            foreach ($transactions as $transaction) {
+                $amount = (float)($transaction['debitAmount'] ?: $transaction['creditAmount']);
+                $transaction_date = Carbon::createFromFormat('d/m/Y H:i:s', $transaction['transactionDate'])->format('Y-m-d');
 
-                foreach ($transactions as $transaction) {
-                    $amount = (float)($transaction['debitAmount'] ?: $transaction['creditAmount']);
+                $categorySlug = $this->categorizeTransaction($transaction['description']);
+                $categoryId = Category::where('slug', $categorySlug)->first()->id ?? null;
 
-                    try {
-                        $transaction_date = Carbon::createFromFormat('d/m/Y H:i:s', $transaction['transactionDate'])->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        Log::error('Error parsing transaction date: ' . $transaction['transactionDate']);
-                        continue;
-                    }
-
-                    Log::info('Saving transaction:', [
-                        'user_id' => auth()->user()->id,
-                        'account_id' => $account->id,
-                        'amount' => $amount,
-                        'transaction_date' => $transaction_date,
-                        'description' => $transaction['description'],
-                        'address' => $transaction['addDescription'] ?? null
-                    ]);
-
-                    try {
-                        Transaction::create([
-                            'user_id' => auth()->user()->id,
-                            'account_id' => $account->id,
-                            'category_id' => null,
-                            'amount' => $amount,
-                            'transaction_date' => $transaction_date,
-                            'type' => 'transfer',
-                            'description' => $transaction['description'],
-                            'address' => $transaction['addDescription'] ?? null,
-                        ]);
-                        Log::info('Transaction saved: ' . $transaction['refNo']);
-                    } catch (\Exception $e) {
-                        Log::error('Error saving transaction: ' . $e->getMessage());
-                    }
-                }
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Transactions fetched and saved successfully.'
+                Transaction::create([
+                    'user_id' => auth()->user()->id,
+                    'account_id' => $account->id,
+                    'category_id' => $categoryId,
+                    'amount' => $amount,
+                    'transaction_date' => $transaction_date,
+                    'type' => ($transaction['debitAmount'] > 0) ? 'cash' : 'transfer',
+                    'description' => $transaction['description'],
+                    'address' => $transaction['addDescription'] ?? null,
                 ]);
             }
 
             return response()->json([
-                'success' => false,
-                'error' => 'Không có giao dịch nào để tải về.'
-            ], 400);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
-            Log::error('MB API Request Exception: ' . $e->getMessage());
+                'success' => true,
+                'message' => 'Transactions fetched and saved successfully.'
+            ]);
+        }
 
-            return response()->json([
-                'success' => false,
-                'error' => 'Gửi yêu cầu tới MB Bank thất bại. Vui lòng thử lại sau.'
-            ], 500);
-        } catch (\Exception $e) {
-            Log::error('MB API General Exception: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'error' => 'Không có giao dịch nào để tải về.'
+        ], 400);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => 'Có lỗi xảy ra. Vui lòng thử lại sau.'
+        ], 500);
+    }
+}
 
-            return response()->json([
-                'success' => false,
-                'error' => 'Có lỗi xảy ra. Vui lòng thử lại sau.'
-            ], 500);
+private function categorizeTransaction($description)
+{
+    $categoryKeywords = [
+        'an-uong' => ['an trua', 'restaurant', 'cafe', 'di an'],
+        'van-chuyen' => ['taxi', 'bus', 'xang', 'xe'],
+        'mua-sam' => ['quan ao', 'dien tu', 'mua sam'],
+        'giai-tri' => ['phim', 'su kien', 'game'],
+        'hoa-don' => ['tien dien', 'nuoc', 'hoa don dien thoai'],
+        'y-te' => ['thuoc', 'benh vien', 'kham'],
+        'giao-duc' => ['hoc phi', 'truong', 'khoa hoc'],
+        'dau-tu' => ['chung khoan', 'bat dong san', 'quy'],
+        'vay-muon' => ['vay', 'lai suat', 'no'],
+        'khac' => ['qua tang', 'tu thien', 'khoan khac'],
+        'thuong' => ['bonus', 'thuong', 'khen thuong'],
+        'chuyen-di' => ['tour', 'di du lich', 've may bay'],
+        'tieu-dung' => ['thuc pham', 'do uong', 'gia dung', 'mua sam tieu dung'],
+        'bao-hiem' => ['bao hiem', 'baohiem', 'bao hiem xe'],
+        'tien-mat' => ['rut tien', 'nap tien', 'thanh toan tien mat'],
+        'chuyen-khoan' => ['chuyen khoan', 'chuyen tien'],
+        'mua-online' => ['mua hang', 'mua online', 'shopping online'],
+        'thanh-toan-online' => ['pay', 'trang thanh toan', 'mua hang online'],
+        'giai-tri' => ['am nhac', 'bai hat', 'hoat dong vui choi'],
+        'du-lich' => ['du lich', 'phuot', 'tour du lich'],
+    ];
+
+    foreach ($categoryKeywords as $categorySlug => $keywords) {
+        foreach ($keywords as $keyword) {
+            if (strpos(strtolower($description), strtolower($keyword)) !== false) {
+                return $categorySlug;
+            }
         }
     }
 
+    return 'khac'; // Default category if no match
+}
+
+    
+    
+   
+    private function saveTransaction($transaction, $category)
+    {
+        // Lấy category_id từ bảng categories
+        $categoryId = Category::where('slug', $category)->first()->id ?? null;
+    
+        $transactionData = [
+            'user_id' => auth()->user()->id,
+            'category_id' => $categoryId, // Gán category_id vào giao dịch
+            'amount' => (float)($transaction['debitAmount'] ?: $transaction['creditAmount']),
+            'description' => $transaction['description'],
+            'transaction_date' => Carbon::createFromFormat('d/m/Y H:i:s', $transaction['transactionDate'])->format('Y-m-d'),
+            'address' => $transaction['addDescription'] ?? null,
+            'type' => ($transaction['debitAmount'] > 0) ? 'cash' : 'transfer',
+        ];
+    
+        // Lưu vào bảng chi tiêu hoặc thu nhập tùy thuộc vào loại giao dịch
+        if ($transaction['debitAmount'] > 0) {
+            Expense::create($transactionData);
+        } elseif ($transaction['creditAmount'] > 0) {
+            Income::create($transactionData);
+        }
+    }
+    
 
 
 
@@ -149,6 +283,7 @@ class TransactionController extends Controller
      *     @OA\Response(response=500, description="Lỗi hệ thống")
      * )
      */
+    
 
     public function index(Request $request)
     {
