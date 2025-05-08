@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -108,38 +109,38 @@ class TransactionController extends Controller
     {
         try {
             $userId = auth()->id();
-
             $query = Transaction::where('user_id', $userId);
-
+            
             if ($request->has('date')) {
                 $date = Carbon::parse($request->input('date'))->format('Y-m-d');
                 $query->whereDate('transaction_date', $date);
             }
-
-            if ($request->has('month')) {
-                $month = Carbon::parse($request->input('month'))->format('Y-m');
-                $query->whereMonth('transaction_date', '=', $month);
-            }
-
-            if ($request->has('year')) {
+            
+            if ($request->has('month') && $request->has('year')) {
+                $month = $request->input('month');
                 $year = $request->input('year');
-                $query->whereYear('transaction_date', '=', $year);
+                $query->whereMonth('transaction_date', $month)
+                      ->whereYear('transaction_date', $year);
             }
-
+            else if ($request->has('year')) {
+                $year = $request->input('year');
+                $query->whereYear('transaction_date', $year);
+            }
+            
             if ($request->has('transaction_type')) {
                 $transactionType = $request->input('transaction_type');
                 $query->where('transaction_type', $transactionType);
             }
-
+            
             $transactions = $query->get();
-
+            
             return response()->json([
                 'success' => true,
                 'data' => $transactions
             ]);
         } catch (\Exception $e) {
             Log::error('Lỗi khi tải giao dịch: ' . $e->getMessage());
-
+            
             return response()->json([
                 'success' => false,
                 'error' => 'Không thể lấy giao dịch tại thời điểm này. Vui lòng thử lại sau'
@@ -151,25 +152,14 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         try {
-            $account = Account::where('user_id', auth()->user()->id)
-                ->where('is_primary', true)
-                ->first();
-
-            if (!$account) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Không tìm thấy tài khoản chính. Vui lòng thiết lập tài khoản chính.'
-                ], 400);
-            }
-
             $validator = Validator::make($request->all(), [
                 'account_id'       => 'nullable|exists:accounts,id',
                 'category_id'      => 'nullable|exists:categories,id',
                 'amount'           => 'required|numeric|min:0',
                 'transaction_date' => 'nullable|date',
+                'transaction_type' => 'nullable|in:income,expense',
                 'type'             => 'required|in:cash,transfer',
-                // 'transaction_type' => 'required|in:income,expense',
-                'address' => 'nullable|string|max:255',
+                'address'          => 'nullable|string|max:255',
                 'description'      => 'nullable|string',
             ]);
 
@@ -183,20 +173,39 @@ class TransactionController extends Controller
 
             $data = $validator->validated();
             $data['user_id'] = auth()->user()->id;
-            $data['transaction_date'] = $data['transaction_date'] ?? now()->toDateString();
-            $data['account_id'] = $account->id;
+            $data['transaction_date'] = Carbon::now()->addDay()->toDateString();
+
+
+            $user = User::find(auth()->id());
+
+            if ($request->category_id) {
+                $category = Category::find($request->category_id);
+                if ($category) {
+                    $data['transaction_type'] = $category->type;
+                    if ($category->type === 'income') {
+                        $user->monthly_customer_spending += $request->amount;
+                    } else if ($category->type === 'expense') {
+                        $user->monthly_customer_spending -= $request->amount;
+                    }
+                    $user->save();
+                }
+            }
+
             $transaction = Transaction::create($data);
+            $transaction->created_at = Carbon::parse($transaction->created_at)->addDay();
+            $transaction->save();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Thêm giao dịch thành công.',
-                'data'    => $transaction
+                'data'    => $transaction,
+                'monthly_customer_spending' => $user->monthly_customer_spending,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage(),
-                'message' => 'Thêm giao dịch thành công.',
+                'message' => 'Đã xảy ra lỗi khi thêm giao dịch.',
             ], 500);
         }
     }

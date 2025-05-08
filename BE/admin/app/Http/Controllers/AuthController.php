@@ -201,7 +201,8 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Đăng nhập thành công',
-            'token' => $token
+            'token' => $token,
+            'user' => $user
         ]);
     }
 
@@ -358,5 +359,6 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Mật khẩu đã được đặt lại thành công',
             'redirect_url' => env('FRONTEND_LOGIN_URL', 'http://127.0.0.1:8080/login')
-        ]);    }
+        ]);
+    }
 }

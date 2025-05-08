@@ -33,6 +33,35 @@ class CategoryController extends Controller
         return response()->json($categories);
     }
 
+    public function showHome(Request $request)
+    {
+        $type = $request->type;
+        $name = $request->name;
+
+        $query = DB::table('categories')
+            ->join('transactions', 'categories.id', '=', 'transactions.category_id')
+            ->where('categories.user_id', Auth::id())
+            ->where('transactions.user_id', Auth::id())
+            ->select('categories.*', DB::raw('SUM(transactions.amount) as total_amount'))
+            ->groupBy('categories.id', 'categories.name', 'categories.type', 'categories.icon', 'categories.slug', 'categories.user_id', 'categories.created_at', 'categories.updated_at');
+
+        if ($request->has('type') && in_array($type, ['income', 'expense'])) {
+            $query->where('categories.type', $type);
+        }
+
+        if ($request->has('name')) {
+            $query->where('categories.name', 'like', '%' . $name . '%');
+        }
+
+        $query->having('total_amount', '>', 0);
+
+        $categories = $query->get();
+
+        return response()->json($categories);
+    }
+
+
+
 
     public function store(Request $request)
     {

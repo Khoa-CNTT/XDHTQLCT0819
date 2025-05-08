@@ -76,4 +76,34 @@ class UserController extends Controller
 
         return response()->json($user);
     }
+
+    public function updateIncome(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        $authUser = auth()->user();
+
+        if (!$authUser) {
+            return response()->json(['message' => 'Không xác thực người dùng'], 401);
+        }
+
+        $user = User::find($authUser->id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Người dùng không tồn tại'], 404);
+        }
+
+        $user->monthly_income += $request->amount;
+        $user->monthly_customer_spending += $request->amount;
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'Cập nhật thu nhập thành công',
+            'monthly_income' => $user->monthly_income,
+            'monthly_customer_spending' => $user->monthly_customer_spending,
+        ]);
+    }
 }

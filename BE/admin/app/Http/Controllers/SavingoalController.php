@@ -212,10 +212,8 @@ class SavingoalController extends Controller
             $goal = Savingoal::where('user_id', auth()->id())->findOrFail($id);
 
             $goal->save_money += $request->amount;
-            $goal->save();
-
             $goal->savings_percentage  = round(($goal->save_money / $goal->target) * 100, 2);
-
+            $goal->save();
             return response()->json([
                 'success' => true,
                 'message' => 'Cập nhật số tiền tiết kiệm thành công.',

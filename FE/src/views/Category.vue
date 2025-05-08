@@ -460,7 +460,7 @@ export default {
       }
 
       try {
-        await axios.post("/api/transaction", this.newTransaction, {
+       const res =  await axios.post("/api/transaction", this.newTransaction, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
           },
@@ -470,7 +470,7 @@ export default {
         this.closeAddTransactionModal();
         await this.fetchCategories();
       } catch (error) {
-        toast.error("Error adding transaction:", error);
+        toast.error(error);
         toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
       }
     },
@@ -574,7 +574,7 @@ export default {
 
 .modal-content p:nth-child(4) strong + span,
 .modal-content p:nth-child(4) {
-  color: #047857;
+  color: #e72121;
   font-weight: 700;
 }
 
