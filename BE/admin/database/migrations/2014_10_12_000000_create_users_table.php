@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('role', ['admin', 'user'])->default('user');
             $table->boolean('isActived')->default(false);
             $table->boolean('isBlocked')->default(false);
+            $table->boolean('status')->default(false);
             $table->string('address')->nullable();
             $table->double('monthly_income')->default(0);
             $table->double('monthly_customer_spending')->default(0);

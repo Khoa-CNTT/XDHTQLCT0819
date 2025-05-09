@@ -12,29 +12,61 @@ class UserController extends Controller
 
     public function index()
     {
-        return response()->json(User::all());
+        return response()->json(User::where('role', 'user')->paginate(10));
     }
-
     public function updateProfile(Request $request)
     {
         $user = auth()->user();
 
-        $request->validate([
-            'username' => 'string|max:255',
-            'email' => 'email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:15',
-            'fullName' => 'string|max:255',
-            'address' => 'nullable|string|max:255',
-        ]);
+        $rules = [];
 
-        User::where('id', $user->id)->update($request->only(['username', 'email', 'phone', 'fullName', 'address']));
+        if ($request->has('username')) {
+            $rules['username'] = 'string|max:255|unique:users,username,' . $user->id;
+        }
+
+        if ($request->has('phone')) {
+            $rules['phone'] = 'nullable|string|max:15|unique:users,phone,' . $user->id;
+        }
+
+        if ($request->has('fullName')) {
+            $rules['fullName'] = 'string|max:255';
+        }
+
+        if ($request->has('address')) {
+            $rules['address'] = 'nullable|string|max:255';
+        }
+
+        $messages = [
+            'username.string' => 'Tên người dùng phải là chuỗi.',
+            'username.max' => 'Tên người dùng không được vượt quá 255 ký tự.',
+            'username.unique' => 'Tên người dùng đã tồn tại.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.unique' => 'Email đã tồn tại.',
+            'phone.string' => 'Số điện thoại phải là chuỗi.',
+            'phone.max' => 'Số điện thoại không được vượt quá 15 ký tự.',
+            'phone.unique' => 'Số điện thoại đã tồn tại.',
+            'fullName.string' => 'Họ tên phải là chuỗi.',
+            'fullName.max' => 'Họ tên không được vượt quá 255 ký tự.',
+            'address.string' => 'Địa chỉ phải là chuỗi.',
+            'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
+        ];
+
+        $validatedData = $request->validate($rules, $messages);
+
+        User::where('id', $user->id)->update($validatedData);
 
         $user = User::find($user->id);
 
-        return response()->json(['message' => 'Cập nhật hồ sơ thành công', 'user' => $user]);
+        return response()->json([
+            'message' => 'Cập nhật hồ sơ thành công',
+            'user' => $user
+        ]);
     }
 
-    public function updateAvatar(Request $request)
+
+
+
+    public function updateAvatarProfile(Request $request)
     {
         $request->validate([
             'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -54,6 +86,28 @@ class UserController extends Controller
     }
 
 
+
+    public function updateAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $user = User::find($request->id);
+
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $user->avatar = $path;
+        $user->save();
+
+        return response()->json(['message' => 'Cập nhật ảnh đại diện thành công', 'avatar' => $path]);
+    }
+
+
+
     public function destroy($id)
     {
         $user = User::find($id);
@@ -65,6 +119,58 @@ class UserController extends Controller
         return response()->json(['message' => 'Xóa người dùng thành công']);
     }
 
+
+
+    public function update(Request $request)
+    {
+        $user = User::find($request->id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Người dùng không tồn tại.'], 404);
+        }
+
+        $rules = [];
+
+        if ($request->has('username')) {
+            $rules['username'] = 'string|max:255|unique:users,username,' . $user->id;
+        }
+
+        if ($request->has('phone')) {
+            $rules['phone'] = 'nullable|string|max:15|unique:users,phone,' . $user->id;
+        }
+
+        if ($request->has('fullName')) {
+            $rules['fullName'] = 'string|max:255';
+        }
+
+        if ($request->has('address')) {
+            $rules['address'] = 'nullable|string|max:255';
+        }
+
+        $messages = [
+            'username.string' => 'Tên người dùng phải là chuỗi.',
+            'username.max' => 'Tên người dùng không được vượt quá 255 ký tự.',
+            'username.unique' => 'Tên người dùng đã tồn tại.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.unique' => 'Email đã tồn tại.',
+            'phone.string' => 'Số điện thoại phải là chuỗi.',
+            'phone.max' => 'Số điện thoại không được vượt quá 15 ký tự.',
+            'phone.unique' => 'Số điện thoại đã tồn tại.',
+            'fullName.string' => 'Họ tên phải là chuỗi.',
+            'fullName.max' => 'Họ tên không được vượt quá 255 ký tự.',
+            'address.string' => 'Địa chỉ phải là chuỗi.',
+            'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
+        ];
+
+        $validatedData = $request->validate($rules, $messages);
+
+        $user->update($validatedData);
+
+        return response()->json([
+            'message' => 'Cập nhật hồ sơ thành công',
+            'user' => $user
+        ]);
+    }
 
 
     public function edit($id)
@@ -105,5 +211,19 @@ class UserController extends Controller
             'monthly_income' => $user->monthly_income,
             'monthly_customer_spending' => $user->monthly_customer_spending,
         ]);
+    }
+
+    public function block($id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->isBlocked = !$user->isBlocked;
+        $user->status = false;
+
+        $user->save();
+
+        $message = $user->isBlocked ? 'Người dùng đã bị khóa.' : 'Người dùng đã được mở khóa.';
+
+        return response()->json(['message' => $message], 200);
     }
 }

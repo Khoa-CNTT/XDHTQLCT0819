@@ -36,11 +36,14 @@
           </div>
         </div>
         <div class="auth-links">
-          <p><router-link to="/forgot-password">Quên mật khẩu?</router-link></p>  
+          <p><router-link to="/forgot-password">Quên mật khẩu?</router-link></p>
         </div>
         <button type="submit" class="btn-primary">Đăng nhập</button>
         <div class="auth-links">
-          <p>Chưa có tài khoản? <router-link to="/sign-up">Đăng ký ngay</router-link></p>   
+          <p>
+            Chưa có tài khoản?
+            <router-link to="/sign-up">Đăng ký ngay</router-link>
+          </p>
         </div>
       </form>
     </div>
@@ -48,8 +51,8 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { useToast } from 'vue-toastification';
+import axios from "axios";
+import { useToast } from "vue-toastification";
 
 export default {
   name: "LoginPage",
@@ -82,9 +85,15 @@ export default {
         localStorage.setItem("user", JSON.stringify(data.user));
 
         toast.success("🎉 Đăng nhập thành công!");
-        this.$router.push("/quan-li-chi-tieu");
+        if (data.user.role === "admin") {
+          this.$router.push("/quan-ly-nguoi-dung");
+        } else {
+          this.$router.push("/quan-li-chi-tieu");
+        }
       } catch (error) {
-        const errorMsg = error.response?.data?.error || "❌ Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.";
+        const errorMsg =
+          error.response?.data?.error ||
+          "❌ Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.";
         toast.error(errorMsg);
         console.error(error);
       }
@@ -93,16 +102,15 @@ export default {
 };
 </script>
 
-
-
 <style scoped>
 /* Reset cơ bản */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
   background-color: #f0f2f5;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Phần section */
@@ -112,23 +120,23 @@ html, body {
   align-items: center;
   justify-content: center;
   background-color: #f0f2f5;
-  background-image: url('/src/assets/dn.jpg');
+  background-image: url("/src/assets/dn.jpg");
 }
 .section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 249, 249, 0.3);
-    backdrop-filter: blur(12px);
-    z-index: 1;
-  }
-  .section > * {
-    position: relative;
-    z-index: 2;
-  }
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 249, 249, 0.3);
+  backdrop-filter: blur(12px);
+  z-index: 1;
+}
+.section > * {
+  position: relative;
+  z-index: 2;
+}
 /* Wrapper chứa form */
 .auth-wrapper {
   background-color: white;

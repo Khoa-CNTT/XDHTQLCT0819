@@ -11,54 +11,99 @@
       </div>
 
       <form class="auth-form" @submit.prevent="handleRegister">
-        <div class="form-group">
-          <label for="username">Tên đăng nhập</label>
-          <input type="text" id="username" v-model="form.username" required placeholder="Tên đăng nhập" />
-        </div>
-        <div class="form-group">
-          <label for="fullName">Họ và tên</label>
-          <input type="text" id="fullName" v-model="form.fullName" required placeholder="Họ và tên" />
-        </div>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" v-model="form.email" required placeholder="Email" />
-        </div>
-        <div class="form-group">
-          <label for="phone">Số điện thoại</label>
-          <input type="text" id="phone" v-model="form.phone" placeholder="Số điện thoại" />
-        </div>
-        <div class="form-group">
-          <label for="address">Địa chỉ</label>
-          <input type="text" id="address" v-model="form.address" placeholder="Địa chỉ" />
-        </div>
-        <div class="form-group password-group">
-          <label for="password">Mật khẩu</label>
-          <div class="password-wrapper">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="username">Tên đăng nhập</label>
             <input
-              :type="showPassword ? 'text' : 'password'"
-              id="password"
-              v-model="form.password"
+              type="text"
+              id="username"
+              v-model="form.username"
               required
-              placeholder="Mật khẩu"
+              placeholder="Tên đăng nhập"
             />
-            <span class="toggle-password" @click="togglePassword">
-              <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-            </span>
+          </div>
+          <div class="form-group">
+            <label for="fullName">Họ và tên</label>
+            <input
+              type="text"
+              id="fullName"
+              v-model="form.fullName"
+              required
+              placeholder="Họ và tên"
+            />
           </div>
         </div>
-        <div class="form-group password-group">
-          <label for="confirmPassword">Xác nhận mật khẩu</label>
-          <div class="password-wrapper">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email</label>
             <input
-              :type="showConfirmPassword ? 'text' : 'password'"
-              id="confirmPassword"
-              v-model="confirmPassword"
+              type="email"
+              id="email"
+              v-model="form.email"
               required
-              placeholder="Xác nhận mật khẩu"
+              placeholder="Email"
             />
-            <span class="toggle-password" @click="toggleConfirmPassword">
-              <i :class="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-            </span>
+          </div>
+          <div class="form-group">
+            <label for="phone">Số điện thoại</label>
+            <input
+              type="text"
+              id="phone"
+              v-model="form.phone"
+              placeholder="Số điện thoại"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="address">Địa chỉ</label>
+            <input
+              type="text"
+              id="address"
+              v-model="form.address"
+              placeholder="Địa chỉ"
+            />
+          </div>
+          <div class="form-group password-group">
+            <label for="password">Mật khẩu</label>
+            <div class="password-wrapper">
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                id="password"
+                v-model="form.password"
+                required
+                placeholder="Mật khẩu"
+              />
+              <span class="toggle-password" @click="togglePassword">
+                <i
+                  :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"
+                ></i>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group password-group" style="width: 100%">
+            <label for="confirmPassword">Xác nhận mật khẩu</label>
+            <div class="password-wrapper">
+              <input
+                :type="showConfirmPassword ? 'text' : 'password'"
+                id="confirmPassword"
+                v-model="confirmPassword"
+                required
+                placeholder="Xác nhận mật khẩu"
+              />
+              <span class="toggle-password" @click="toggleConfirmPassword">
+                <i
+                  :class="
+                    showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'
+                  "
+                ></i>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -66,7 +111,10 @@
       </form>
 
       <div class="auth-links">
-        <p>Bạn đã có tài khoản? <router-link to="/login">Đăng nhập ngay</router-link></p>
+        <p>
+          Bạn đã có tài khoản?
+          <router-link to="/login">Đăng nhập ngay</router-link>
+        </p>
       </div>
     </div>
   </section>
@@ -91,11 +139,11 @@ export default {
       confirmPassword: "",
       showPassword: false,
       showConfirmPassword: false,
-      toast: null, // 👈 Thêm toast vào data
+      toast: null,
     };
   },
   created() {
-    this.toast = useToast(); // 👈 Khởi tạo toast ở đây để dùng được trong methods
+    this.toast = useToast();
   },
   methods: {
     togglePassword() {
@@ -111,19 +159,26 @@ export default {
       }
 
       try {
-        const response = await axios.post("http://localhost:8000/api/register", this.form, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await axios.post(
+          "http://localhost:8000/api/register",
+          this.form,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-        this.toast.success("🎉 Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
+        this.toast.success(
+          "🎉 Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản."
+        );
         this.$router.push("/login");
       } catch (error) {
         if (error.response && error.response.data) {
           const data = error.response.data;
-          const errorMsg = data.errors
-            ? Object.values(data.errors).flat().join("\n")
+
+          const errorMsg = data.error
+            ? Object.values(data.error).flat().join("\n")
             : data.message || "❌ Đăng ký thất bại!";
           this.toast.error(errorMsg);
         } else {
@@ -135,204 +190,212 @@ export default {
 };
 </script>
 
-
-
-
-
-  <style scoped>
-  /* Đảm bảo phần tử cha không bị ảnh hưởng bởi style toàn cục */
-  html, body {
+<style scoped>
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
   background-color: #f0f2f5;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
 }
 
-/* Phần section */
 .section {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background-color: #f0f2f5;
-  background-image: url('/src/assets/dn.jpg');
+  background-image: url("/src/assets/dn.jpg");
+  min-height: 100vh;
+  padding: 3rem 1rem;
 }
 .section::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width:  100vw;
-    height: 100vh;
-    background: rgba(255, 249, 249, 0.3);
-    backdrop-filter: blur(10px);
-    z-index: 1;
-  }
-  .section > * {
-    position: relative;
-    z-index: 2;
-  }
-/* Wrapper chứa form */
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 249, 249, 0.3);
+  backdrop-filter: blur(10px);
+  z-index: 1;
+}
+.section > * {
+  position: relative;
+  z-index: 2;
+}
+
 .auth-wrapper {
   background-color: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  padding: 3rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
   width: 100%;
-  max-width: 400px;
+  max-width: 650px;
   margin-bottom: 2rem;
 }
 
-/* Modal header với logo và tiêu đề */
 .modal-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .modal-header h2 {
   color: #0ea5e9;
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-size: 2rem;
+  font-weight: 700;
   margin-top: 0.5rem;
   text-transform: uppercase;
 }
 
 .modal-logo {
-  width: 120px;
+  width: 140px;
   height: auto;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
-
 
 .auth-wrapper-image {
-  width: 50px; /* Điều chỉnh kích thước hình ảnh nhỏ */
-  height: 50px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
-  margin-bottom: 1rem; /* Khoảng cách dưới hình ảnh */
+  margin-bottom: 1rem;
 }
 
-  /* Form đăng ký */
-  .auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-form .form-group {
+  margin-bottom: 1.2rem;
+}
+
+.auth-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #374151;
+  font-size: 1.05rem;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  font-size: 1.05rem;
+  transition: all 0.3s ease;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2);
+}
+
+.auth-form .form-row {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.auth-form .form-row .form-group {
+  flex: 1;
+  min-width: calc(50% - 0.6rem);
+}
+
+.password-group {
+  position: relative;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.toggle-password:hover {
+  color: #0ea5e9;
+}
+
+.auth-form button {
+  width: auto;
+  padding: 0.9rem 2.5rem;
+  margin: 0 auto;
+  background-color: #0ea5e9;
+  color: white;
+  border: none;
+  border-radius: 0.6rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.auth-form button:hover {
+  background-color: #0284c7;
+  transform: scale(1.05);
+}
+
+.auth-links {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.auth-links p {
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.auth-links a {
+  color: #0ea5e9;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.auth-links a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding-top: 5rem;
   }
 
-  .auth-form .form-group {
-    margin-bottom: 1rem;
-  }
-
-  .auth-form label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: #374151;
+  .auth-wrapper {
+    padding: 2rem;
+    max-width: 90%;
   }
 
   .auth-form input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-  }
-
-  .auth-form input:focus {
-    outline: none;
-    border-color: #0ea5e9;
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
-  }
-
-  /* Nút ẩn/hiện mật khẩu */
-  .password-group {
-    position: relative;
-  }
-
-  .password-wrapper {
-    position: relative;
-  }
-
-  .toggle-password {
-    position: absolute;
-    right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #6b7280;
     font-size: 1rem;
   }
 
-  .toggle-password:hover {
-    color: #0ea5e9;
-  }
-
-  /* Nút đăng ký */
   .auth-form button {
-    width: auto;
-    padding: 0.75rem 2rem;
-    margin: 0 auto;
-    background-color: #0ea5e9;
-    color: white;
-    border: none;
-    border-radius: 0.5rem;
+    padding: 0.7rem 2rem;
     font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
   }
 
-  .auth-form button:hover {
-    background-color: #0284c7;
-    transform: scale(1.05);
+  .auth-form .form-row {
+    flex-direction: column;
   }
 
-  /* Liên kết */
-  .auth-links {
-    text-align: center;
-    margin-top: 1.5rem;
+  .auth-form .form-row .form-group {
+    min-width: 100%;
   }
-
-  .auth-links p {
-    color: #6b7280;
-    margin-bottom: 0.5rem;
-  }
-
-  .auth-links a {
-    color: #0ea5e9;
-    text-decoration: none;
-    font-weight: bold;
-  }
-
-  .auth-links a:hover {
-    text-decoration: underline;
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .section {
-      padding-top: 6rem;
-      min-height: 80vh;
-    }
-
-    .section-title {
-      font-size: 2rem;
-    }
-
-    .auth-wrapper {
-      padding: 1.5rem;
-      max-width: 90%;
-    }
-
-    .auth-form input {
-      font-size: 0.9rem;
-    }
-
-    .auth-form button {
-      padding: 0.5rem 1.5rem;
-      font-size: 0.9rem;
-    }
-  }
-  </style>
+}
+</style>

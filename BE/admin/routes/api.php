@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
     Route::get('/user/{id}', [UserController::class, 'edit']);
     Route::put('/user/income', [UserController::class, 'updateIncome']);
     Route::put('/user/update-profile', [UserController::class, 'updateProfile']);
-    Route::post('/user/avatar', [UserController::class, 'updateAvatar']);
+    Route::post('/user/avatar-profile', [UserController::class, 'updateAvatarProfile']);
 
     // Account
     Route::prefix('account')->group(function () {
@@ -70,7 +70,10 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
 
     /////// ---------ADMIN------------------///////
     Route::middleware(['checkRole:admin'])->group(function () {
+        Route::post('/user/avatar', [UserController::class, 'updateAvatar']);
         Route::get('/users', [UserController::class, 'index']);
+        Route::put('/user/update', [UserController::class, 'update']);
         Route::delete('/user/{id}', [UserController::class, 'destroy']);
+        Route::put('/user/block/{id}', [UserController::class, 'block']);
     });
 });

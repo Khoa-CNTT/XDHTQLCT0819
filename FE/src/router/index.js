@@ -10,6 +10,7 @@ import Report from "@/views/Report.vue";
 import EditUser from "@/views/EditUser.vue"; 
 import Category from "@/views/Category.vue";
 import Account from "@/views/Account.vue";
+import Profile from "@/views/Profile.vue";
 
 const routes = [
   {
@@ -60,7 +61,7 @@ const routes = [
     path: "/quan-ly-nguoi-dung",
     name: "quan-ly-nguoi-dung",
     component: EditUser,
-    meta: { requiresAuth: true }, // bảo vệ bằng middleware login
+    meta: { requiresAuth: true }, 
   },
   {
     path: "/quan-ly-danh-muc",
@@ -74,6 +75,12 @@ const routes = [
     component: Account,
     meta: { requiresAuth: true }, 
   },
+   {
+    path: "/profile",
+    name: "profile",
+    component: Profile,
+    meta: { requiresAuth: true }, 
+  },
 ];
 
 const router = createRouter({
@@ -81,7 +88,6 @@ const router = createRouter({
   routes,
 });
 
-// Middleware check login
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem("auth_token");
   if (to.meta.requiresAuth && !isAuthenticated) {

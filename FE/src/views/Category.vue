@@ -103,7 +103,7 @@
             <label class="form-label">Loại</label>
             <select v-model="form.type" class="form-select" required>
               <option value="">Chọn loại</option>
-              <!-- <option value="income">Thu nhập</option> -->
+              <option value="income">Thu nhập</option>
               <option value="expense">Chi tiêu</option>
             </select>
           </div>

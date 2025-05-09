@@ -59,6 +59,8 @@ class AuthController extends Controller
                 'email.unique' => 'Email đã tồn tại. Vui lòng chọn email khác.',
                 'phone.unique' => 'Số điện thoại đã tồn tại. Vui lòng chọn số điện thoại khác.',
                 'username.unique' => 'Tên người dùng đã tồn tại. Vui lòng chọn tên người dùng khác.',
+                'password.required' => 'Vui lòng nhập mật khẩu.',
+                'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
             ]);
 
             if ($validator->fails()) {
@@ -78,6 +80,7 @@ class AuthController extends Controller
                 'currency' => 'VND',
                 'isActived' => false,
                 'isBlocked' => false,
+                'status' => false,
                 'address' => $request->address,
                 'avatar' => null,
             ]);
@@ -197,6 +200,12 @@ class AuthController extends Controller
             return response()->json(['error' => 'Tài khoản chưa được kích hoạt'], 401);
         }
 
+        if ($user->isBlocked) {
+            return response()->json(['error' => 'Tài khoản bị khóa'], 401);
+        }
+        $user->status = true;
+        $user->save();
+
         $token = $user->createToken('API Token')->plainTextToken;
 
         return response()->json([
@@ -209,12 +218,18 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+
+        $user->status = false;
+        $user->save();
+
+        $user->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Logged out successfully'
+            'message' => 'Đăng xuất thành công'
         ]);
     }
+
 
     public function resetShow(Request $request)
     {
