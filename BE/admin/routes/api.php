@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExampleController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SavingoalController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
@@ -67,6 +68,15 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
         Route::delete('/{id}', [SavingoalController::class, 'destroy']);
         Route::put('/{id}/add-money', [SavingoalController::class, 'updateSaveMoney']);
     });
+    Route::prefix('reports')->group(function () {
+        Route::get('/bar-chart', [ReportController::class, 'barChart']);
+        Route::get('/expense-pie', [ReportController::class, 'expensePie']);
+        Route::get('/income-pie', [ReportController::class, 'incomePie']);
+        Route::get('/summary', [ReportController::class, 'summary']);
+    });
+
+
+
 
     /////// ---------ADMIN------------------///////
     Route::middleware(['checkRole:admin'])->group(function () {

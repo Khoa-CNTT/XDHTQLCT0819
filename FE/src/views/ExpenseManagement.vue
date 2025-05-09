@@ -365,7 +365,6 @@ export default {
       }
     },
 
-    // Thêm Thu nhập
     async addIncome() {
       const toast = useToast();
       try {
