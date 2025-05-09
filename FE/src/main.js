@@ -11,6 +11,9 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import Toast from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 
 // Đăng ký các thành phần của Chart.js
@@ -25,9 +28,9 @@ app.component('Pie', Pie);
 // Đăng ký VueDatePicker toàn cục
 app.component('VueDatePicker', VueDatePicker);
 
-app.use(Toast);             
+app.use(Toast);
 app.use(router);
 app.use(store);
-app.mount("#app");    
+app.mount("#app");
 
 

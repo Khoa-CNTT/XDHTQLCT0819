@@ -16,7 +16,8 @@
           <li><router-link to="/quan-ly-danh-muc" class="nav-link">Danh mục</router-link></li>
           <li><router-link to="/quan-ly-nguoi-dung" class="nav-link">Người dùng</router-link></li>
           <li><router-link to="/quan-ly-tai-khoan" class="nav-link">Tài khoản</router-link></li>
-          <li><a href="#" class="nav-link" @click.prevent="handleLogout">Đăng xuất</a></li>
+          <li><router-link to="/tai-khoan-ca-nhan" class="dropdown-item">Trang cá nhân</router-link></li>
+          <li><a href="#" class="dropdown-item" @click.prevent="handleLogout">Đăng xuất</a></li>
         </ul>
       </div>
     </nav>
@@ -123,5 +124,29 @@ export default {
 
 .nav-link:hover::after {
   width: 100%;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  min-width: 150px;
+  z-index: 100;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 10px;
+  color: #333;
+  text-decoration: none;
+}
+
+.dropdown-item:hover {
+  background: #f0f0f0;
 }
 </style>

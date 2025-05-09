@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExampleController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SavingoalController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
@@ -72,5 +73,12 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
     Route::middleware(['checkRole:admin'])->group(function () {
         Route::get('/users', [UserController::class, 'index']);
         Route::delete('/user/{id}', [UserController::class, 'destroy']);
+    });
+    Route::prefix('profile')->group(function () {
+        Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+            return $request->user();
+        });
+        Route::middleware('auth:sanctum')->put('/update-profile', [ProfileController::class, 'updateProfile']);
+        Route::middleware('auth:sanctum')->post('/update-avatar', [ProfileController::class, 'updateAvatar']);
     });
 });

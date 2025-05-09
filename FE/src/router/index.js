@@ -7,9 +7,11 @@ import ExpenseManagement from "@/views/ExpenseManagement.vue";
 import Transaction from "@/views/Transaction.vue";
 import Target from "@/views/Target.vue";
 import Report from "@/views/Report.vue";
-import EditUser from "@/views/EditUser.vue"; 
+import EditUser from "@/views/EditUser.vue";
 import Category from "@/views/Category.vue";
 import Account from "@/views/Account.vue";
+import Profile from "@/views/Profile.vue";
+
 
 const routes = [
   {
@@ -56,7 +58,7 @@ const routes = [
     component: Report,
     meta: { requiresAuth: true },
   },
-   {
+  {
     path: "/quan-ly-nguoi-dung",
     name: "quan-ly-nguoi-dung",
     component: EditUser,
@@ -66,13 +68,20 @@ const routes = [
     path: "/quan-ly-danh-muc",
     name: "quan-ly-danh-muc",
     component: Category,
-    meta: { requiresAuth: true }, 
+    meta: { requiresAuth: true },
   },
   {
     path: "/quan-ly-tai-khoan",
     name: "quan-ly-tai-khoan",
     component: Account,
-    meta: { requiresAuth: true }, 
+    meta: { requiresAuth: true },
+  },
+
+  {
+    path: "/tai-khoan-ca-nhan",
+    name: "tai-khoan-ca-nhan",
+    component: Profile,
+    meta: { requiresAuth: true },
   },
 ];
 
@@ -81,7 +90,6 @@ const router = createRouter({
   routes,
 });
 
-// Middleware check login
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem("auth_token");
   if (to.meta.requiresAuth && !isAuthenticated) {
