@@ -99,6 +99,15 @@ export default {
       }
     },
   },
+  mounted() {
+    const toast = useToast();
+    const query = this.$route.query;
+    if (query.message) {
+      const type = query.status === "success" ? "success" : "error";
+      toast[type](decodeURIComponent(query.message));
+      this.$router.replace({ query: null });
+    }
+  },
 };
 </script>
 

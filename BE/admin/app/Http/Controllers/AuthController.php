@@ -53,11 +53,12 @@ class AuthController extends Controller
                 'fullName' => 'required|string',
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|min:8',
-                'phone' => 'nullable|unique:users,phone',
+                'phone' => ['nullable', 'unique:users,phone', 'regex:/^(03|05|07|08|09)[0-9]{8}$/'],
                 'username' => 'required|unique:users,username',
             ], [
                 'email.unique' => 'Email đã tồn tại. Vui lòng chọn email khác.',
                 'phone.unique' => 'Số điện thoại đã tồn tại. Vui lòng chọn số điện thoại khác.',
+                'phone.regex' => 'Số điện thoại không hợp lệ',
                 'username.unique' => 'Tên người dùng đã tồn tại. Vui lòng chọn tên người dùng khác.',
                 'password.required' => 'Vui lòng nhập mật khẩu.',
                 'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
@@ -138,21 +139,28 @@ class AuthController extends Controller
      * )
      */
 
+
+
     public function verifyEmail(Request $request)
     {
         $token = $request->query('token');
         $user = User::where('verify_token', $token)->first();
 
+        $redirectUrl = env('FRONTEND_LOGIN_URL', 'http://localhost:8080/login');
+
         if (!$user) {
-            return response()->json(['message' => 'Token không hợp lệ hoặc đã hết hạn.'], 400);
+            $url = $redirectUrl . '?status=error&message=' . urlencode('Token không hợp lệ hoặc đã hết hạn.');
+            return redirect($url);
         }
 
         $user->isActived = true;
         $user->verify_token = null;
         $user->save();
 
-        return response()->json(['message' => 'Tài khoản đã được kích hoạt thành công.']);
+        $url = $redirectUrl . '?status=success&message=' . urlencode('Tài khoản đã được kích hoạt thành công.');
+        return redirect($url);
     }
+
 
     /**
      * @OA\Post(
@@ -189,7 +197,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return response()->json(['error' => 'Email không tồn tại'], 401);
+            return response()->json(['error' => 'Tài khoản không tồn tại'], 401);
         }
 
         if (!Hash::check($request->password, $user->password)) {
@@ -244,20 +252,20 @@ class AuthController extends Controller
     {
         $request->validate([
             'current_password' => 'required',
-            'new_password' => 'required|min:6|confirmed',
+            'new_password' => 'required|min:8|confirmed',
         ]);
 
         $user = $request->user();
 
         if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json(['error' => 'Current password is incorrect'], 400);
+            return response()->json(['error' => 'Mật khẩu không trùng nhau'], 400);
         }
 
         $user->password = Hash::make($request->new_password);
         $user->save();
 
         return response()->json([
-            'message' => 'Password changed successfully'
+            'message' => 'Đã đổi mật khẩu thành công!'
         ]);
     }
 
@@ -358,12 +366,12 @@ class AuthController extends Controller
             ->first();
 
         if (!$updatePassword) {
-            return response()->json(['error' => 'Invalid token!'], 400);
+            return response()->json(['error' => 'Không có token'], 400);
         }
 
         $tokenCreatedAt = Carbon::parse($updatePassword->created_at);
         if (Carbon::now()->diffInMinutes($tokenCreatedAt) > 60) {
-            return response()->json(['error' => 'Token has expired!'], 400);
+            return response()->json(['error' => 'Token đã hết hạn'], 400);
         }
 
         User::where('email', $request->email)
@@ -372,8 +380,7 @@ class AuthController extends Controller
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return response()->json([
-            'message' => 'Mật khẩu đã được đặt lại thành công',
-            'redirect_url' => env('FRONTEND_LOGIN_URL', 'http://127.0.0.1:8080/login')
+            'redirect_url' => env('FRONTEND_LOGIN_URL', 'http://127.0.0.1:8080/login') . '?message=' . urlencode('Mật khẩu đã được đặt lại thành công') . '&status=success'
         ]);
     }
 }

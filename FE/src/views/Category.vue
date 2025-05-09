@@ -139,7 +139,15 @@
             <strong>Biểu tượng:</strong> <i :class="categoryDetail.icon"></i>
           </p>
           <p>
-            <strong>Tổng số tiền:</strong> {{ formatCurrency(totalAmount) }}
+            <strong>Tổng số tiền:</strong>
+            <span
+              :style="{
+                color:
+                  categoryDetail.type === 'income' ? 'green' : 'red',
+              }"
+            >
+              {{ formatCurrency(totalAmount) }}
+            </span>
           </p>
 
           <h6>Giao dịch</h6>
@@ -155,7 +163,16 @@
                 <small>Ngày: {{ transaction.transaction_date }}</small
                 ><br />
                 <strong>Số tiền:</strong>
-                {{ formatCurrency(transaction.amount) }}
+                <span
+                  :style="{
+                    color:
+                      transaction.transaction_type === 'income'
+                        ? 'green'
+                        : 'red',
+                  }"
+                >
+                  {{ formatCurrency(transaction.amount) }}
+                </span>
               </div>
               <button
                 class="btn btn-sm btn-danger"
@@ -409,11 +426,17 @@ export default {
 
       if (result.isConfirmed) {
         try {
-          await axios.delete(`/api/categories/${id}`, {
+          const res = await axios.delete(`/api/categories/${id}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
             },
           });
+          const user = JSON.parse(localStorage.getItem("user"));
+          if (user) {
+            user.monthly_income = res.data.monthly_income;
+            user.monthly_customer_spending = res.data.monthly_customer_spending;
+            localStorage.setItem("user", JSON.stringify(user));
+          }
           toast.success("🗑️ Xoá danh mục thành công!");
           await this.fetchCategories();
         } catch (err) {
@@ -460,14 +483,28 @@ export default {
       }
 
       try {
-       const res =  await axios.post("/api/transaction", this.newTransaction, {
+        const res = await axios.post("/api/transaction", this.newTransaction, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
           },
         });
         toast.success("Giao dịch đã được thêm thành công!");
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user) {
+          user.monthly_income = res.data.monthly_income;
+          user.monthly_customer_spending = res.data.monthly_customer_spending;
+          localStorage.setItem("user", JSON.stringify(user));
+        }
         this.openCategoryDetail(this.newTransaction.category_id);
         this.closeAddTransactionModal();
+        this.newTransaction = {
+          transaction_date: "",
+          type: "cash",
+          amount: 0,
+          description: "",
+          address: "",
+          category_id: "",
+        };
         await this.fetchCategories();
       } catch (error) {
         toast.error(error);
@@ -493,12 +530,18 @@ export default {
 
       if (result.isConfirmed) {
         try {
-          await axios.delete(`/api/transaction/${id}`, {
+          const res = await axios.delete(`/api/transaction/${id}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
             },
           });
           toast.success("Đã xoá giao dịch khỏi danh mục thành công!");
+          const user = JSON.parse(localStorage.getItem("user"));
+          if (user) {
+            user.monthly_income = res.data.monthly_income;
+            user.monthly_customer_spending = res.data.monthly_customer_spending;
+            localStorage.setItem("user", JSON.stringify(user));
+          }
           this.openCategoryDetail(categoryId);
           await this.fetchCategories();
         } catch (err) {

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -162,15 +164,37 @@ class CategoryController extends Controller
 
     public function destroy($id)
     {
+        $userId = Auth::id();
+
         $category = Category::where('id', $id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', $userId)
             ->first();
 
         if (!$category) {
             return response()->json(['message' => 'Không tìm thấy danh mục'], 404);
         }
 
+        $transactions = Transaction::where('category_id', $category->id)->get();
+
+        $user = User::find($userId);
+
+        foreach ($transactions as $transaction) {
+            if ($transaction->transaction_type === 'income') {
+                $user->monthly_income -= $transaction->amount;
+                $user->monthly_customer_spending -= $transaction->amount;
+            } elseif ($transaction->transaction_type === 'expense') {
+                $user->monthly_customer_spending += $transaction->amount;
+            }
+        }
+
+        $user->save();
+        Transaction::where('category_id', $category->id)->delete();
         $category->delete();
-        return response()->json(['message' => 'Xóa danh mục thành công']);
+
+        return response()->json([
+            'message' => 'Xóa danh mục và các giao dịch liên quan thành công, đã cập nhật số liệu',
+            'monthly_income' => $user->monthly_income,
+            'monthly_customer_spending' => $user->monthly_customer_spending,
+        ]);
     }
 }

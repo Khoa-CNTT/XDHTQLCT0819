@@ -90,6 +90,19 @@
               </option>
             </select>
           </div>
+          <div class="form-group">
+            <div class="mb-3">
+              <label for="transaction_date" class="form-label">Ngày</label>
+              <input
+                type="date"
+                id="transaction_date"
+                v-model="newTransaction.transaction_date"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+
           <div class="modal-actions">
             <button
               type="button"
@@ -213,6 +226,7 @@ export default {
       showAddTransactionModal: false,
       showIncomeModal: false,
       newTransaction: {
+        transaction_date: "",
         type: "cash",
         amount: 0,
         description: "",
@@ -236,8 +250,6 @@ export default {
     },
     mounted() {
       const user = JSON.parse(localStorage.getItem("user"));
-      console.log(user);
-
       this.totalIncome = user.monthly_income;
       this.balance = user.monthly_customer_spending;
     },
@@ -343,7 +355,13 @@ export default {
     // Thêm Chi tiêu
     async addTransaction() {
       const toast = useToast();
-
+      const isValidDate = this.isValidDate(
+        this.newTransaction.transaction_date
+      );
+      if (!isValidDate) {
+        toast.error("Ngày phải đúng định dạng (YYYY-MM-DD)");
+        return;
+      }
       try {
         const res = await axios.post("/api/transaction", this.newTransaction, {
           headers: {
@@ -358,6 +376,14 @@ export default {
         }
         toast.success("Giao dịch đã được thêm thành công!");
         this.closeExpenseModal();
+        this.newTransaction = {
+          transaction_date: "",
+          type: "cash",
+          amount: 0,
+          description: "",
+          address: "",
+          category_id: "",
+        };
         await this.fetchCategoriesHome();
       } catch (error) {
         toast.error("Error adding transaction:", error);

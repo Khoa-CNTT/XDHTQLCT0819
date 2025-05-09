@@ -110,37 +110,36 @@ class TransactionController extends Controller
         try {
             $userId = auth()->id();
             $query = Transaction::where('user_id', $userId);
-            
+
             if ($request->has('date')) {
                 $date = Carbon::parse($request->input('date'))->format('Y-m-d');
                 $query->whereDate('transaction_date', $date);
             }
-            
+
             if ($request->has('month') && $request->has('year')) {
                 $month = $request->input('month');
                 $year = $request->input('year');
                 $query->whereMonth('transaction_date', $month)
-                      ->whereYear('transaction_date', $year);
-            }
-            else if ($request->has('year')) {
+                    ->whereYear('transaction_date', $year);
+            } else if ($request->has('year')) {
                 $year = $request->input('year');
                 $query->whereYear('transaction_date', $year);
             }
-            
+
             if ($request->has('transaction_type')) {
                 $transactionType = $request->input('transaction_type');
                 $query->where('transaction_type', $transactionType);
             }
-            
+
             $transactions = $query->get();
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $transactions
             ]);
         } catch (\Exception $e) {
             Log::error('Lỗi khi tải giao dịch: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Không thể lấy giao dịch tại thời điểm này. Vui lòng thử lại sau'
@@ -173,7 +172,7 @@ class TransactionController extends Controller
 
             $data = $validator->validated();
             $data['user_id'] = auth()->user()->id;
-            $data['transaction_date'] = Carbon::now()->addDay()->toDateString();
+            $data['transaction_date'] = $request->transaction_date ?? Carbon::now()->toDateString();
 
 
             $user = User::find(auth()->id());
@@ -184,6 +183,7 @@ class TransactionController extends Controller
                     $data['transaction_type'] = $category->type;
                     if ($category->type === 'income') {
                         $user->monthly_customer_spending += $request->amount;
+                        $user->monthly_income += $request->amount;
                     } else if ($category->type === 'expense') {
                         $user->monthly_customer_spending -= $request->amount;
                     }
@@ -199,6 +199,7 @@ class TransactionController extends Controller
                 'success' => true,
                 'message' => 'Thêm giao dịch thành công.',
                 'data'    => $transaction,
+                'monthly_income' => $user->monthly_income,
                 'monthly_customer_spending' => $user->monthly_customer_spending,
             ]);
         } catch (\Exception $e) {
@@ -275,21 +276,34 @@ class TransactionController extends Controller
     {
         try {
             $transaction = Transaction::where('user_id', auth()->id())->findOrFail($id);
+            $user = User::find(auth()->id());
+
+            if ($transaction->transaction_type === 'income') {
+                $user->monthly_income -= $transaction->amount;
+                $user->monthly_customer_spending -= $transaction->amount;
+            } elseif ($transaction->transaction_type === 'expense') {
+                $user->monthly_customer_spending += $transaction->amount;
+            }
+
+            $user->save();
             $transaction->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Xóa giao dịch thành công.'
+                'message' => 'Xóa giao dịch thành công.',
+                'monthly_income' => $user->monthly_income,
+                'monthly_customer_spending' => $user->monthly_customer_spending
             ]);
         } catch (\Exception $e) {
-            Log::error('Lỗi khi tải giao dịch:: ' . $e->getMessage());
+            Log::error('Lỗi khi xóa giao dịch: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'error' => 'Không thể lấy giao dịch tại thời điểm này. Vui lòng thử lại sau'
+                'error' => 'Không thể xóa giao dịch tại thời điểm này. Vui lòng thử lại sau.'
             ], 500);
         }
     }
+
 
 
     public function determineTransactionType($description, $debitAmount, $creditAmount)

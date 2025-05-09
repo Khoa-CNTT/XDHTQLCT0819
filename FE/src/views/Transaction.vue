@@ -124,14 +124,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Nút mở modal thêm chi tiêu -->
-    <button
-      class="open-modal-button"
-      @click="$router.push('/quan-li-chi-tieu')"
-    >
-      <i class="fas fa-plus"></i>
-    </button>
   </div>
 </template>
 

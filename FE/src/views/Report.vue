@@ -112,8 +112,8 @@
             class="value balance"
             :class="{ negative: summary.balance < 0 }"
           >
+            <small v-if="summary.balance < 0">-</small>
             {{ formatNumber(Math.abs(summary.balance)) }} VND
-            <small v-if="summary.balance < 0">(Âm)</small>
           </span>
         </div>
       </div>
@@ -154,10 +154,10 @@ export default {
   data() {
     return {
       loading: true,
-      timeRange: "month", // Mặc định là tháng
+      timeRange: "month",
       dateRange: [
-        new Date(new Date().getFullYear(), new Date().getMonth(), 1), // First day of current month
-        new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), // Last day of current month
+        new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+        new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
       ],
       barChartData: {
         labels: [],
@@ -187,7 +187,7 @@ export default {
             ticks: {
               callback: (value) => {
                 const val = value / 1000000;
-                return (val % 1 === 0 ? val.toFixed(0) : val.toFixed(1));
+                return val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
               },
             },
           },
@@ -688,4 +688,3 @@ export default {
   }
 }
 </style>
-
