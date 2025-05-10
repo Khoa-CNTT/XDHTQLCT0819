@@ -1,7 +1,6 @@
 <template>
   <header class="header">
     <nav class="nav container">
-      <!-- Logo -->
       <router-link to="/" class="logo">
         <img
           src="/logo.png"
@@ -11,10 +10,8 @@
         />
       </router-link>
 
-      <!-- Menu -->
       <div class="nav-menu">
         <ul class="nav-list">
-          <!-- not admin -->
           <template v-if="!isAdmin">
             <li>
               <router-link to="/quan-li-chi-tieu" class="nav-link"
@@ -46,7 +43,6 @@
             </li>
           </template>
 
-          <!--  admin -->
           <template v-if="isAdmin">
             <li>
               <router-link to="/quan-ly-nguoi-dung" class="nav-link text-dark"
@@ -58,18 +54,17 @@
           <li class="profile-dropdown">
             <button type="button" class="profile-btn" @click="toggleDropdown">
               <img
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfhfi7aUGAdQUKibEqaRK7xO0lLSWZ2hclOQ&s"
+                :src="user?.avatar ? apiImage(user.avatar) : defaultAvatar"
                 alt="Profile"
                 class="avatar"
               />
               <span class="caret">&#9662;</span>
             </button>
 
-            <!-- Dropdown menu -->
             <div v-if="isDropdownOpen" class="dropdown-menu">
-              <a href="#" class="dropdown-link" @click.prevent="handleLogout">
-                Đăng xuất
-              </a>
+              <a href="#" class="dropdown-link" @click.prevent="handleLogout"
+                >Đăng xuất</a
+              >
             </div>
           </li>
         </ul>
@@ -90,11 +85,16 @@ export default {
     return {
       isAdmin: false,
       isDropdownOpen: false,
+      user: null,
+      defaultAvatar: "/default-avatar.png",
     };
   },
   methods: {
     toggleDropdown() {
       this.isDropdownOpen = !this.isDropdownOpen;
+    },
+    apiImage(filename) {
+      return `/api/get-image/${filename}`;
     },
     handleLogout() {
       Swal.fire({
@@ -118,7 +118,7 @@ export default {
                 },
               }
             )
-            .then((response) => {
+            .then(() => {
               localStorage.removeItem("auth_token");
               localStorage.removeItem("user");
 
@@ -126,19 +126,15 @@ export default {
               toast.success("Tài khoản đã đăng xuất thành công!", {
                 timeout: 3000,
                 position: "top-right",
-                closeOnClick: true,
-                pauseOnHover: true,
               });
 
               this.$emit("logged-out");
             })
-            .catch((error) => {
+            .catch(() => {
               const toast = useToast();
               toast.error("Đã có lỗi xảy ra khi đăng xuất!", {
                 timeout: 3000,
                 position: "top-right",
-                closeOnClick: true,
-                pauseOnHover: true,
               });
             });
         }
@@ -153,9 +149,13 @@ export default {
   },
   mounted() {
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (user && user.role === "admin") {
-        this.isAdmin = true;
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        this.user = parsedUser;
+        if (parsedUser.role === "admin") {
+          this.isAdmin = true;
+        }
       }
     } catch (e) {
       console.error("Error parsing user data", e);

@@ -117,10 +117,16 @@
             />
           </div>
           <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" @click="cancelForm">
+            <button
+              type="button"
+              class="btn btn-secondary btn-custom"
+              @click="cancelForm"
+            >
               Huỷ
             </button>
-            <button type="submit" class="btn btn-success">Lưu</button>
+            <button type="submit" class="btn btn-success btn-custom">
+              Lưu
+            </button>
           </div>
         </form>
       </div>
@@ -142,8 +148,7 @@
             <strong>Tổng số tiền:</strong>
             <span
               :style="{
-                color:
-                  categoryDetail.type === 'income' ? 'green' : 'red',
+                color: categoryDetail.type === 'income' ? 'green' : 'red',
               }"
             >
               {{ formatCurrency(totalAmount) }}
@@ -687,6 +692,18 @@ export default {
 
 .modal-content .btn-secondary:hover {
   background-color: #4b5563;
+}
+/* HUYLE TODO */
+.btn-custom {
+  min-width: 80px;
+  height: 40px;
+  /* padding: 0.5rem 1.2rem; */
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  margin-top: 2.6%;
 }
 
 /* Animation for modal entrance */

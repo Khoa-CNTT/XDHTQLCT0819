@@ -106,6 +106,22 @@ class UserController extends Controller
         return response()->json(['message' => 'Cập nhật ảnh đại diện thành công', 'avatar' => $path]);
     }
 
+    public function getImage($filename)
+    {
+        $path = $filename;
+
+        if (!Storage::disk('public')->exists($path)) {
+            abort(404);
+        }
+
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = Storage::disk('public');
+
+        $file = $disk->get($path);
+        $type = $disk->mimeType($path);
+
+        return response($file, 200)->header('Content-Type', $type);
+    }
 
 
     public function destroy($id)

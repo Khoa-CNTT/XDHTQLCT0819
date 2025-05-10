@@ -262,8 +262,8 @@ export default {
         toast.error("Thao tác thất bại!");
       }
     },
-    apiImage(path) {
-      return `http://localhost:8080/storage/${path}`;
+    apiImage(filename) {
+      return `/api/get-image/${filename}`;
     },
     openEdit(user) {
       this.selectedUser = { ...user };
