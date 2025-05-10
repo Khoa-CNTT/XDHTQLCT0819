@@ -250,24 +250,44 @@ class AuthController extends Controller
 
     public function changePassword(Request $request)
     {
+        $messages = [
+            'current_password.required' => 'Mật khẩu cũ không được để trống.',
+            'new_password.required' => 'Mật khẩu mới không được để trống.',
+            'new_password.min' => 'Mật khẩu mới phải có ít nhất 8 ký tự.',
+            'new_password.confirmed' => 'Mật khẩu xác nhận không khớp.',
+            'new_password_confirmation.required' => 'Mật khẩu xác nhận không được để trống.',
+        ];
+
         $request->validate([
             'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
-        ]);
+            'new_password' => 'required|min:8',
+            'new_password_confirmation' => 'required|same:new_password',
+        ], $messages);
 
         $user = $request->user();
 
         if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json(['error' => 'Mật khẩu không trùng nhau'], 400);
+            return response()->json([
+                'error' => 'Mật khẩu hiện tại không chính xác!',
+            ], 400);
+        }
+
+        if ($request->new_password !== $request->new_password_confirmation) {
+            return response()->json([
+                'error' => 'Mật khẩu không trùng nhau!',
+            ], 400);
         }
 
         $user->password = Hash::make($request->new_password);
         $user->save();
 
         return response()->json([
-            'message' => 'Đã đổi mật khẩu thành công!'
+            'message' => 'Đã đổi mật khẩu thành công!',
         ]);
     }
+
+
+
 
 
     /**

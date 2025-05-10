@@ -28,12 +28,13 @@ Route::middleware('auth:sanctum')->get('/mb-bank', [TransactionController::class
 
 Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/change-password', [AuthController::class, 'changePassword']);
-
+    Route::post('/user/change-password', [AuthController::class, 'changePassword']);
+    Route::get('/user/profile', [UserController::class, 'profile']);
     Route::get('/user/{id}', [UserController::class, 'edit']);
     Route::put('/user/income', [UserController::class, 'updateIncome']);
     Route::put('/user/update-profile', [UserController::class, 'updateProfile']);
     Route::post('/user/avatar-profile', [UserController::class, 'updateAvatarProfile']);
+    
 
     // Account
     Route::prefix('account')->group(function () {

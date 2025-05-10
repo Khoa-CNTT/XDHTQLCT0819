@@ -61,10 +61,14 @@
               <span class="caret">&#9662;</span>
             </button>
 
+            <!-- Gộp dropdown -->
             <div v-if="isDropdownOpen" class="dropdown-menu">
-              <a href="#" class="dropdown-link" @click.prevent="handleLogout"
-                >Đăng xuất</a
-              >
+              <router-link to="/profile" class="dropdown-link">
+                Thông tin tài khoản
+              </router-link>
+              <a href="#" class="dropdown-link" @click.prevent="handleLogout">
+                Đăng xuất
+              </a>
             </div>
           </li>
         </ul>
@@ -255,13 +259,12 @@ export default {
   font-size: 0.8rem;
 }
 
-/* Dropdown Menu */
 .dropdown-menu {
   position: absolute;
   top: 45px;
   right: 0;
-  background-color: white;
-  min-width: 160px;
+  background-color: #fff;
+  min-width: 180px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border-radius: 4px;
   padding: 8px 0;
@@ -271,11 +274,10 @@ export default {
 }
 
 .dropdown-link {
-  display: block;
   padding: 8px 16px;
   text-decoration: none;
   color: #333;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color 0.2s;
   font-size: 0.95rem;
 }
 

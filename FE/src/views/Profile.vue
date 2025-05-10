@@ -1,398 +1,230 @@
 <template>
-  <div class="container mx-auto py-8 px-4">
-    <div class="grid gap-8 md:grid-cols-3">
-      <!-- Left column - Avatar and basic info -->
-      <div class="md:col-span-1">
-        <div class="card">
-          <div class="card-header flex flex-col items-center text-center">
-            <div class="relative mb-4">
-              <div class="avatar h-32 w-32">
-                <img
-                  v-if="userData.avatar"
-                  :src="`/${userData.avatar}`"
-                  :alt="userData.fullName"
-                  class="avatar-image"
-                />
-                <div v-else class="avatar-fallback text-2xl">
-                  {{ userData.fullName.substring(0, 2).toUpperCase() }}
-                </div>
-              </div>
-              <span
-                v-if="userData.isActived"
-                class="badge absolute bottom-0 right-0 bg-[#00A3E0] text-white"
-              >
-                Hoạt động
-              </span>
-            </div>
-            <h2 class="card-title text-2xl text-[#00A3E0]">
-              {{ userData.fullName }}
-            </h2>
-            <p class="card-description flex items-center justify-center gap-1">
-              <user-icon class="h-4 w-4" />
-              {{ userData.username }}
-            </p>
-            <span class="badge-outline mt-2 border-[#00A3E0] text-[#00A3E0]">
-              {{ translateRole(userData.role).toUpperCase() }}
-            </span>
-          </div>
-          <div class="card-content space-y-4">
-            <div class="flex items-start gap-2">
-              <mail-icon class="h-5 w-5 text-[#00A3E0] mt-0.5" />
-              <div class="space-y-1">
-                <p class="text-sm font-medium text-[#00A3E0]">Email</p>
-                <p class="text-sm text-muted-foreground">
-                  {{ userData.email }}
-                </p>
-              </div>
-            </div>
-            <div class="flex items-start gap-2">
-              <phone-icon class="h-5 w-5 text-[#00A3E0] mt-0.5" />
-              <div class="space-y-1">
-                <p class="text-sm font-medium text-[#00A3E0]">Điện thoại</p>
-                <p class="text-sm text-muted-foreground">
-                  {{ userData.phone }}
-                </p>
-              </div>
-            </div>
-            <div class="flex items-start gap-2">
-              <map-pin-icon class="h-5 w-5 text-[#00A3E0] mt-0.5" />
-              <div class="space-y-1">
-                <p class="text-sm font-medium text-[#00A3E0]">Địa chỉ</p>
-                <p class="text-sm text-muted-foreground">
-                  {{ userData.address }}
-                </p>
-              </div>
-            </div>
+  <div class="profile-container">
+    <div class="left-column">
+      <div class="avatar-container">
+        <div class="avatar">
+          <img
+            v-if="userData.avatar"
+            :src="apiImage(userData.avatar)"
+            alt="Avatar"
+          />
+          <div v-else class="avatar-placeholder">
+            {{ userData.fullName?.substring(0, 2).toUpperCase() }}
           </div>
         </div>
+        <input
+          type="file"
+          id="avatar-upload"
+          @change="handleAvatarUpload"
+          accept="image/*"
+        />
+        <label for="avatar-upload" class="file-upload-button">Chọn ảnh</label>
+
+        <h2 class="user-name">{{ userData.fullName }}</h2>
+        <span class="badge">{{ translateRole(userData.role) }}</span>
       </div>
 
-      <!-- Right column - Detailed information -->
-      <div class="md:col-span-2">
-        <div class="tabs-container w-full">
-          <div class="tabs-list grid w-full grid-cols-2">
-            <button
-              @click="activeTab = 'account'"
-              :class="[
-                'tab-trigger',
-                activeTab === 'account'
-                  ? 'bg-[#00A3E0] text-white'
-                  : 'bg-[#E8F7FC]',
-              ]"
-            >
-              Thông tin tài khoản
-            </button>
-            <button
-              @click="activeTab = 'financial'"
-              :class="[
-                'tab-trigger',
-                activeTab === 'financial'
-                  ? 'bg-[#00A3E0] text-white'
-                  : 'bg-[#E8F7FC]',
-              ]"
-            >
-              Chi tiết tài chính
-            </button>
-          </div>
-
-          <!-- Account Tab Content -->
-          <div v-if="activeTab === 'account'" class="space-y-4 mt-4">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title text-black">Trạng thái tài khoản</h3>
-              </div>
-              <div class="card-content space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div
-                    class="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <span class="font-medium text-black">Trạng thái</span>
-                    <span
-                      :class="[
-                        'badge',
-                        userData.status
-                          ? 'bg-[#00A3E0] text-white'
-                          : 'bg-red-500 text-white',
-                      ]"
-                    >
-                      {{ userData.status ? "Hoạt động" : "Không hoạt động" }}
-                    </span>
-                  </div>
-                  <div
-                    class="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <span class="font-medium text-black">Tình trạng</span>
-                    <span
-                      :class="[
-                        'badge',
-                        !userData.isBlocked
-                          ? 'bg-[#4CAF50] text-white'
-                          : 'bg-red-500 text-white',
-                      ]"
-                    >
-                      {{ userData.isBlocked ? "Đã khóa" : "Không khóa" }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title text-black">Thời gian tài khoản</h3>
-              </div>
-              <div class="card-content space-y-4">
-                <div class="flex items-start gap-2">
-                  <calendar-days-icon class="h-5 w-5 text-[#00A3E0] mt-0.5" />
-                  <div class="space-y-1">
-                    <p class="text-sm font-medium text-black">Ngày tạo</p>
-                    <p class="text-sm text-muted-foreground">
-                      {{ formatDate(userData.created_at) }}
-                    </p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-2">
-                  <calendar-days-icon class="h-5 w-5 text-[#00A3E0] mt-0.5" />
-                  <div class="space-y-1">
-                    <p class="text-sm font-medium text-black">
-                      Cập nhật lần cuối
-                    </p>
-                    <p class="text-sm text-muted-foreground">
-                      {{ formatDate(userData.updated_at) }}
-                    </p>
-                  </div>
-                </div>
-              </div>
+      <div class="card" style="margin: 10px 5px; height: 260px">
+        <div class="card-content-user">
+          <div class="info-item">
+            <mail-icon class="info-icon" />
+            <div class="info-details">
+              <p class="info-title">Email</p>
+              <p class="info-value">{{ userData.email }}</p>
             </div>
           </div>
 
-          <!-- Financial Tab Content -->
-          <div v-if="activeTab === 'financial'" class="space-y-4 mt-4">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title text-black">Tổng quan tài chính</h3>
-              </div>
-              <div class="card-content">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div class="card">
-                    <div class="card-header pb-2">
-                      <h4 class="card-title text-sm font-medium text-black">
-                        Thu nhập hàng tháng
-                      </h4>
-                    </div>
-                    <div class="card-content">
-                      <div class="flex items-center">
-                        <dollar-sign-icon class="h-4 w-4 text-[#00A3E0] mr-1" />
-                        <span class="text-2xl font-bold">{{
-                          formatCurrency(userData.monthly_income)
-                        }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="card">
-                    <div class="card-header pb-2">
-                      <h4 class="card-title text-sm font-medium text-black">
-                        Chi tiêu hàng tháng
-                      </h4>
-                    </div>
-                    <div class="card-content">
-                      <div class="flex items-center">
-                        <dollar-sign-icon class="h-4 w-4 text-[#00A3E0] mr-1" />
-                        <span class="text-2xl font-bold">
-                          {{
-                            formatCurrency(userData.monthly_customer_spending)
-                          }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title text-black">Cài đặt tiền tệ</h3>
-              </div>
-              <div class="card-content">
-                <div class="flex items-center gap-2">
-                  <dollar-sign-icon class="h-5 w-5 text-[#00A3E0]" />
-                  <span class="font-medium text-black">Tiền tệ ưa thích:</span>
-                  <span class="badge-outline border-[#00A3E0] text-[#00A3E0]">
-                    {{ userData.currency }}
-                  </span>
-                </div>
-              </div>
+          <div class="info-item">
+            <phone-icon class="info-icon" />
+            <div class="info-details">
+              <p class="info-title">Điện thoại</p>
+              <p class="info-value">{{ userData.phone }}</p>
             </div>
           </div>
-        </div>
 
-        <div class="mt-6 flex justify-end gap-4">
-          <button
-            @click="openEditModal"
-            class="btn-outline border-[#00A3E0] text-[#00A3E0] hover:bg-[#E8F7FC]"
-          >
-            Chỉnh sửa hồ sơ
-          </button>
-          <button class="btn bg-[#00A3E0] hover:bg-[#0089BD] text-white">
-            Lưu thay đổi
-          </button>
+          <div class="info-item">
+            <map-pin-icon class="info-icon" />
+            <div class="info-details">
+              <p class="info-title">Địa chỉ</p>
+              <p class="info-value">{{ userData.address }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Edit Profile Modal -->
-    <div v-if="isModalOpen" class="modal-overlay">
-      <div class="modal-container">
-        <div class="modal-header">
-          <h3 class="modal-title">Chỉnh sửa hồ sơ</h3>
-          <button @click="closeModal" class="modal-close">
-            <x-icon class="h-5 w-5" />
-          </button>
+    <div class="right-column">
+      <div class="tabs">
+        <button
+          :class="{ active: activeTab === 'account' }"
+          @click="activeTab = 'account'"
+        >
+          Thông tin tài khoản
+        </button>
+      </div>
+
+      <div v-if="activeTab === 'account'" class="info-card-status">
+        <h3>Trạng thái tài khoản</h3>
+        <div class="card-content">
+          <div class="status-grid">
+            <div class="status-item">
+              <span>Trạng thái</span>
+              <button
+                class="status-button"
+                :class="userData.status ? 'active' : 'inactive'"
+              >
+                {{ userData.status ? "Hoạt động" : "Không hoạt động" }}
+              </button>
+            </div>
+
+            <div class="status-item">
+              <span>Tình trạng</span>
+              <button
+                class="status-button"
+                :class="!userData.isBlocked ? 'unlocked' : 'locked'"
+              >
+                {{ userData.isBlocked ? "Đã khóa" : "Đã kích hoạt" }}
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="modal-body">
-          <form @submit.prevent="saveChanges">
-            <div class="form-group">
-              <div class="avatar-upload">
-                <div class="avatar h-24 w-24 mx-auto">
-                  <img
-                    v-if="editedUser.avatar"
-                    :src="`/${editedUser.avatar}`"
-                    :alt="editedUser.fullName"
-                    class="avatar-image"
-                  />
-                  <div v-else class="avatar-fallback text-xl">
-                    {{ editedUser.fullName.substring(0, 2).toUpperCase() }}
-                  </div>
-                </div>
-                <div class="avatar-upload-controls mt-2 text-center">
-                  <label for="avatar-upload" class="avatar-upload-btn">
-                    <upload-icon class="h-4 w-4 mr-1" />
-                    Tải ảnh lên
-                  </label>
-                  <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    class="hidden"
-                  />
-                </div>
-              </div>
+      </div>
 
-              <div class="form-row">
-                <label class="form-label">Họ và tên</label>
+      <div v-if="activeTab === 'account'" class="info-card">
+        <h3>Thời gian tài khoản</h3>
+        <div class="card-content-time">
+          <div class="time-item">
+            <calendar-days-icon class="time-icon" />
+            <div class="time-details">
+              <p class="time-title">Ngày tạo</p>
+              <p class="time-value">{{ formatDate(userData.created_at) }}</p>
+            </div>
+          </div>
+          <div class="time-item">
+            <calendar-days-icon class="time-icon" />
+            <div class="time-details">
+              <p class="time-title">Cập nhật lần cuối</p>
+              <p class="time-value">{{ formatDate(userData.updated_at) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="change-password-button" @click="openPasswordChangeModal">
+        Đổi mật khẩu
+      </button>
+
+      <button class="edit-profile-button" @click="openEditModal">
+        Chỉnh sửa hồ sơ
+      </button>
+
+      <!-- Edit Profile Modal -->
+      <div v-if="isModalOpen" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3>Chỉnh sửa hồ sơ</h3>
+            <button @click="closeEditModal" class="modal-close">×</button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="saveChanges">
+              <div class="form-group">
+                <label>Họ và tên:</label>
                 <input
+                  type="text"
                   v-model="editedUser.fullName"
-                  type="text"
                   class="form-input"
-                  :class="{ 'input-error': errors.fullName }"
                 />
-                <p v-if="errors.fullName" class="error-message">
-                  {{ errors.fullName }}
-                </p>
               </div>
-
-              <div class="form-row">
-                <label class="form-label">Tên người dùng</label>
+              <div class="form-group">
+                <label>Email:</label>
                 <input
-                  v-model="editedUser.username"
-                  type="text"
-                  class="form-input"
-                  :class="{ 'input-error': errors.username }"
-                />
-                <p v-if="errors.username" class="error-message">
-                  {{ errors.username }}
-                </p>
-              </div>
-
-              <div class="form-row">
-                <label class="form-label">Email</label>
-                <input
-                  v-model="editedUser.email"
                   type="email"
+                  v-model="editedUser.email"
                   class="form-input"
-                  :class="{ 'input-error': errors.email }"
+                  disabled
                 />
-                <p v-if="errors.email" class="error-message">
-                  {{ errors.email }}
-                </p>
               </div>
-
-              <div class="form-row">
-                <label class="form-label">Điện thoại</label>
+              <div class="form-group">
+                <label>Điện thoại:</label>
                 <input
+                  type="text"
                   v-model="editedUser.phone"
-                  type="tel"
                   class="form-input"
-                  :class="{ 'input-error': errors.phone }"
                 />
-                <p v-if="errors.phone" class="error-message">
-                  {{ errors.phone }}
-                </p>
               </div>
-
-              <div class="form-row">
-                <label class="form-label">Địa chỉ</label>
-                <textarea
+              <div class="form-group">
+                <label>Địa chỉ:</label>
+                <input
+                  type="text"
                   v-model="editedUser.address"
-                  class="form-textarea"
-                  :class="{ 'input-error': errors.address }"
-                ></textarea>
-                <p v-if="errors.address" class="error-message">
-                  {{ errors.address }}
-                </p>
+                  class="form-input"
+                />
               </div>
-
-              <div class="form-row">
-                <label class="form-label">Tiền tệ</label>
-                <select v-model="editedUser.currency" class="form-select">
-                  <option value="VND">VND - Việt Nam Đồng</option>
-                  <option value="USD">USD - Đô la Mỹ</option>
-                  <option value="EUR">EUR - Euro</option>
-                </select>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  @click="closeEditModal"
+                  class="btn-cancel"
+                >
+                  Ủy bỏ
+                </button>
+                <button type="submit" class="btn-save">Lưu thay đổi</button>
               </div>
+            </form>
+          </div>
+        </div>
+      </div>
 
-              <div class="form-row">
-                <label class="form-label">Thu nhập hàng tháng</label>
-                <div class="form-input-group">
-                  <span class="input-prefix">{{ editedUser.currency }}</span>
-                  <input
-                    v-model.number="editedUser.monthly_income"
-                    type="number"
-                    class="form-input with-prefix"
-                  />
-                </div>
+      <!-- Change Password Modal -->
+      <div v-if="isPasswordModalOpen" class="modal-overlay">
+        <div class="modal-container">
+          <div class="modal-header">
+            <h3>Đổi mật khẩu</h3>
+            <button @click="closePasswordChangeModal" class="modal-close">
+              ×
+            </button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="changePassword">
+              <div class="form-group">
+                <label>Mật khẩu cũ:</label>
+                <input
+                  type="password"
+                  v-model="passwordForm.current_password"
+                  class="form-input"
+                  required
+                />
               </div>
-
-              <div class="form-row">
-                <label class="form-label">Chi tiêu hàng tháng</label>
-                <div class="form-input-group">
-                  <span class="input-prefix">{{ editedUser.currency }}</span>
-                  <input
-                    v-model.number="editedUser.monthly_customer_spending"
-                    type="number"
-                    class="form-input with-prefix"
-                  />
-                </div>
+              <div class="form-group">
+                <label>Mật khẩu mới:</label>
+                <input
+                  type="password"
+                  v-model="passwordForm.new_password"
+                  class="form-input"
+                  required
+                />
               </div>
-            </div>
-
-            <div class="modal-footer">
-              <button
-                type="button"
-                @click="closeModal"
-                class="btn-outline border-gray-300 text-gray-700 hover:bg-gray-100"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                type="submit"
-                class="btn bg-[#00A3E0] hover:bg-[#0089BD] text-white"
-              >
-                Lưu thay đổi
-              </button>
-            </div>
-          </form>
+              <div class="form-group">
+                <label>Xác nhận mật khẩu mới:</label>
+                <input
+                  type="password"
+                  v-model="passwordForm.new_password_confirmation"
+                  class="form-input"
+                  required
+                />
+              </div>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  @click="closePasswordChangeModal"
+                  class="btn-cancel"
+                >
+                  Hủy bỏ
+                </button>
+                <button type="submit" class="btn-save">Lưu thay đổi</button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -400,157 +232,150 @@
 </template>
 
 <script>
-import { ref, reactive, computed } from "vue";
+import { ref, onMounted } from "vue";
+import axios from "axios";
 import {
-  User as UserIcon,
   Mail as MailIcon,
   Phone as PhoneIcon,
   MapPin as MapPinIcon,
   CalendarDays as CalendarDaysIcon,
-  DollarSign as DollarSignIcon,
-  X as XIcon,
-  Upload as UploadIcon,
 } from "lucide-vue-next";
+import { useToast } from "vue-toastification";
+
+axios.defaults.withCredentials = true;
 
 export default {
   name: "UserProfile",
   components: {
-    UserIcon,
     MailIcon,
     PhoneIcon,
     MapPinIcon,
     CalendarDaysIcon,
-    DollarSignIcon,
-    XIcon,
-    UploadIcon,
   },
   setup() {
     const activeTab = ref("account");
     const isModalOpen = ref(false);
-
-    const userData = ref({
-      id: 3,
-      fullName: "HUY Lê",
-      username: "Letronghuy1111",
-      email: "hale22.02031982@gmail.com",
-      phone: "09830571330",
-      address: "121321",
-      avatar: "avatars/bIr7RqkWiAG38uqYNMyiNQmhf3CTfHh45vHoExKh.png",
-      created_at: "2025-05-09T05:29:23.000000Z",
-      updated_at: "2025-05-09T08:23:10.000000Z",
-      currency: "VND",
-      monthly_income: 0,
-      monthly_customer_spending: 0,
-      isActived: 1,
-      isBlocked: 0,
-      role: "user",
-      status: true,
+    const isPasswordModalOpen = ref(false);
+    const userData = ref({});
+    const editedUser = ref({});
+    const passwordForm = ref({
+      current_password: "",
+      new_password: "",
+      new_password_confirmation: "",
     });
 
-    // Create a copy for editing
-    const editedUser = ref({ ...userData.value });
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await axios.get("/api/user/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        userData.value = response.data;
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin hồ sơ:", error);
+      }
+    };
 
-    // Form validation errors
-    const errors = reactive({
-      fullName: "",
-      username: "",
-      email: "",
-      phone: "",
-      address: "",
-    });
+    const handleAvatarUpload = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
 
-    // Open edit modal
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await axios.post(
+          "/api/user/avatar-profile",
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        userData.value.avatar = response.data.avatar;
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        await fetchProfile();
+        location.reload();
+      } catch (error) {
+        console.error("Lỗi khi cập nhật ảnh đại diện:", error);
+      }
+    };
+
     const openEditModal = () => {
-      // Reset the edited user data to the current user data
       editedUser.value = { ...userData.value };
-      // Clear any previous errors
-      Object.keys(errors).forEach((key) => {
-        errors[key] = "";
-      });
       isModalOpen.value = true;
     };
 
-    // Close modal
-    const closeModal = () => {
+    const closeEditModal = () => {
       isModalOpen.value = false;
     };
 
-    // Validate form
-    const validateForm = () => {
-      let isValid = true;
-
-      // Reset errors
-      Object.keys(errors).forEach((key) => {
-        errors[key] = "";
-      });
-
-      // Validate fullName
-      if (!editedUser.value.fullName.trim()) {
-        errors.fullName = "Họ và tên không được để trống";
-        isValid = false;
-      }
-
-      // Validate username
-      if (!editedUser.value.username.trim()) {
-        errors.username = "Tên người dùng không được để trống";
-        isValid = false;
-      }
-
-      // Validate email
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!editedUser.value.email.trim()) {
-        errors.email = "Email không được để trống";
-        isValid = false;
-      } else if (!emailRegex.test(editedUser.value.email)) {
-        errors.email = "Email không hợp lệ";
-        isValid = false;
-      }
-
-      // Validate phone
-      const phoneRegex = /^[0-9]{10,11}$/;
-      if (!editedUser.value.phone.trim()) {
-        errors.phone = "Số điện thoại không được để trống";
-        isValid = false;
-      } else if (!phoneRegex.test(editedUser.value.phone)) {
-        errors.phone = "Số điện thoại không hợp lệ (10-11 số)";
-        isValid = false;
-      }
-
-      // Validate address
-      if (!editedUser.value.address.trim()) {
-        errors.address = "Địa chỉ không được để trống";
-        isValid = false;
-      }
-
-      return isValid;
+    const openPasswordChangeModal = () => {
+      isPasswordModalOpen.value = true;
     };
 
-    // Save changes
-    const saveChanges = () => {
-      if (validateForm()) {
-        // Update the user data with the edited values
-        userData.value = {
-          ...editedUser.value,
-          updated_at: new Date().toISOString(),
-        };
-        // Close the modal
-        closeModal();
-        // Here you would typically send the updated data to your API
-        console.log("Saved user data:", userData.value);
+    const closePasswordChangeModal = () => {
+      isPasswordModalOpen.value = false;
+    };
+
+    const saveChanges = async () => {
+      const toast = useToast();
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await axios.put(
+          "/api/user/update-profile",
+          editedUser.value,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        userData.value = response.data.user;
+        isModalOpen.value = false;
+        toast.success(response.data.message);
+      } catch (error) {
+        toast.error(error.response.data.message);
       }
     };
 
-    // Translate role to Vietnamese
-    const translateRole = (role) => {
-      const translations = {
-        user: "người dùng",
-        admin: "quản trị viên",
-        moderator: "điều hành viên",
-      };
-      return translations[role.toLowerCase()] || role;
+    const changePassword = async () => {
+      const toast = useToast();
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await axios.post(
+          "/api/user/change-password",
+          passwordForm.value,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        toast.success(response.data.message);
+        closePasswordChangeModal();
+      } catch (error) {
+        if (error.response && error.response.data) {
+          const errorMessage =
+            error.response.data.error ||
+            error.response.data.message ||
+            "Đã có lỗi xảy ra.";
+          toast.error(errorMessage);
+        } else {
+          toast.error("Đã có lỗi xảy ra.");
+        }
+      }
     };
 
-    // Format dates for better readability
+    const apiImage = (filename) => {
+      return `/api/get-image/${filename}`;
+    };
+
     const formatDate = (dateString) => {
       const date = new Date(dateString);
       return date.toLocaleDateString("vi-VN", {
@@ -562,499 +387,438 @@ export default {
       });
     };
 
-    // Format currency values
-    const formatCurrency = (amount) => {
-      return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: userData.value.currency,
-      }).format(amount);
+    const translateRole = (role) => {
+      const translations = {
+        user: "người dùng",
+        admin: "quản trị viên",
+      };
+      return translations[role?.toLowerCase()] || role;
     };
+
+    onMounted(() => {
+      fetchProfile();
+    });
 
     return {
       activeTab,
       userData,
       editedUser,
       isModalOpen,
-      errors,
+      isPasswordModalOpen,
       openEditModal,
-      closeModal,
+      closeEditModal,
       saveChanges,
+      openPasswordChangeModal,
+      closePasswordChangeModal,
+      changePassword,
+      handleAvatarUpload,
       formatDate,
-      formatCurrency,
+      apiImage,
       translateRole,
+      passwordForm,
     };
   },
 };
 </script>
 
 <style scoped>
-.container {
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+input[type="file"] {
+  display: none;
 }
 
-.grid {
+.file-upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(50, 164, 199, 0.3);
+  text-transform: capitalize;
+}
+
+.file-upload-button:hover {
+  background: linear-gradient(135deg, #00a3e0, #00a3e0);
+  box-shadow: 0 6px 14px rgba(89, 184, 207, 0.4);
+  transform: translateY(-1px);
+}
+
+.file-upload-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(102, 126, 234, 0.3);
+}
+
+.file-upload-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+}
+
+.profile-container {
   display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  margin-top: 10px;
 }
 
-.card {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-  margin-bottom: 1rem;
+.left-column {
+  background-color: #e8f7fc;
+  padding: 5px;
+  border-radius: 8px;
 }
 
-.card-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.card-content {
-  padding: 1.5rem;
-}
-
-.card-title {
-  font-weight: 600;
-  font-size: 1.25rem;
-}
-
-.card-description {
-  color: #6b7280;
-  font-size: 0.875rem;
+.avatar-container {
+  text-align: center;
+  margin-bottom: 50px;
+  margin-top: 20px;
 }
 
 .avatar {
-  position: relative;
-  border-radius: 9999px;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  border-radius: 50%;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #e5e7eb;
+  background-color: #c4c4c4;
 }
 
-.avatar-image {
+.avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.avatar-fallback {
+.avatar-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  font-size: 2.5rem;
   height: 100%;
-  font-weight: 500;
+}
+
+.user-name {
+  margin-top: 20px;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #0056b3;
+}
+
+.user-username {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 5px;
 }
 
 .badge {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 9999px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 500;
+  background-color: #00a3e0;
+  color: white;
+  padding: 7px 10px;
+  border-radius: 5px;
 }
 
-.badge-outline {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 9999px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  background: transparent;
-  border: 1px solid;
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+}
+.user-info {
+  margin-top: 10px;
 }
 
-.tabs-container {
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.info-item svg {
+  margin-right: 10px;
+  color: #00a3e0;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.tabs button {
+  padding: 10px 20px;
+  border: 1px solid #00a3e0;
+  background-color: #ffffff;
+  cursor: pointer;
+  border-radius: 5px;
+  color: #00a3e0;
+  font-weight: bold;
   width: 100%;
 }
 
-.tabs-list {
+.tabs button.active {
+  background-color: #00a3e0;
+  color: white;
+}
+
+.info-card-status {
+  background-color: #f1f9ff;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  height: 180px;
+}
+.info-card-status h3 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #0056b3;
+  font-weight: bold;
+}
+
+.info-card {
+  background-color: #f1f9ff;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  height: 300px;
+}
+
+.info-card h3 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #0056b3;
+  font-weight: bold;
+}
+
+.card-content p {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.card-content-time p {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.status-grid {
   display: grid;
-  border-radius: 0.375rem;
-  overflow: hidden;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 10px;
 }
 
-.tab-trigger {
-  padding: 0.75rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-align: center;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.btn {
-  display: inline-flex;
+.status-item {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  border-radius: 0.375rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: background-color 0.2s, color 0.2s;
+  background-color: #ffffff;
+  padding: 10px 15px;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.btn-outline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.375rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  background: transparent;
-  border: 1px solid;
-  transition: background-color 0.2s, color 0.2s;
+.status-button {
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 1rem;
+  border: none;
+  cursor: default;
 }
 
-.text-muted-foreground {
-  color: #6b7280;
+.active {
+  background-color: #00a3e0;
+  color: white;
 }
 
-.space-y-1 > * + * {
-  margin-top: 0.25rem;
+.inactive {
+  background-color: #a0a0a0;
+  color: white;
 }
 
-.space-y-4 > * + * {
-  margin-top: 1rem;
+.unlocked {
+  background-color: #4caf50;
+  color: white;
 }
 
-.relative {
-  position: relative;
+.locked {
+  background-color: #f44336;
+  color: white;
 }
 
-.absolute {
-  position: absolute;
+.time-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  background-color: #ffffff;
+  padding: 10px 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.flex {
+.time-icon {
+  margin-right: 10px;
+  color: #00a3e0;
+  width: 24px;
+  height: 24px;
+}
+
+.time-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.time-value {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.edit-profile-button {
+  position: fixed;
+  bottom: 70px;
+  right: 140px;
+  background-color: transparent;
+  color: #0a0a0a;
+  border: 2px solid #0b0b0b;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  z-index: 999999 !important;
   display: flex;
 }
 
-.items-center {
-  align-items: center;
+.edit-profile-button:hover {
+  background-color: #a0e1f9;
+  color: white;
 }
 
-.items-start {
-  align-items: flex-start;
+.change-password-button {
+  position: fixed;
+  bottom: 70px;
+  right: 5px;
+  background-color: transparent;
+  color: #0a0a0a;
+  border: 2px solid #0b0b0b;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  z-index: 999999 !important;
+  display: flex;
 }
 
-.justify-center {
-  justify-content: center;
+.change-password-button:hover {
+  background-color: #a0e1f9;
+  color: white;
 }
 
-.justify-between {
-  justify-content: space-between;
-}
-
-.justify-end {
-  justify-content: flex-end;
-}
-
-.gap-1 {
-  gap: 0.25rem;
-}
-
-.gap-2 {
-  gap: 0.5rem;
-}
-
-.gap-4 {
-  gap: 1rem;
-}
-
-.mt-0\.5 {
-  margin-top: 0.125rem;
-}
-
-.mt-2 {
-  margin-top: 0.5rem;
-}
-
-.mt-4 {
-  margin-top: 1rem;
-}
-
-.mt-6 {
-  margin-top: 1.5rem;
-}
-
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
-.mr-1 {
-  margin-right: 0.25rem;
-}
-
-.mx-auto {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-2xl {
-  font-size: 1.5rem;
-}
-
-.text-xl {
-  font-size: 1.25rem;
-}
-
-.text-sm {
-  font-size: 0.875rem;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-.font-bold {
-  font-weight: 700;
-}
-
-.rounded-lg {
-  border-radius: 0.5rem;
-}
-
-.border {
-  border: 1px solid #e5e7eb;
-}
-
-.p-4 {
-  padding: 1rem;
-}
-
-.pb-2 {
-  padding-bottom: 0.5rem;
-}
-
-.h-32 {
-  height: 8rem;
-}
-
-.w-32 {
-  width: 8rem;
-}
-
-.h-24 {
-  height: 6rem;
-}
-
-.w-24 {
-  width: 6rem;
-}
-
-.h-5 {
-  height: 1.25rem;
-}
-
-.w-5 {
-  width: 1.25rem;
-}
-
-.h-4 {
-  height: 1rem;
-}
-
-.w-4 {
-  width: 1rem;
-}
-
-.bottom-0 {
-  bottom: 0;
-}
-
-.right-0 {
-  right: 0;
-}
-
-.hidden {
-  display: none;
-}
-
-/* Modal styles */
+/* Modal Overlay */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 100;
 }
 
+/* Modal Container */
 .modal-container {
+  width: 500px;
   background-color: white;
-  border-radius: 0.5rem;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  animation: fadeIn 0.3s ease;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .modal-close {
-  background: transparent;
+  background-color: transparent;
   border: none;
+  font-size: 1.5rem;
   cursor: pointer;
-  color: #6b7280;
+  color: #888;
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 20px;
 }
 
-.modal-footer {
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 5px;
+}
+
+.form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  margin-top: 1.5rem;
+  gap: 10px;
+  margin-top: 20px;
 }
 
-/* Form styles */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-}
-
-.form-input,
-.form-textarea,
-.form-select {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  transition: border-color 0.2s;
-}
-
-.form-input:focus,
-.form-textarea:focus,
-.form-select:focus {
-  outline: none;
-  border-color: #00a3e0;
-  box-shadow: 0 0 0 2px rgba(0, 163, 224, 0.2);
-}
-
-.form-textarea {
-  min-height: 5rem;
-  resize: vertical;
-}
-
-.input-error {
-  border-color: #ef4444;
-}
-
-.error-message {
-  color: #ef4444;
-  font-size: 0.75rem;
-}
-
-.form-input-group {
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.input-prefix {
-  display: flex;
-  align-items: center;
-  padding: 0 0.75rem;
-  background-color: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-right: none;
-  border-radius: 0.375rem 0 0 0.375rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.form-input.with-prefix {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.avatar-upload {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.avatar-upload-btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.375rem 0.75rem;
-  background-color: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
-  color: #374151;
+.btn-cancel {
+  padding: 8px 15px;
+  background-color: #f5f5f5;
+  border: 1px solid #d0d0d0;
+  border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
-.avatar-upload-btn:hover {
-  background-color: #e5e7eb;
+.btn-save {
+  padding: 8px 15px;
+  background-color: #00a3e0;
+  border: 1px solid #00a3e0;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
-/* Responsive styles */
-@media (min-width: 768px) {
-  .md\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
   }
-
-  .md\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .md\:col-span-1 {
-    grid-column: span 1 / span 1;
-  }
-
-  .md\:col-span-2 {
-    grid-column: span 2 / span 2;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>
