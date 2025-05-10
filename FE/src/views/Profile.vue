@@ -166,7 +166,7 @@
                   @click="closeEditModal"
                   class="btn-cancel"
                 >
-                  Ủy bỏ
+                  Hủy bỏ
                 </button>
                 <button type="submit" class="btn-save">Lưu thay đổi</button>
               </div>
