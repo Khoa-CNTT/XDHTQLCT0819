@@ -809,6 +809,7 @@ export default {
 .summary-item .income {
   color: #10b981;
   background: linear-gradient(135deg, #10b981, #059669);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -816,6 +817,7 @@ export default {
 .summary-item .expense {
   color: #ef4444;
   background: linear-gradient(135deg, #ef4444, #dc2626);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -823,12 +825,14 @@ export default {
 .summary-item .balance {
   color: #3b82f6;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .summary-item .balance.negative {
   background: linear-gradient(135deg, #f43f5e, #e11d48);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
