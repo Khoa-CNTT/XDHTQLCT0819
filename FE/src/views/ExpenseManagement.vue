@@ -79,8 +79,12 @@
           </div>
           <div class="form-group">
             <label>Danh mục</label>
-            <select v-model="newTransaction.category_id" required>
-              <option value="" disabled>Chọn danh mục</option>
+            <select
+              v-model="newTransaction.category_id"
+              required
+              :class="{ 'text-muted': !newTransaction.category_id }"
+            >
+              <option value="" disabled hidden>Chọn danh mục</option>
               <option
                 v-for="cat in categoryList2"
                 :key="cat.id"
@@ -311,6 +315,9 @@ export default {
         const res = await axios.get("/api/categories", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+          params: {
+            type: "expense",
           },
         });
 
