@@ -171,7 +171,7 @@
           <div class="modal-actions">
             <button
               type="button"
-              class="cancel-button"
+              class="cancel-voice-button"
               @click="closeOpenVoiceModal"
             >
               Huỷ
@@ -522,7 +522,7 @@ export default {
           this.fetchCategoriesHome();
         } catch (error) {
           toast.error(
-            "Hệ thống không nhận diện được!Vui lòng nói chi tiết hơn"
+            "Hệ thống chưa nhận diện được thông tin. Vui lòng nói lại rõ ràng hơn (ví dụ: 'Chi 30 nghìn mua trà sữa')."
           );
         }
       };
@@ -1257,7 +1257,6 @@ body {
   }
 }
 
-/* Media queries for responsiveness */
 @media (max-width: 640px) {
   .modal-content {
     max-width: 100%;
@@ -1268,7 +1267,6 @@ body {
     min-width: 120px;
   }
 }
-/* Modal Voice Animation */
 .modal-void {
   position: fixed;
   top: 0;
@@ -1291,8 +1289,6 @@ body {
     background-color: rgba(0, 0, 0, 0.7);
   }
 }
-
-/* Sound wave effect around the modal */
 .modal-void::before,
 .modal-void::after {
   content: "";
@@ -1325,7 +1321,6 @@ body {
   }
 }
 
-/* Modal Voice Animation - Refined version */
 .modal-void {
   position: fixed;
   top: 0;
@@ -1340,7 +1335,6 @@ body {
   backdrop-filter: blur(5px);
 }
 
-/* Modal container */
 .modal-void .modal {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
   padding: 1.8rem;
@@ -1354,7 +1348,6 @@ body {
   border: none;
 }
 
-/* Colorful border effect */
 .modal-void .modal::before {
   content: "";
   position: absolute;
@@ -1394,7 +1387,6 @@ body {
   }
 }
 
-/* Label styling */
 .modal-void .form-group label {
   display: block;
   text-align: center;
@@ -1405,13 +1397,11 @@ body {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* Microphone container */
 .modal-void .col-lg-12 {
   position: relative;
   padding: 1.5rem 0;
 }
 
-/* Colorful sound waves around the microphone */
 .modal-void .col-lg-12::before,
 .modal-void .col-lg-12::after {
   content: "";
@@ -1468,7 +1458,6 @@ body {
   }
 }
 
-/* Microphone icon styling */
 .fa-microphone-lines {
   position: relative;
   z-index: 10;
@@ -1478,7 +1467,6 @@ body {
   color: #5f27cd;
 }
 
-/* Inactive microphone animation */
 .blinking {
   animation: blink 2s infinite;
 }
@@ -1501,7 +1489,6 @@ body {
   }
 }
 
-/* Active microphone animation with colorful effects */
 .active-microphone {
   color: #ff6b6b;
   animation: activePulse 1s infinite;
@@ -1533,7 +1520,6 @@ body {
   }
 }
 
-/* Colorful sound waves when microphone is active */
 .active-microphone + .sound-waves {
   position: absolute;
   top: 50%;
@@ -1587,15 +1573,14 @@ body {
   }
 }
 
-/* Button styling */
 .modal-actions {
   display: flex;
   justify-content: center;
   margin-top: 1.5rem;
 }
 
-.cancel-button {
-  padding: 0.7rem 2rem;
+.cancel-voice-button {
+  padding: 0.7rem 23%;
   background: linear-gradient(135deg, #5f27cd 0%, #6c5ce7 100%);
   color: white;
   border: none;
@@ -1607,17 +1592,16 @@ body {
   box-shadow: 0 4px 10px rgba(95, 39, 205, 0.3);
 }
 
-.cancel-button:hover {
+.cancel-voice-button:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 15px rgba(95, 39, 205, 0.4);
   background: linear-gradient(135deg, #6c5ce7 0%, #5f27cd 100%);
 }
 
-.cancel-button:active {
+.cancel-voice-button:active {
   transform: translateY(-1px);
 }
 
-/* Make sure the row and column are displayed correctly */
 .row {
   display: flex;
   width: 100%;
