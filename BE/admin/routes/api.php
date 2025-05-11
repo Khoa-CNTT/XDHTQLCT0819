@@ -83,6 +83,8 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
 
     Route::prefix('ai')->group(function () {
         Route::post('/void', [AiController::class, 'AIVoid']);
+        Route::get('/get-mbank', [AiController::class, 'fetchAndClassifyMBBankTransactions']);
+
     });
 
 

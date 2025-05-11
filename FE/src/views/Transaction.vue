@@ -296,21 +296,24 @@ export default {
     },
 
     async fetchMBTransactions() {
+      const toast = useToast();
       try {
         this.isLoading = true;
-        const response = await axios.get("/api/mb-bank", {
+        const response = await axios.get("/api/ai/get-mbank", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
           },
         });
-
-        if (response.status === 200) {
-          alert("✅ Đã tải giao dịch từ MB Bank");
-          await this.fetchTransactions();
+        toast.success(response.data.message);
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user) {
+          user.monthly_income = res.data.monthly_income;
+          user.monthly_customer_spending = res.data.monthly_customer_spending;
+          localStorage.setItem("user", JSON.stringify(user));
         }
+        this.fetchTransactions();
       } catch (err) {
-        console.error("❌ Lỗi tải giao dịch MB Bank", err);
-        alert("❌ Lỗi tải giao dịch MB Bank");
+        toast.error("Lỗi tải giao dịch MB Bank");
       } finally {
         this.isLoading = false;
       }

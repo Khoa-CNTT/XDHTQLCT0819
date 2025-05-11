@@ -53,22 +53,30 @@
 
           <li class="profile-dropdown">
             <button type="button" class="profile-btn" @click="toggleDropdown">
-              <img
-                :src="user?.avatar ? apiImage(user.avatar) : defaultAvatar"
-                alt="Profile"
-                class="avatar"
-              />
+              <template v-if="user?.avatar">
+                <img
+                  :src="apiImage(user.avatar)"
+                  alt="Profile"
+                  class="avatar"
+                />
+              </template>
+              <div v-else class="avatar-placeholder">
+                <img
+                  src="https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg"
+                  alt="Profile"
+                  class="avatar"
+                />
+              </div>
               <span class="caret">&#9662;</span>
             </button>
 
-            <!-- Gộp dropdown -->
             <div v-if="isDropdownOpen" class="dropdown-menu">
-              <router-link to="/profile" class="dropdown-link">
-                Thông tin tài khoản
-              </router-link>
-              <a href="#" class="dropdown-link" @click.prevent="handleLogout">
-                Đăng xuất
-              </a>
+              <router-link to="/profile" class="dropdown-link"
+                >Thông tin tài khoản</router-link
+              >
+              <a href="#" class="dropdown-link" @click.prevent="handleLogout"
+                >Đăng xuất</a
+              >
             </div>
           </li>
         </ul>

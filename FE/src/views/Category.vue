@@ -101,7 +101,12 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Loại</label>
-            <select v-model="form.type" class="form-select" required>
+            <select
+              v-model="form.type"
+              class="form-select"
+              :disabled="isEditing"
+              required
+            >
               <option value="">Chọn loại</option>
               <option value="income">Thu nhập</option>
               <option value="expense">Chi tiêu</option>
@@ -341,6 +346,14 @@ export default {
         this.form.icon = "fas fa-tshirt";
       } else if (name.includes("khác")) {
         this.form.icon = "fas fa-ellipsis-h";
+      } else if (
+        name.includes("làm đẹp") ||
+        name.includes("spa") ||
+        name.includes("mỹ phẩm") ||
+        name.includes("cắt tóc") ||
+        name.includes("salon")
+      ) {
+        this.form.icon = "fas fa-spa";
       } else {
         this.form.icon = "";
       }

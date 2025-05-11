@@ -17,14 +17,18 @@ class CategoryController extends Controller
     {
         $userId = Auth::id();
 
+        // Khởi tạo truy vấn cho các danh mục (categories)
         $query = Category::where('user_id', $userId);
 
+        // Lọc theo loại nếu có (filter by type if requested)
         if ($request->has('type') && in_array($request->type, ['income', 'expense'])) {
             $query->where('type', $request->type);
         }
 
+        // Lấy danh sách các danh mục (Get the list of categories)
         $categories = $query->get();
 
+        // Tính tổng số tiền cho từng danh mục (Calculate total for each category)
         foreach ($categories as $category) {
             $total = DB::table('transactions')
                 ->where('category_id', $category->id)
@@ -34,29 +38,74 @@ class CategoryController extends Controller
             $category->total_amount = $total ?: 0;
         }
 
-        $otherTotal = DB::table('transactions')
+        // Thêm "Khác thu" (Add "Other income")
+        $otherIncomeTotal = DB::table('transactions')
             ->whereNull('category_id')
             ->where('user_id', $userId)
-            ->when($request->has('type') && in_array($request->type, ['income', 'expense']), function ($q) use ($request) {
-                $q->where('transaction_type', $request->type);
-            })
+            ->where('transaction_type', 'income') // Filter income transactions
             ->sum('amount');
 
-        if ($otherTotal > 0) {
-            $otherCategory = new \stdClass();
-            $otherCategory->id = -1;
-            $otherCategory->name = 'Khác';
-            $otherCategory->icon = 'fas fa-question';
-            $otherCategory->slug = 'khac';
-            $otherCategory->type = $request->type ?? null;
-            $otherCategory->user_id = $userId;
-            $otherCategory->total_amount = $otherTotal;
+        if ($otherIncomeTotal > 0 && (!$request->has('type') || $request->type == 'income')) {
+            $otherIncome = new \stdClass();
+            $otherIncome->id = -1;
+            $otherIncome->name = 'Khác thu';
+            $otherIncome->icon = 'fas fa-question';
+            $otherIncome->slug = 'khac-thu';
+            $otherIncome->type = 'income';
+            $otherIncome->user_id = $userId;
+            $otherIncome->total_amount = $otherIncomeTotal;
 
-            $categories->push($otherCategory);
+            // Lấy các giao dịch thu "Khác thu" (Get "Other income" transactions)
+            $otherIncome->transactions = DB::table('transactions')
+                ->whereNull('category_id')
+                ->where('user_id', $userId)
+                ->where('transaction_type', 'income') // Filter income transactions
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $categories->push($otherIncome);
+        }
+
+        // Thêm "Khác chi" (Add "Other expense")
+        $otherExpenseTotal = DB::table('transactions')
+            ->whereNull('category_id')
+            ->where('user_id', $userId)
+            ->where('transaction_type', 'expense') // Filter expense transactions
+            ->sum('amount');
+
+        if ($otherExpenseTotal > 0 && (!$request->has('type') || $request->type == 'expense')) {
+            $otherExpense = new \stdClass();
+            $otherExpense->id = -2;
+            $otherExpense->name = 'Khác chi';
+            $otherExpense->icon = 'fas fa-question';
+            $otherExpense->slug = 'khac-chi';
+            $otherExpense->type = 'expense';
+            $otherExpense->user_id = $userId;
+            $otherExpense->total_amount = $otherExpenseTotal;
+
+            // Lấy các giao dịch chi "Khác chi" (Get "Other expense" transactions)
+            $otherExpense->transactions = DB::table('transactions')
+                ->whereNull('category_id')
+                ->where('user_id', $userId)
+                ->where('transaction_type', 'expense') // Filter expense transactions
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $categories->push($otherExpense);
+        }
+
+        // Filter out unnecessary transactions if type is specified
+        if ($request->has('type')) {
+            $categories = $categories->filter(function ($category) use ($request) {
+                return $category->type == $request->type;
+            });
         }
 
         return response()->json($categories);
     }
+
+
+
 
 
 
@@ -104,29 +153,57 @@ class CategoryController extends Controller
 
         $categories = $query->get();
 
-        $otherTotal = DB::table('transactions')
+        // Thêm "Khác thu"
+        $otherIncomeTotal = DB::table('transactions')
             ->whereNull('category_id')
             ->where('user_id', $userId)
-            ->when($type && in_array($type, ['income', 'expense']), function ($q) use ($type) {
-                $q->where('transaction_type', $type);
-            })
+            ->where('transaction_type', 'income')
             ->sum('amount');
 
-        if ($otherTotal > 0) {
-            $otherCategory = new \stdClass();
-            $otherCategory->id = -1;
-            $otherCategory->name = 'Khác';
-            $otherCategory->icon = 'fas fa-question';
-            $otherCategory->slug = 'khac';
-            $otherCategory->type = $type ?? null;
-            $otherCategory->user_id = $userId;
-            $otherCategory->total_amount = $otherTotal;
+        if ($otherIncomeTotal > 0 && (!$type || $type == 'income')) {
+            $otherIncome = new \stdClass();
+            $otherIncome->id = -1;
+            $otherIncome->name = 'Khác thu';
+            $otherIncome->icon = 'fas fa-question';
+            $otherIncome->slug = 'khac-thu';
+            $otherIncome->type = 'income';
+            $otherIncome->user_id = $userId;
+            $otherIncome->total_amount = $otherIncomeTotal;
+            $categories->push($otherIncome);
+        }
 
-            $categories->push($otherCategory);
+        // Thêm "Khác chi"
+        $otherExpenseTotal = DB::table('transactions')
+            ->whereNull('category_id')
+            ->where('user_id', $userId)
+            ->where('transaction_type', 'expense')
+            ->sum('amount');
+
+        if ($otherExpenseTotal > 0 && (!$type || $type == 'expense')) {
+            $otherExpense = new \stdClass();
+            $otherExpense->id = -2;
+            $otherExpense->name = 'Khác chi';
+            $otherExpense->icon = 'fas fa-question';
+            $otherExpense->slug = 'khac-chi';
+            $otherExpense->type = 'expense';
+            $otherExpense->user_id = $userId;
+            $otherExpense->total_amount = $otherExpenseTotal;
+
+            // Thêm danh sách transaction chi tiết
+            $otherExpense->transactions = DB::table('transactions')
+                ->whereNull('category_id')
+                ->where('user_id', $userId)
+                ->where('transaction_type', 'expense')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $categories->push($otherExpense);
         }
 
         return response()->json($categories);
     }
+
+
 
 
     public function store(Request $request)
@@ -166,19 +243,21 @@ class CategoryController extends Controller
         $userId = Auth::id();
 
         if ((int)$id === -1) {
+            // Khác thu
             $transactions = DB::table('transactions')
                 ->whereNull('category_id')
                 ->where('user_id', $userId)
+                ->where('transaction_type', 'income')
                 ->get();
 
             $totalAmount = $transactions->sum('amount');
 
             $otherCategory = (object)[
                 'id' => -1,
-                'name' => 'Khác',
+                'name' => 'Khác thu',
                 'icon' => 'fas fa-question',
-                'slug' => 'khac',
-                'type' => null,
+                'slug' => 'khac-thu',
+                'type' => 'income',
                 'user_id' => $userId,
                 'created_at' => null,
                 'updated_at' => null,
@@ -191,7 +270,35 @@ class CategoryController extends Controller
             ]);
         }
 
-        // Xử lý danh mục bình thường
+        if ((int)$id === -2) {
+            // Khác chi
+            $transactions = DB::table('transactions')
+                ->whereNull('category_id')
+                ->where('user_id', $userId)
+                ->where('transaction_type', 'expense')
+                ->get();
+
+            $totalAmount = $transactions->sum('amount');
+
+            $otherCategory = (object)[
+                'id' => -2,
+                'name' => 'Khác chi',
+                'icon' => 'fas fa-question',
+                'slug' => 'khac-chi',
+                'type' => 'expense',
+                'user_id' => $userId,
+                'created_at' => null,
+                'updated_at' => null,
+            ];
+
+            return response()->json([
+                'category' => $otherCategory,
+                'transactions' => $transactions,
+                'total_amount' => $totalAmount,
+            ]);
+        }
+
+        // Danh mục có thật
         $category = Category::where('id', $id)
             ->where('user_id', $userId)
             ->first();
@@ -213,6 +320,7 @@ class CategoryController extends Controller
             'total_amount' => $totalAmount,
         ]);
     }
+
 
 
 

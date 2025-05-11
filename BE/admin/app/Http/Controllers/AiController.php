@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class AiController extends Controller
@@ -162,7 +165,12 @@ PROMPT;
                 'viện phí',
                 'bệnh viện',
                 'thuốc',
-                'khám bệnh'
+                'khám bệnh',
+                'trà sữa',
+                'bánh mì',
+                'đồ ăn',
+                'đám'
+
             ])) {
                 $transaction_type = 'expense';
             }
@@ -205,5 +213,319 @@ PROMPT;
                 'message' => 'Lỗi khi tạo giao dịch: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+
+    // MBank fetch
+
+    public function fetchAndClassifyMBBankTransactions()
+    {
+        try {
+            $authUser = auth()->user();
+            $list_danh_muc = Category::where('user_id', $authUser->id)->pluck('name', 'id')->toArray();
+
+            $account = Account::where('user_id', $authUser->id)
+                ->where('is_primary', true)
+                ->first();
+
+            if (!$account) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Không tìm thấy tài khoản chính. Vui lòng thiết lập tài khoản chính.'
+                ], 400);
+            }
+
+            $payload = [
+                "USERNAME"  => $account->number_card,
+                "PASSWORD"  => Crypt::decryptString($account->password),
+                "DAY_BEGIN" => Carbon::today()->format('d/m/Y'),
+                "DAY_END"   => Carbon::today()->format('d/m/Y'),
+                "NUMBER_MB" => $account->number_card
+            ];
+            $client = new \GuzzleHttp\Client();
+            $response = $client->post('https://api-mb.dzmid.io.vn/api/transactions', [
+                'json' => $payload,
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+
+            if ($data['success'] && isset($data['data']['transactionHistoryList'])) {
+                $transactions = $data['data']['transactionHistoryList'];
+                $processedCount = 0;
+
+                foreach ($transactions as $transaction) {
+                    $amount = (float)($transaction['debitAmount'] ?: $transaction['creditAmount']);
+
+                    try {
+                        $transaction_date = Carbon::createFromFormat('d/m/Y H:i:s', $transaction['transactionDate'])->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        Log::error('Lỗi khi phân tích ngày giao dịch: ' . $transaction['transactionDate']);
+                        continue;
+                    }
+
+                    $transaction_type = !empty($transaction['creditAmount']) ? 'income' : 'expense';
+
+                    $transaction_info = $this->analyzeTransaction($transaction['description'], $list_danh_muc);
+
+                    if ($transaction_info) {
+                        try {
+                            DB::table('users')->where('id', $authUser->id)->update([
+                                'monthly_income' => $transaction_type === 'income'
+                                    ? DB::raw('monthly_income + ' . $amount)
+                                    : DB::raw('monthly_income'),
+                                'monthly_customer_spending' => $transaction_type === 'income'
+                                    ? DB::raw('monthly_customer_spending + ' . $amount)
+                                    : DB::raw('monthly_customer_spending - ' . $amount)
+                            ]);
+
+                            Transaction::create([
+                                'user_id' => $authUser->id,
+                                'account_id' => $account->id,
+                                'category_id' => $transaction_info['category_id'],
+                                'amount' => $amount,
+                                'transaction_date' => $transaction_date,
+                                'type' => $transaction_info['type'],
+                                'transaction_type' => $transaction_type,
+                                'description' => $transaction_info['description'] ?? $transaction['description'],
+                                'address' => $transaction['addDescription'] ?? null,
+                            ]);
+
+                            $processedCount++;
+                            Log::info('Giao dịch đã được phân loại và lưu: ' . $transaction['refNo']);
+                        } catch (\Exception $e) {
+                            Log::error('Lỗi khi lưu giao dịch: ' . $e->getMessage());
+                        }
+                    }
+                }
+
+                $updatedUser = DB::table('users')->where('id', $authUser->id)->first();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đã tải và phân loại ' . $processedCount . ' giao dịch thành công.',
+                    'monthly_income' => $updatedUser->monthly_income,
+                    'monthly_customer_spending' => $updatedUser->monthly_customer_spending,
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Không có giao dịch nào để tải về.'
+            ], 400);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            Log::error('Lỗi yêu cầu MB API: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Gửi yêu cầu tới MB Bank thất bại. Vui lòng thử lại sau.'
+            ], 500);
+        } catch (\Exception $e) {
+            Log::error('Lỗi chung MB API: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Có lỗi xảy ra. Vui lòng thử lại sau.'
+            ], 500);
+        }
+    }
+
+    private function analyzeTransaction($description, $list_danh_muc)
+    {
+        $api_key = 'AIzaSyASMyZotUMFskPC3IMAbrPnKJq8Rm_sL-M';
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $api_key;
+
+        $client = new Client([
+            'base_uri' => 'https://generativelanguage.googleapis.com',
+            'timeout'  => 30.0,
+        ]);
+
+        $prompt = $this->createTransactionPrompt($description, $list_danh_muc);
+
+        try {
+            $response = $client->post($url, [
+                'json' => [
+                    'contents' => [[
+                        'parts' => [['text' => $prompt]]
+                    ]]
+                ],
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ]
+            ]);
+
+            $body = json_decode($response->getBody(), true);
+            $result = trim($body['candidates'][0]['content']['parts'][0]['text'] ?? '');
+
+            $clean = Str::of($result)->replace(["```json", "```"], '')->trim();
+            $data = json_decode($clean, true);
+
+            if (is_null($data)) {
+                Log::warning('AI không thể trích xuất dữ liệu từ mô tả: ' . $description);
+                return null;
+            }
+
+            if (!isset($data['amount'], $data['description'])) {
+                Log::warning('Thiếu thông tin cần thiết trong phản hồi AI cho mô tả: ' . $description);
+                return null;
+            }
+
+            $data['type'] = 'transfer';
+
+            $transaction_type = $this->determineTransactionType($data['description']);
+            $data['transaction_type'] = $transaction_type;
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi phân tích giao dịch: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function createTransactionPrompt($description, $list_danh_muc)
+    {
+        $category_json_string = collect($list_danh_muc)
+            ->map(fn($name, $id) => "$id: \"$name\"")
+            ->implode(",\n    ");
+
+        return <<<PROMPT
+Mô tả giao dịch: "$description"
+
+Yêu cầu: Trích xuất thông tin từ mô tả giao dịch trên và trả về đúng định dạng JSON hợp lệ với các trường sau:
+
+{
+    "amount": (số tiền tính bằng đơn vị đồng, là số nguyên, lấy từ mô tả nếu có hoặc để 0),
+    "type": "transfer",
+    "description": (mô tả ngắn gọn hành động chi tiêu hoặc thu nhập, tối đa 50 ký tự),
+    "category_id": (id của danh mục phù hợp, chọn từ các ID trong bảng dưới hoặc null nếu không phù hợp)
+}
+
+Dưới đây là danh sách danh mục để tham chiếu category_id:
+{
+    $category_json_string
+}
+
+Ghi nhớ:
+- Trả về một chuỗi JSON hợp lệ duy nhất (double quotes, đúng cú pháp JSON).
+- Không ghi chú thích, không giải thích thêm.
+- Nếu không trích xuất được thì trả về đúng: null (chữ thường).
+PROMPT;
+    }
+
+    private function determineTransactionType($description)
+    {
+        $description = Str::lower($description);
+
+        $income_keywords = [
+            'nhận',
+            'thu nhập',
+            'lương',
+            'thưởng',
+            'tiền về',
+            'hoàn tiền',
+            'đã nhận',
+            'trả lại',
+            'tiền lãi',
+            'cổ tức',
+            'tiền thưởng',
+            'được trả',
+            'nhận được',
+            'đã gửi cho tôi',
+            'chuyển đến',
+            'chuyển vào',
+            'hoàn trả',
+            'trợ cấp',
+            'phụ cấp',
+            'nạp tiền',
+            'nạp ví',
+            'chuyen tien',
+            'mbvcb',
+            'khuyen mai',
+            'hoan tra',
+            'tiet kiem',
+            'thu'
+        ];
+
+        $expense_keywords = [
+            'chi tiêu',
+            'mua',
+            'trả',
+            'chuyển tiền',
+            'thanh toán',
+            'chuyển khoản',
+            'đóng phí',
+            'phí',
+            'tiền điện',
+            'tiền nước',
+            'tiền nhà',
+            'tiền phòng',
+            'gửi tiền',
+            'chuyển đi',
+            'trả nợ',
+            'mua sắm',
+            'ăn uống',
+            'cà phê',
+            'nhà hàng',
+            'siêu thị',
+            'xăng dầu',
+            'đi chợ',
+            'đặt hàng',
+            'mua vé',
+            'thuê',
+            'đặt cọc',
+            'rút tiền',
+            'chuyển cho',
+            'gửi cho',
+            'chi trả',
+            'trả góp',
+            'học phí',
+            'viện phí',
+            'bệnh viện',
+            'thuốc',
+            'khám bệnh',
+            'trà sữa',
+            'bánh mì',
+            'đồ ăn',
+            'chi',
+            'napas',
+            'gd',
+            'an',
+            'toi',
+            'trua',
+            'sang',
+            'coffee',
+            'bank',
+            'rut tien',
+            'viettel',
+            'sach',
+            'chuyen di',
+            'giai tri',
+            'du lich',
+            'khach san',
+            'xe',
+            'xang',
+            'sua chua',
+            'bao tri',
+            'dien thoai',
+            'internet',
+            'bao hiem',
+            'thue',
+            'thuong mai',
+            'mua sam',
+            'quan ao'
+        ];
+
+        foreach ($income_keywords as $keyword) {
+            if (Str::contains($description, $keyword)) {
+                return 'income';
+            }
+        }
+
+        foreach ($expense_keywords as $keyword) {
+            if (Str::contains($description, $keyword)) {
+                return 'expense';
+            }
+        }
+
+        return 'expense';
     }
 }
