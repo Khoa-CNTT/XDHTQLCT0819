@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,7 +35,7 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
     Route::put('/user/income', [UserController::class, 'updateIncome']);
     Route::put('/user/update-profile', [UserController::class, 'updateProfile']);
     Route::post('/user/avatar-profile', [UserController::class, 'updateAvatarProfile']);
-    
+
 
     // Account
     Route::prefix('account')->group(function () {
@@ -79,6 +80,13 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
         Route::get('/income-pie', [ReportController::class, 'incomePie']);
         Route::get('/summary', [ReportController::class, 'summary']);
     });
+
+    Route::prefix('ai')->group(function () {
+        Route::post('/void', [AiController::class, 'AIVoid']);
+    });
+
+
+
 
 
 

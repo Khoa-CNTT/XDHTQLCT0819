@@ -3,7 +3,7 @@
     <!-- Hero Section -->
     <div class="hero-section">
       <div class="hero-content">
-        <h1>XIN CHÀO</h1>
+        <h1 style="text-transform: uppercase">XIN CHÀO {{ user.fullName }}</h1>
         <p>Hôm nay bạn đã chi tiêu những gì?</p>
         <form class="search-form" @submit.prevent>
           <input
@@ -149,6 +149,38 @@
       </div>
     </div>
 
+    <!-- MODAL VOICHAT -->
+    <div v-if="showVoiceModal" class="modal-void">
+      <div class="modal">
+        <form class="modal-form">
+          <div class="form-group">
+            <label>Hãy Nói Vào Đây</label>
+            <div class="row">
+              <div class="col-lg-12 text-center">
+                <i
+                  class="fa-solid fa-microphone-lines fa-5x"
+                  v-bind:class="{
+                    blinking: !recognitionActive,
+                    'active-microphone': recognitionActive,
+                  }"
+                  v-on:click="startRecognition()"
+                ></i>
+              </div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="cancel-button"
+              @click="closeOpenVoiceModal"
+            >
+              Huỷ
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Nút mở modal -->
     <div class="action-buttons">
       <button class="action-btn" @click="openIncomeModal">
@@ -158,6 +190,10 @@
       <button class="action-btn" @click="openExpenseModal">
         <i class="fas fa-plus"></i>
         <span class="tooltip-text">Thêm chi tiêu</span>
+      </button>
+      <button class="action-btn" @click="openVoiceModal">
+        <i class="fa-solid fa-microphone-lines"></i>
+        <span class="tooltip-text">Nói</span>
       </button>
     </div>
 
@@ -213,10 +249,10 @@
 <script>
 import axios from "axios";
 import { useToast } from "vue-toastification";
-
 export default {
   data() {
     return {
+      user: {},
       selectedCategory: null,
       searchQuery: "",
       categoryList: [],
@@ -224,7 +260,7 @@ export default {
       totalIncome: 0,
       balance: 0,
       showDetailModal: false,
-
+      showVoiceModal: false,
       categoryDetail: null,
 
       showAddTransactionModal: false,
@@ -340,6 +376,13 @@ export default {
     closeIncomeModal() {
       this.showIncomeModal = false;
     },
+    openVoiceModal() {
+      this.showVoiceModal = true;
+    },
+    closeOpenVoiceModal() {
+      this.showVoiceModal = false;
+    },
+
     closeDetailModal() {
       this.showDetailModal = false;
     },
@@ -435,15 +478,74 @@ export default {
         useToast().error("Không thể lấy chi tiết danh mục!");
       }
     },
+
+    async startRecognition() {
+      const toast = useToast();
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        toast.error("Trình duyệt không hỗ trợ SpeechRecognition");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "vi-VN";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+
+      recognition.onresult = async (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log("nhận diện" + transcript);
+
+        try {
+          const res = await axios.post(
+            "/api/ai/void",
+            { text: transcript },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+              },
+            }
+          );
+          const user = JSON.parse(localStorage.getItem("user"));
+          if (user) {
+            user.monthly_income = res.data.monthly_income;
+            user.monthly_customer_spending = res.data.monthly_customer_spending;
+            localStorage.setItem("user", JSON.stringify(user));
+          }
+          this.totalIncome = res.data.monthly_income;
+          this.balance = res.data.monthly_customer_spending;
+
+          toast.success(res.data.message);
+          this.fetchCategoriesHome();
+        } catch (error) {
+          toast.error(
+            "Hệ thống không nhận diện được!Vui lòng nói chi tiết hơn"
+          );
+        }
+      };
+
+      recognition.onerror = function (event) {
+        console.error("Lỗi nhận dạng: ", event.error);
+        alert("Lỗi nhận dạng giọng nói: " + event.error);
+      };
+
+      recognition.onend = function () {
+        console.log("Kết thúc nhận dạng.");
+      };
+    },
   },
   mounted() {
-    this.fetchCategoriesHome();
-    this.fetchCategories();
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
-      this.totalIncome = user.monthly_income;
-      this.balance = user.monthly_customer_spending;
+      this.user = user;
+      this.totalIncome = user.monthly_income || 0;
+      this.balance = user.monthly_customer_spending || 0;
     }
+    this.fetchCategoriesHome();
+    this.fetchCategories();
     window.addEventListener("keydown", this.handleKeydown);
   },
 };
@@ -1165,5 +1267,367 @@ body {
   .modal-content p strong {
     min-width: 120px;
   }
+}
+/* Modal Voice Animation */
+.modal-void {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: backgroundFade 0.5s ease forwards;
+  backdrop-filter: blur(8px);
+}
+
+@keyframes backgroundFade {
+  from {
+    background-color: rgba(0, 0, 0, 0);
+  }
+  to {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* Sound wave effect around the modal */
+.modal-void::before,
+.modal-void::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: transparent;
+  border: 3px solid rgba(16, 185, 129, 0.6);
+  width: 150px;
+  height: 150px;
+  z-index: -1;
+  animation: soundWave 2s infinite;
+}
+
+.modal-void::after {
+  animation-delay: 0.5s;
+}
+
+@keyframes soundWave {
+  0% {
+    width: 150px;
+    height: 150px;
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    width: 150px;
+    height: 150px;
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+
+/* Modal Voice Animation - Refined version */
+.modal-void {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+}
+
+/* Modal container */
+.modal-void .modal {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+  padding: 1.8rem;
+  height: 350px;
+  border-radius: 1.2rem;
+  width: 320px; /* More appropriate size */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 20px rgba(79, 70, 229, 0.15);
+  position: relative;
+  overflow: hidden;
+  animation: modalAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: none;
+}
+
+/* Colorful border effect */
+.modal-void .modal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #ff6b6b,
+    #feca57,
+    #1dd1a1,
+    #5f27cd,
+    #54a0ff
+  );
+  animation: borderGlow 3s infinite linear;
+  background-size: 500% 100%;
+}
+
+@keyframes borderGlow {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 0%;
+  }
+}
+
+@keyframes modalAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Label styling */
+.modal-void .form-group label {
+  display: block;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Microphone container */
+.modal-void .col-lg-12 {
+  position: relative;
+  padding: 1.5rem 0;
+}
+
+/* Colorful sound waves around the microphone */
+.modal-void .col-lg-12::before,
+.modal-void .col-lg-12::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.modal-void .col-lg-12::before {
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(254, 202, 87, 0.1) 30%,
+    rgba(29, 209, 161, 0.1) 60%,
+    rgba(84, 160, 255, 0.1) 90%,
+    transparent 100%
+  );
+  animation: colorPulse 3s infinite;
+}
+
+.modal-void .col-lg-12::after {
+  width: 180px;
+  height: 180px;
+  border: 2px dashed rgba(95, 39, 205, 0.3);
+  animation: rotate 10s linear infinite;
+}
+
+@keyframes colorPulse {
+  0% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Microphone icon styling */
+.fa-microphone-lines {
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+  display: inline-block;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+  color: #5f27cd;
+}
+
+/* Inactive microphone animation */
+.blinking {
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+    color: #5f27cd;
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+    color: #54a0ff;
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+    color: #5f27cd;
+  }
+}
+
+/* Active microphone animation with colorful effects */
+.active-microphone {
+  color: #ff6b6b;
+  animation: activePulse 1s infinite;
+}
+
+@keyframes activePulse {
+  0% {
+    transform: scale(1);
+    color: #ff6b6b;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  }
+  25% {
+    color: #feca57;
+    text-shadow: 0 0 15px rgba(254, 202, 87, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    color: #1dd1a1;
+    text-shadow: 0 0 20px rgba(29, 209, 161, 0.7);
+  }
+  75% {
+    color: #54a0ff;
+    text-shadow: 0 0 15px rgba(84, 160, 255, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    color: #ff6b6b;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  }
+}
+
+/* Colorful sound waves when microphone is active */
+.active-microphone + .sound-waves {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+.active-microphone ~ .sound-wave {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+.active-microphone ~ .sound-wave:nth-child(1) {
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(255, 107, 107, 0.5);
+  animation: wave 2s infinite;
+}
+
+.active-microphone ~ .sound-wave:nth-child(2) {
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(29, 209, 161, 0.5);
+  animation: wave 2s infinite 0.4s;
+}
+
+.active-microphone ~ .sound-wave:nth-child(3) {
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(84, 160, 255, 0.5);
+  animation: wave 2s infinite 0.8s;
+}
+
+@keyframes wave {
+  0% {
+    width: 60px;
+    height: 60px;
+    opacity: 1;
+    border-width: 2px;
+  }
+  100% {
+    width: 200px;
+    height: 200px;
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+/* Button styling */
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.cancel-button {
+  padding: 0.7rem 2rem;
+  background: linear-gradient(135deg, #5f27cd 0%, #6c5ce7 100%);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(95, 39, 205, 0.3);
+}
+
+.cancel-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(95, 39, 205, 0.4);
+  background: linear-gradient(135deg, #6c5ce7 0%, #5f27cd 100%);
+}
+
+.cancel-button:active {
+  transform: translateY(-1px);
+}
+
+/* Make sure the row and column are displayed correctly */
+.row {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+.col-lg-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+  position: relative;
+  text-align: center;
 }
 </style>

@@ -15,7 +15,9 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Category::where('user_id', Auth::id());
+        $userId = Auth::id();
+
+        $query = Category::where('user_id', $userId);
 
         if ($request->has('type') && in_array($request->type, ['income', 'expense'])) {
             $query->where('type', $request->type);
@@ -26,32 +28,75 @@ class CategoryController extends Controller
         foreach ($categories as $category) {
             $total = DB::table('transactions')
                 ->where('category_id', $category->id)
-                ->where('user_id', Auth::id())
+                ->where('user_id', $userId)
                 ->sum('amount');
 
             $category->total_amount = $total ?: 0;
         }
 
+        $otherTotal = DB::table('transactions')
+            ->whereNull('category_id')
+            ->where('user_id', $userId)
+            ->when($request->has('type') && in_array($request->type, ['income', 'expense']), function ($q) use ($request) {
+                $q->where('transaction_type', $request->type);
+            })
+            ->sum('amount');
+
+        if ($otherTotal > 0) {
+            $otherCategory = new \stdClass();
+            $otherCategory->id = -1;
+            $otherCategory->name = 'Khác';
+            $otherCategory->icon = 'fas fa-question';
+            $otherCategory->slug = 'khac';
+            $otherCategory->type = $request->type ?? null;
+            $otherCategory->user_id = $userId;
+            $otherCategory->total_amount = $otherTotal;
+
+            $categories->push($otherCategory);
+        }
+
         return response()->json($categories);
     }
 
+
+
     public function showHome(Request $request)
     {
+        $userId = Auth::id();
         $type = $request->type;
         $name = $request->name;
 
         $query = DB::table('categories')
             ->join('transactions', 'categories.id', '=', 'transactions.category_id')
-            ->where('categories.user_id', Auth::id())
-            ->where('transactions.user_id', Auth::id())
-            ->select('categories.*', DB::raw('SUM(transactions.amount) as total_amount'))
-            ->groupBy('categories.id', 'categories.name', 'categories.type', 'categories.icon', 'categories.slug', 'categories.user_id', 'categories.created_at', 'categories.updated_at');
+            ->where('categories.user_id', $userId)
+            ->where('transactions.user_id', $userId)
+            ->select(
+                'categories.id',
+                'categories.name',
+                'categories.icon',
+                'categories.slug',
+                'categories.type',
+                'categories.user_id',
+                'categories.created_at',
+                'categories.updated_at',
+                DB::raw('SUM(transactions.amount) as total_amount')
+            )
+            ->groupBy(
+                'categories.id',
+                'categories.name',
+                'categories.icon',
+                'categories.slug',
+                'categories.type',
+                'categories.user_id',
+                'categories.created_at',
+                'categories.updated_at'
+            );
 
-        if ($request->has('type') && in_array($type, ['income', 'expense'])) {
+        if ($type && in_array($type, ['income', 'expense'])) {
             $query->where('categories.type', $type);
         }
 
-        if ($request->has('name')) {
+        if ($name) {
             $query->where('categories.name', 'like', '%' . $name . '%');
         }
 
@@ -59,10 +104,29 @@ class CategoryController extends Controller
 
         $categories = $query->get();
 
+        $otherTotal = DB::table('transactions')
+            ->whereNull('category_id')
+            ->where('user_id', $userId)
+            ->when($type && in_array($type, ['income', 'expense']), function ($q) use ($type) {
+                $q->where('transaction_type', $type);
+            })
+            ->sum('amount');
+
+        if ($otherTotal > 0) {
+            $otherCategory = new \stdClass();
+            $otherCategory->id = -1;
+            $otherCategory->name = 'Khác';
+            $otherCategory->icon = 'fas fa-question';
+            $otherCategory->slug = 'khac';
+            $otherCategory->type = $type ?? null;
+            $otherCategory->user_id = $userId;
+            $otherCategory->total_amount = $otherTotal;
+
+            $categories->push($otherCategory);
+        }
+
         return response()->json($categories);
     }
-
-
 
 
     public function store(Request $request)
@@ -99,8 +163,37 @@ class CategoryController extends Controller
 
     public function show($id)
     {
+        $userId = Auth::id();
+
+        if ((int)$id === -1) {
+            $transactions = DB::table('transactions')
+                ->whereNull('category_id')
+                ->where('user_id', $userId)
+                ->get();
+
+            $totalAmount = $transactions->sum('amount');
+
+            $otherCategory = (object)[
+                'id' => -1,
+                'name' => 'Khác',
+                'icon' => 'fas fa-question',
+                'slug' => 'khac',
+                'type' => null,
+                'user_id' => $userId,
+                'created_at' => null,
+                'updated_at' => null,
+            ];
+
+            return response()->json([
+                'category' => $otherCategory,
+                'transactions' => $transactions,
+                'total_amount' => $totalAmount,
+            ]);
+        }
+
+        // Xử lý danh mục bình thường
         $category = Category::where('id', $id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', $userId)
             ->first();
 
         if (!$category) {
@@ -109,7 +202,7 @@ class CategoryController extends Controller
 
         $transactions = DB::table('transactions')
             ->where('category_id', $category->id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', $userId)
             ->get();
 
         $totalAmount = $transactions->sum('amount');
@@ -120,6 +213,7 @@ class CategoryController extends Controller
             'total_amount' => $totalAmount,
         ]);
     }
+
 
 
 

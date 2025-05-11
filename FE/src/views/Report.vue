@@ -240,17 +240,18 @@ export default {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: false, // Ẩn legend mặc định, sử dụng legend tùy chỉnh
+            display: false,
           },
           tooltip: {
             callbacks: {
               label: function (context) {
-                const value = context.parsed;
+                const value = parseFloat(context.parsed);
                 const total = context.dataset.data.reduce(
-                  (acc, val) => acc + val,
+                  (acc, val) => acc + parseFloat(val),
                   0
                 );
-                const percentage = Math.round((value / total) * 100);
+                const percentage =
+                  total > 0 ? Math.round((value / total) * 100) : 0;
                 return `${context.label}: ${new Intl.NumberFormat("vi-VN", {
                   style: "currency",
                   currency: "VND",

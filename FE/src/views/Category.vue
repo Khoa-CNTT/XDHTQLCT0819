@@ -188,13 +188,15 @@
             </li>
           </ul>
 
-          <!-- Button to open Add Transaction Modal -->
+          <!-- Button to open Add Transaction Modal (only visible if category is not 'Khác') -->
           <button
+            v-if="categoryDetail.slug !== 'khac'"
             class="btn btn-primary"
             @click="openAddTransactionModal(categoryDetail.id)"
           >
             Thêm Giao Dịch
           </button>
+
           <!-- Close modal button -->
           <button class="btn btn-secondary" @click="closeDetailModal">
             Đóng

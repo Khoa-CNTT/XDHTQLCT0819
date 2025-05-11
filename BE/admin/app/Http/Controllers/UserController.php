@@ -69,9 +69,6 @@ class UserController extends Controller
         ]);
     }
 
-
-
-
     public function updateAvatarProfile(Request $request)
     {
         $request->validate([
