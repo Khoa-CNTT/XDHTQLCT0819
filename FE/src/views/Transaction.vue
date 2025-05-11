@@ -129,6 +129,7 @@
 
 <script>
 import axios from "axios";
+import { useToast } from "vue-toastification";
 
 export default {
   name: "TransactionPage",
@@ -313,7 +314,7 @@ export default {
         }
         this.fetchTransactions();
       } catch (err) {
-        toast.error("Lỗi tải giao dịch MB Bank");
+        toast.error(err.response.data.error);
       } finally {
         this.isLoading = false;
       }
