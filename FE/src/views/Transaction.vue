@@ -51,7 +51,7 @@
           Tháng này
         </button>
         <button class="btn-fetch" @click="fetchMBTransactions">
-          Tải giao dịch MB Bank
+          Tải giao dịch MB Bank hôm nay
         </button>
       </div>
     </div>

@@ -23,10 +23,6 @@ Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::get('/get-image/{filename}', [UserController::class, 'getImage'])
     ->where('filename', '.*');
 
-
-// Exception 
-Route::middleware('auth:sanctum')->get('/mb-bank', [TransactionController::class, 'fetchMBBankTransactions']);
-
 Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/change-password', [AuthController::class, 'changePassword']);
