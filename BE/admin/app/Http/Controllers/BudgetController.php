@@ -150,7 +150,7 @@ class BudgetController extends Controller
         }
 
         return response()->json([
-            'canh_bao' => $alerts
+            'alerts' => $alerts
         ]);
     }
 
