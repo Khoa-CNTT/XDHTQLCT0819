@@ -59,11 +59,11 @@
     <!-- Thông tin tài chính -->
     <div class="finance-info">
       <div class="info-card income-card">
-        <span class="label">Thu Nhập:</span>
+        <span class="label">Tổng thu nhập:</span>
         <span class="value income">{{ formatNumber(totalIncome) }} VND</span>
       </div>
       <div class="info-card expense-card">
-        <span class="label">Chi tiêu:</span>
+        <span class="label">Tổng chi tiêu:</span>
         <span class="value expense">{{ formatNumber(totalExpense) }} VND</span>
       </div>
     </div>

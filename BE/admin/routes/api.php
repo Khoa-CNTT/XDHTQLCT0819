@@ -2,10 +2,10 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AiController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExampleController;
 use App\Http\Controllers\ReportController;
@@ -80,6 +80,15 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
     Route::prefix('ai')->group(function () {
         Route::post('/void', [AiController::class, 'AIVoid']);
         Route::get('/get-mbank', [AiController::class, 'fetchAndClassifyMBBankTransactions']);
+    });
+
+    Route::prefix('budget')->group(function () {
+        Route::post('/', [BudgetController::class, 'store']);
+        Route::get('/', [BudgetController::class, 'getBudgetSummary']);
+        Route::get('/alerts', [BudgetController::class, 'getBudgetAlerts']);
+        Route::get('/{id}', [BudgetController::class, 'edit']);
+        Route::put('/{id}', [BudgetController::class, 'update']);
+        Route::delete('/{id}', [BudgetController::class, 'destroy']);
     });
 
     /////// ---------ADMIN------------------///////

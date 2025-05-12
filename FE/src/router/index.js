@@ -7,7 +7,7 @@ import ExpenseManagement from "@/views/ExpenseManagement.vue";
 import Transaction from "@/views/Transaction.vue";
 import Target from "@/views/Target.vue";
 import Report from "@/views/Report.vue";
-import EditUser from "@/views/EditUser.vue"; 
+import EditUser from "@/views/EditUser.vue";
 import Category from "@/views/Category.vue";
 import Account from "@/views/Account.vue";
 import Profile from "@/views/Profile.vue";
@@ -57,30 +57,30 @@ const routes = [
     component: Report,
     meta: { requiresAuth: true },
   },
-   {
+  {
     path: "/quan-ly-nguoi-dung",
     name: "quan-ly-nguoi-dung",
     component: EditUser,
-    meta: { requiresAuth: true }, 
+    meta: { requiresAuth: true },
   },
   {
     path: "/quan-ly-danh-muc",
     name: "quan-ly-danh-muc",
     component: Category,
-    meta: { requiresAuth: true }, 
+    meta: { requiresAuth: true },
   },
   {
     path: "/quan-ly-tai-khoan",
     name: "quan-ly-tai-khoan",
     component: Account,
-    meta: { requiresAuth: true }, 
+    meta: { requiresAuth: true },
   },
-   {
+  {
     path: "/profile",
     name: "profile",
     component: Profile,
-    meta: { requiresAuth: true }, 
-  },
+    meta: { requiresAuth: true },
+  }
 ];
 
 const router = createRouter({
