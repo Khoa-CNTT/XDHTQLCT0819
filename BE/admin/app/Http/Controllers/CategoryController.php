@@ -48,7 +48,7 @@ class CategoryController extends Controller
         if ($otherIncomeTotal > 0 && (!$request->has('type') || $request->type == 'income')) {
             $otherIncome = new \stdClass();
             $otherIncome->id = -1;
-            $otherIncome->name = 'Khác thu';
+            $otherIncome->name = 'Khác ( Thu )';
             $otherIncome->icon = 'fas fa-question';
             $otherIncome->slug = 'khac-thu';
             $otherIncome->type = 'income';
@@ -76,7 +76,7 @@ class CategoryController extends Controller
         if ($otherExpenseTotal > 0 && (!$request->has('type') || $request->type == 'expense')) {
             $otherExpense = new \stdClass();
             $otherExpense->id = -2;
-            $otherExpense->name = 'Khác chi';
+            $otherExpense->name = 'Khác ( Chi )';
             $otherExpense->icon = 'fas fa-question';
             $otherExpense->slug = 'khac-chi';
             $otherExpense->type = 'expense';
@@ -163,7 +163,7 @@ class CategoryController extends Controller
         if ($otherIncomeTotal > 0 && (!$type || $type == 'income')) {
             $otherIncome = new \stdClass();
             $otherIncome->id = -1;
-            $otherIncome->name = 'Khác thu';
+            $otherIncome->name = 'Khác ( Thu )';
             $otherIncome->icon = 'fas fa-question';
             $otherIncome->slug = 'khac-thu';
             $otherIncome->type = 'income';
@@ -182,7 +182,7 @@ class CategoryController extends Controller
         if ($otherExpenseTotal > 0 && (!$type || $type == 'expense')) {
             $otherExpense = new \stdClass();
             $otherExpense->id = -2;
-            $otherExpense->name = 'Khác chi';
+            $otherExpense->name = 'Khác ( Chi )';
             $otherExpense->icon = 'fas fa-question';
             $otherExpense->slug = 'khac-chi';
             $otherExpense->type = 'expense';
@@ -254,7 +254,7 @@ class CategoryController extends Controller
 
             $otherCategory = (object)[
                 'id' => -1,
-                'name' => 'Khác thu',
+                'name' => 'Khác ( Thu )',
                 'icon' => 'fas fa-question',
                 'slug' => 'khac-thu',
                 'type' => 'income',
@@ -282,7 +282,7 @@ class CategoryController extends Controller
 
             $otherCategory = (object)[
                 'id' => -2,
-                'name' => 'Khác chi',
+                'name' => 'Khác ( Chi )',
                 'icon' => 'fas fa-question',
                 'slug' => 'khac-chi',
                 'type' => 'expense',
@@ -400,3 +400,6 @@ class CategoryController extends Controller
         ]);
     }
 }
+
+
+ 

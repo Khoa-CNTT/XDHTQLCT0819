@@ -300,12 +300,12 @@ export default {
       const toast = useToast();
       try {
         this.isLoading = true;
-        const response = await axios.get("/api/ai/get-mbank", {
+        const res = await axios.get("/api/ai/get-mbank", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
           },
         });
-        toast.success(response.data.message);
+        toast.success(res.data.message);
         const user = JSON.parse(localStorage.getItem("user"));
         if (user) {
           user.monthly_income = res.data.monthly_income;
@@ -313,8 +313,8 @@ export default {
           localStorage.setItem("user", JSON.stringify(user));
         }
         this.fetchTransactions();
-      } catch (err) {
-        toast.error(err.response.data.error);
+      } catch (error) {
+        toast.error(error.response.data.error);
       } finally {
         this.isLoading = false;
       }

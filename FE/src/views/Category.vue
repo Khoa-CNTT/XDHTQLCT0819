@@ -429,7 +429,6 @@ export default {
     cancelForm() {
       this.showForm = false;
       this.form = { id: null, name: "", type: "", icon: "" };
-      useToast().info("🔔 Đã huỷ chỉnh sửa / thêm danh mục.");
     },
     async deleteCategory(id) {
       const toast = useToast();

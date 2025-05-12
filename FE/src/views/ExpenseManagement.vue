@@ -127,23 +127,65 @@
         <h2 class="modal-title">Thêm thu nhập</h2>
         <form @submit.prevent="addIncome" class="modal-form">
           <div class="form-group">
-            <label>Nhập số tiền</label>
+            <label for="description" class="form-label">Nội dung</label>
             <input
               type="text"
-              v-model="income.amount"
-              @input="formatIncomeAmount"
+              id="description"
+              v-model="newTransaction.description"
+              class="form-control"
               required
             />
           </div>
+          <div class="form-group">
+            <label for="amount" class="form-label">Số tiền</label>
+            <input
+              type="number"
+              id="amount"
+              v-model="newTransaction.amount"
+              class="form-control"
+              required
+              min="0"
+            />
+          </div>
+          <div class="form-group">
+            <label>Danh mục</label>
+            <select
+              v-model="newTransaction.category_id"
+              required
+              :class="{ 'text-muted': !newTransaction.category_id }"
+            >
+              <option value="" disabled hidden>Chọn danh mục</option>
+              <option
+                v-for="cat in categoryList3"
+                :key="cat.id"
+                :value="cat.id"
+              >
+                {{ cat.name }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="mb-3">
+              <label for="transaction_date" class="form-label">Ngày</label>
+              <input
+                type="date"
+                id="transaction_date"
+                v-model="newTransaction.transaction_date"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+
           <div class="modal-actions">
             <button
               type="button"
               class="cancel-button"
               @click="closeIncomeModal"
             >
-              Huỷ
+              Đóng
             </button>
-            <button type="submit" class="add-button">Thêm</button>
+            <button type="submit" class="add-button">Thêm Giao Dịch</button>
           </div>
         </form>
       </div>
@@ -257,6 +299,7 @@ export default {
       searchQuery: "",
       categoryList: [],
       categoryList2: [],
+      categoryList3: [],
       totalIncome: 0,
       balance: 0,
       showDetailModal: false,
@@ -346,7 +389,7 @@ export default {
       }
     },
 
-    async fetchCategories() {
+    async fetchCategoriesExpense() {
       try {
         const res = await axios.get("/api/categories", {
           headers: {
@@ -357,10 +400,28 @@ export default {
           },
         });
 
-        this.categoryList2 = res.data;
+        this.categoryList2 = res.data.filter((item) => item.id !== -2);
       } catch (error) {
         console.error("Error fetching categories:", error);
         this.showErrorNotification("Lỗi khi tải danh mục chi tiêu!");
+      }
+    },
+
+    async fetchCategoriesIncome() {
+      try {
+        const res = await axios.get("/api/categories", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+          params: {
+            type: "income",
+          },
+        });
+
+        this.categoryList3 = res.data.filter((item) => item.id !== -1);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        this.showErrorNotification("Lỗi khi tải danh mục thu nhập!");
       }
     },
 
@@ -444,7 +505,7 @@ export default {
     async addIncome() {
       const toast = useToast();
       try {
-        const res = await axios.put("/api/user/income", this.income, {
+        const res = await axios.post("/api/transaction", this.newTransaction, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
           },
@@ -457,7 +518,18 @@ export default {
           user.monthly_customer_spending = res.data.monthly_customer_spending;
           localStorage.setItem("user", JSON.stringify(user));
         }
+
         toast.success("Thêm thu nhập thành công");
+        this.closeIncomeModal();
+        this.newTransaction = {
+          transaction_date: "",
+          type: "cash",
+          amount: 0,
+          description: "",
+          address: "",
+          category_id: "",
+        };
+        await this.fetchCategoriesHome();
       } catch (error) {
         toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
       }
@@ -545,7 +617,8 @@ export default {
       this.balance = user.monthly_customer_spending || 0;
     }
     this.fetchCategoriesHome();
-    this.fetchCategories();
+    this.fetchCategoriesExpense();
+    this.fetchCategoriesIncome();
     window.addEventListener("keydown", this.handleKeydown);
   },
 };
