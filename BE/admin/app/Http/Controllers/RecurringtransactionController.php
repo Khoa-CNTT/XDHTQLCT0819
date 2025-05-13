@@ -6,6 +6,7 @@ use App\Models\Recurringtransaction;
 use App\Models\Savingoal;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Traits\UserActivityLogger;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 
 class RecurringtransactionController extends Controller
 {
+    use UserActivityLogger;
     public function index()
     {
         $transactions = Recurringtransaction::where('user_id', Auth::id())->get();
@@ -51,6 +53,7 @@ class RecurringtransactionController extends Controller
         $data['user_id'] = Auth::id();
 
         $transaction = Recurringtransaction::create($data);
+        $this->logAction('Đã thêm giao dịch định kì: ' . $transaction->description . ' thành công');
 
         return response()->json($transaction, 201);
     }
@@ -100,6 +103,7 @@ class RecurringtransactionController extends Controller
         }
 
         $transaction->update($validator->validated());
+        $this->logAction('Đã cập nhật giao dịch định kì: ' . $transaction->description . ' thành công');
 
         return response()->json([
             'message' => 'Ngân sách đã được cập nhật thành công',
@@ -116,6 +120,7 @@ class RecurringtransactionController extends Controller
         }
 
         $transaction->delete();
+        $this->logAction('Đã xoá giao dịch định kì: ' . $transaction->description . ' thành công');
 
         return response()->json(['message' => 'Giao dịch đã được xoá thành công']);
     }
@@ -125,7 +130,7 @@ class RecurringtransactionController extends Controller
     // CRON
     public function processRecurringTransactions()
     {
-        $recurringTransactions = Recurringtransaction::all();
+        $recurringTransactions = Recurringtransaction::where('user_id', Auth::id())->get();
 
         foreach ($recurringTransactions as $recurringTransaction) {
             $nextTransactionDate = Carbon::parse($recurringTransaction->date);

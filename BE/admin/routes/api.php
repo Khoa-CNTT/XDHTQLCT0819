@@ -11,6 +11,7 @@ use App\Http\Controllers\ExampleController;
 use App\Http\Controllers\RecurringtransactionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SavingoalController;
+use App\Http\Controllers\StoryController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 
@@ -102,7 +103,10 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
         Route::delete('{id}', [RecurringtransactionController::class, 'destroy']);
     });
 
-
+    Route::prefix('stories')->group(function () {
+        Route::get('/', [StoryController::class, 'getstories']);
+        Route::delete('/', [StoryController::class, 'destroy']);
+    });
 
     /////// ---------ADMIN------------------///////
     Route::middleware(['checkRole:admin'])->group(function () {

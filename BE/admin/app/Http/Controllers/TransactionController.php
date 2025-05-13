@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Traits\UserActivityLogger;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +14,8 @@ use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
+    use UserActivityLogger;
+
     public function index(Request $request)
     {
         try {
@@ -102,6 +105,7 @@ class TransactionController extends Controller
             $transaction = Transaction::create($data);
             $transaction->created_at = Carbon::parse($transaction->created_at)->addDay();
             $transaction->save();
+            $this->logAction('Đã thêm giao dịch: ' . $transaction->description . ' thành công');
 
             return response()->json([
                 'success' => true,
@@ -164,6 +168,7 @@ class TransactionController extends Controller
 
             $data = $validator->validated();
             $transaction->update($data);
+            $this->logAction('Đã cập nhật giao dịch: ' . $transaction->description . ' thành công');
 
             return response()->json([
                 'success' => true,
@@ -195,7 +200,7 @@ class TransactionController extends Controller
 
             $user->save();
             $transaction->delete();
-
+            $this->logAction('Đã xoá giao dịch: ' . $transaction->description . ' thành công');
             return response()->json([
                 'success' => true,
                 'message' => 'Xóa giao dịch thành công.',
@@ -211,8 +216,4 @@ class TransactionController extends Controller
             ], 500);
         }
     }
-
-
-
-   
 }

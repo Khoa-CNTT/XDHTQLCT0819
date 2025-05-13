@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Budget;
+use App\Traits\UserActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 
 class BudgetController extends Controller
 {
+    use UserActivityLogger;
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -53,7 +55,7 @@ class BudgetController extends Controller
             'budget_limit' => $request->budget_limit,
             'warning_threshold' => $request->warning_threshold,
         ]);
-
+        $this->logAction('Đã tạo ngân sách thành công');
         return response()->json([
             'message' => 'Ngân sách đã được tạo thành công',
             'budget' => $budget,
@@ -278,6 +280,7 @@ class BudgetController extends Controller
             'budget_limit' => $request->budget_limit,
             'warning_threshold' => $request->warning_threshold,
         ]);
+        $this->logAction('Cập nhật ngân sách: ' . $budget->category_id . ' thành công');
 
         return response()->json([
             'message' => 'Ngân sách đã được cập nhật thành công',
@@ -296,7 +299,7 @@ class BudgetController extends Controller
         }
 
         $budget->delete();
-
+        $this->logAction('Xoá ngân sách thành công');
         return response()->json(['message' => 'Ngân sách đã được xoá thành công']);
     }
 }

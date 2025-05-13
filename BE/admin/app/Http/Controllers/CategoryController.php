@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Traits\UserActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
+    use UserActivityLogger;
     public function index(Request $request)
     {
         $userId = Auth::id();
@@ -94,11 +96,6 @@ class CategoryController extends Controller
 
         return response()->json($categories);
     }
-
-
-
-
-
 
     public function showHome(Request $request)
     {
@@ -221,7 +218,7 @@ class CategoryController extends Controller
             'icon' => $request->icon,
             'user_id' => Auth::id(),
         ]);
-
+        $this->logAction('Đã thêm mới danh mục: ' . $category->name . 'thành công');
         return response()->json([
             'message' => 'Tạo danh mục thành công',
             'category' => $category
@@ -346,6 +343,7 @@ class CategoryController extends Controller
             'type' => $request->type,
             'icon' => $request->icon,
         ]);
+        $this->logAction('Đã cập nhật danh mục: ' . $category->name . ' thành công');
 
         return response()->json([
             'message' => 'Cập nhật danh mục thành công',
@@ -381,7 +379,7 @@ class CategoryController extends Controller
         $user->save();
         Transaction::where('category_id', $category->id)->delete();
         $category->delete();
-
+        $this->logAction('Đã xoá danh mục: ' . $category->name . ' thành công');
         return response()->json([
             'message' => 'Xóa danh mục và các giao dịch liên quan thành công, đã cập nhật số liệu',
             'monthly_income' => $user->monthly_income,

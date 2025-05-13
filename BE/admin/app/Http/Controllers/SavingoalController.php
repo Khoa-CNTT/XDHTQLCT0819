@@ -6,6 +6,7 @@ use App\Models\Savingoal;
 use App\Http\Controllers\Controller;
 use App\Mail\GoalCompletedMail;
 use App\Models\User;
+use App\Traits\UserActivityLogger;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Validator;
 
 class SavingoalController extends Controller
 {
+    use UserActivityLogger;
+
     public function index()
     {
         try {
@@ -88,6 +91,7 @@ class SavingoalController extends Controller
                 : 0;
 
             $goal = Savingoal::create($data);
+            $this->logAction('Đã thêm mục tiêu: ' . $goal->name . ' thành công');
 
             return response()->json([
                 'success' => true,
@@ -162,6 +166,7 @@ class SavingoalController extends Controller
             }
 
             $goal->update($data);
+            $this->logAction('Đã cập nhật mục tiêu: ' . $goal->name . ' thành công');
 
             return response()->json([
                 'success' => true,
@@ -185,6 +190,7 @@ class SavingoalController extends Controller
         try {
             $goal = Savingoal::where('user_id', auth()->id())->findOrFail($id);
             $goal->delete();
+            $this->logAction('Đã xoá mục tiêu: ' . $goal->name . ' thành công');
 
             return response()->json([
                 'success' => true,
@@ -241,6 +247,7 @@ class SavingoalController extends Controller
             $goal->save_money += $request->amount;
             $goal->savings_percentage = round(($goal->save_money / $goal->target) * 100, 2);
             $goal->save();
+            $this->logAction('Đã Thêm tiền tiết kiệm cho mục tiêu: ' . $goal->name . ' thành công');
 
             return response()->json([
                 'success' => true,

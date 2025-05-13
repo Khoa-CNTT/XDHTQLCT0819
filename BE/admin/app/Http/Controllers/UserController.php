@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Traits\UserActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
+    use UserActivityLogger;
 
     public function index()
     {
@@ -62,6 +64,7 @@ class UserController extends Controller
         User::where('id', $user->id)->update($validatedData);
 
         $user = User::find($user->id);
+        $this->logAction('Đã cập nhật thông tin cá nhân thành công');
 
         return response()->json([
             'message' => 'Cập nhật hồ sơ thành công',
@@ -84,7 +87,7 @@ class UserController extends Controller
         $path = $request->file('avatar')->store('avatars', 'public');
         $user->avatar = $path;
         User::where('id', $user->id)->update(['avatar' => $path]);
-
+        $this->logAction('Đã cập nhật ảnh đại diện thành công');
         return response()->json(['message' => 'Cập nhật ảnh đại diện thành công', 'avatar' => $path, 'user' => $user]);
     }
 
