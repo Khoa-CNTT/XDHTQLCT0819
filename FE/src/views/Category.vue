@@ -490,6 +490,50 @@ export default {
       return regex.test(date);
     },
 
+    fetchCategoryBudgetStatus(categoryId) {
+      const toast = useToast();
+      axios
+        .get(`/api/budget/category/${categoryId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+        })
+        .then((response) => {
+          if (response.data && response.data.status) {
+            const formattedStatus = response.data.status.replace(
+              /<strong>(.*?)<\/strong>/g,
+              (_, category) => {
+                const uppercaseCategory = category.toUpperCase();
+                return uppercaseCategory;
+              }
+            );
+
+            if (formattedStatus.includes("đã vượt ngưỡng")) {
+              toast.error(formattedStatus, {
+                timeout: 5000,
+                position: "top-right",
+                dangerouslyUseHTMLString: true,
+              });
+            } else if (formattedStatus.includes("sắp vượt ngưỡng")) {
+              toast.warning(formattedStatus, {
+                timeout: 5000,
+                position: "top-right",
+                dangerouslyUseHTMLString: true,
+              });
+            } else {
+              toast.success(formattedStatus, {
+                timeout: 5000,
+                position: "top-right",
+                dangerouslyUseHTMLString: true,
+              });
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Lỗi khi lấy trạng thái ngân sách danh mục:", error);
+        });
+    },
+
     // HUY TODO:
     async addTransaction() {
       const toast = useToast();
@@ -516,6 +560,7 @@ export default {
         }
         this.openCategoryDetail(this.newTransaction.category_id);
         this.closeAddTransactionModal();
+        this.fetchCategoryBudgetStatus(this.newTransaction.category_id);
         this.newTransaction = {
           transaction_date: "",
           type: "cash",

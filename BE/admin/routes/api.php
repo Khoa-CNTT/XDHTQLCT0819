@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExampleController;
+use App\Http\Controllers\RecurringtransactionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SavingoalController;
 use App\Http\Controllers\TransactionController;
@@ -87,9 +88,20 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
         Route::get('/', [BudgetController::class, 'getBudgetSummary']);
         Route::get('/alerts', [BudgetController::class, 'getBudgetAlerts']);
         Route::get('/{id}', [BudgetController::class, 'edit']);
+        Route::get('/category/{id}', [BudgetController::class, 'getCategoryBudgetStatus']);
         Route::put('/{id}', [BudgetController::class, 'update']);
         Route::delete('/{id}', [BudgetController::class, 'destroy']);
     });
+
+    Route::prefix('recurringtransaction')->group(function () {
+        Route::get('/', [RecurringtransactionController::class, 'index']);
+        Route::post('/', [RecurringtransactionController::class, 'store']);
+        Route::get('{id}', [RecurringtransactionController::class, 'edit']);
+        Route::put('{id}', [RecurringtransactionController::class, 'update']);
+        Route::delete('{id}', [RecurringtransactionController::class, 'destroy']);
+    });
+
+
 
     /////// ---------ADMIN------------------///////
     Route::middleware(['checkRole:admin'])->group(function () {

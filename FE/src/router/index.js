@@ -11,6 +11,7 @@ import EditUser from "@/views/EditUser.vue";
 import Category from "@/views/Category.vue";
 import Account from "@/views/Account.vue";
 import Profile from "@/views/Profile.vue";
+import Budget from "@/views/Budget.vue";
 
 const routes = [
   {
@@ -79,6 +80,12 @@ const routes = [
     path: "/profile",
     name: "profile",
     component: Profile,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/budget",
+    name: "budget",
+    component: Budget,
     meta: { requiresAuth: true },
   }
 ];

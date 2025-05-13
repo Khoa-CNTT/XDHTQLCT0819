@@ -36,6 +36,11 @@
                 >Danh mục</router-link
               >
             </li>
+             <li>
+              <router-link to="/budget" class="nav-link"
+                >Ngân sách</router-link
+              >
+            </li>
             <li>
               <router-link to="/quan-ly-tai-khoan" class="nav-link"
                 >Tài khoản</router-link
@@ -158,6 +163,7 @@ export default {
         this.isDropdownOpen = false;
       }
     },
+    
   },
   mounted() {
     try {
@@ -172,7 +178,6 @@ export default {
     } catch (e) {
       console.error("Error parsing user data", e);
     }
-
     document.addEventListener("click", this.closeDropdown);
   },
   beforeUnmount() {
