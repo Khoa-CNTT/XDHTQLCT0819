@@ -203,24 +203,24 @@ export default {
     this.fetchGoals();
   },
   methods: {
-    // Convert amount to VND format
     formatVND(number) {
-      return number.toLocaleString("vi-VN") + " VND";
+      if (typeof number === "string") {
+        number = number.replace(/\./g, "");
+      }
+      const value = Number(number) || 0;
+      return value.toLocaleString("vi-VN") + " VND";
     },
 
-    // Format currency for goal.savingsToday
     formatCurrency(event, index) {
-      let value = event.target.value.replace(/\D/g, ""); // Remove all non-numeric characters
-      value = value.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Add thousand separators
+      let value = event.target.value.replace(/\D/g, "");
+      value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
       this.goals[index].savingsToday = value;
     },
 
-    // Format date
     formatDate(date) {
       return new Date(date).toLocaleDateString("vi-VN");
     },
 
-    // Calculate progress percentage
     progress(saved, target) {
       return Math.min(Math.round((saved / target) * 100), 100);
     },
@@ -239,7 +239,6 @@ export default {
       this.showModal = true;
     },
 
-    // Show edit goal modal
     showEditModal(goal, index) {
       this.currentGoal = { ...goal };
       this.editingIndex = index;
@@ -247,7 +246,6 @@ export default {
       this.showModal = true;
     },
 
-    // Close the modal
     closeModal() {
       this.showModal = false;
       this.currentGoal = {
@@ -262,7 +260,6 @@ export default {
       this.editingIndex = null;
     },
 
-    // Save goal (add or edit)
     saveGoal() {
       if (this.isEditing) {
         axios
@@ -299,7 +296,6 @@ export default {
       }
     },
 
-    // Delete goal
     deleteGoal(index) {
       const goal = this.goals[index];
       axios
@@ -310,7 +306,7 @@ export default {
         })
         .then((response) => {
           this.goals.splice(index, 1);
-          this.toast.success("✅ Xóa mục tiêu thành công");
+          this.toast.success(response.data.data.message);
         })
         .catch((error) => {
           this.toast.error("❌ Có lỗi khi xóa mục tiêu");
@@ -318,7 +314,6 @@ export default {
         });
     },
 
-    // Add today's savings
     addSavingsToday(index) {
       const goal = this.goals[index];
       const savingsToday = goal.savingsToday.replace(/\./g, "") || 0;
@@ -326,9 +321,7 @@ export default {
         this.toast.error("❌ Số tiền không thể âm!");
         return;
       }
-      goal.save_money += parseInt(savingsToday);
       goal.savingsToday = "";
-
       axios
         .put(
           `/api/saving-goals/${goal.id}/add-money`,
@@ -341,15 +334,21 @@ export default {
         )
         .then((response) => {
           this.goals[index] = response.data.data;
-          this.toast.success("✅ Cập nhật số tiền tiết kiệm thành công");
+          this.toast.success(response.data.message);
+          const user = JSON.parse(localStorage.getItem("user"));
+          if (user) {
+            user.monthly_customer_spending =
+              response.data.data.monthly_customer_spending;
+            localStorage.setItem("user", JSON.stringify(user));
+          }
+          this.fetchGoals();
         })
         .catch((error) => {
-          this.toast.error("❌ Có lỗi khi cập nhật số tiền");
+          this.toast.error(error.response.data.message);
           console.error("Có lỗi khi cập nhật số tiền:", error);
         });
     },
 
-    // Fetch all goals
     fetchGoals() {
       axios
         .get("/api/saving-goals", {

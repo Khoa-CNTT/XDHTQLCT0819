@@ -17,18 +17,14 @@ class CategoryController extends Controller
     {
         $userId = Auth::id();
 
-        // Khởi tạo truy vấn cho các danh mục (categories)
         $query = Category::where('user_id', $userId);
 
-        // Lọc theo loại nếu có (filter by type if requested)
         if ($request->has('type') && in_array($request->type, ['income', 'expense'])) {
             $query->where('type', $request->type);
         }
 
-        // Lấy danh sách các danh mục (Get the list of categories)
         $categories = $query->get();
 
-        // Tính tổng số tiền cho từng danh mục (Calculate total for each category)
         foreach ($categories as $category) {
             $total = DB::table('transactions')
                 ->where('category_id', $category->id)
@@ -38,11 +34,10 @@ class CategoryController extends Controller
             $category->total_amount = $total ?: 0;
         }
 
-        // Thêm "Khác thu" (Add "Other income")
         $otherIncomeTotal = DB::table('transactions')
             ->whereNull('category_id')
             ->where('user_id', $userId)
-            ->where('transaction_type', 'income') // Filter income transactions
+            ->where('transaction_type', 'income')
             ->sum('amount');
 
         if ($otherIncomeTotal > 0 && (!$request->has('type') || $request->type == 'income')) {
@@ -55,22 +50,20 @@ class CategoryController extends Controller
             $otherIncome->user_id = $userId;
             $otherIncome->total_amount = $otherIncomeTotal;
 
-            // Lấy các giao dịch thu "Khác thu" (Get "Other income" transactions)
             $otherIncome->transactions = DB::table('transactions')
                 ->whereNull('category_id')
                 ->where('user_id', $userId)
-                ->where('transaction_type', 'income') // Filter income transactions
+                ->where('transaction_type', 'income')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
             $categories->push($otherIncome);
         }
 
-        // Thêm "Khác chi" (Add "Other expense")
         $otherExpenseTotal = DB::table('transactions')
             ->whereNull('category_id')
             ->where('user_id', $userId)
-            ->where('transaction_type', 'expense') // Filter expense transactions
+            ->where('transaction_type', 'expense')
             ->sum('amount');
 
         if ($otherExpenseTotal > 0 && (!$request->has('type') || $request->type == 'expense')) {
@@ -83,18 +76,16 @@ class CategoryController extends Controller
             $otherExpense->user_id = $userId;
             $otherExpense->total_amount = $otherExpenseTotal;
 
-            // Lấy các giao dịch chi "Khác chi" (Get "Other expense" transactions)
             $otherExpense->transactions = DB::table('transactions')
                 ->whereNull('category_id')
                 ->where('user_id', $userId)
-                ->where('transaction_type', 'expense') // Filter expense transactions
+                ->where('transaction_type', 'expense')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
             $categories->push($otherExpense);
         }
 
-        // Filter out unnecessary transactions if type is specified
         if ($request->has('type')) {
             $categories = $categories->filter(function ($category) use ($request) {
                 return $category->type == $request->type;
@@ -153,7 +144,7 @@ class CategoryController extends Controller
 
         $categories = $query->get();
 
-        // Thêm "Khác thu"
+        //  "Khác thu"
         $otherIncomeTotal = DB::table('transactions')
             ->whereNull('category_id')
             ->where('user_id', $userId)
@@ -172,7 +163,7 @@ class CategoryController extends Controller
             $categories->push($otherIncome);
         }
 
-        // Thêm "Khác chi"
+        //  "Khác chi"
         $otherExpenseTotal = DB::table('transactions')
             ->whereNull('category_id')
             ->where('user_id', $userId)
@@ -189,7 +180,6 @@ class CategoryController extends Controller
             $otherExpense->user_id = $userId;
             $otherExpense->total_amount = $otherExpenseTotal;
 
-            // Thêm danh sách transaction chi tiết
             $otherExpense->transactions = DB::table('transactions')
                 ->whereNull('category_id')
                 ->where('user_id', $userId)
@@ -298,7 +288,6 @@ class CategoryController extends Controller
             ]);
         }
 
-        // Danh mục có thật
         $category = Category::where('id', $id)
             ->where('user_id', $userId)
             ->first();
@@ -400,6 +389,3 @@ class CategoryController extends Controller
         ]);
     }
 }
-
-
- 
