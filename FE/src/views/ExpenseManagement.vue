@@ -389,6 +389,22 @@ export default {
       }
     },
 
+    async fetchProfile() {
+      try {
+        const res = await axios.get("/api/user/profile", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+        });
+        this.user = res.data;
+        this.totalIncome = res.data.monthly_income || 0;
+        this.balance = res.data.monthly_customer_spending || 0;
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        this.showErrorNotification("Lỗi khi tải danh mục chi tiêu!");
+      }
+    },
+
     async fetchCategoriesExpense() {
       try {
         const res = await axios.get("/api/categories", {
@@ -654,15 +670,10 @@ export default {
     },
   },
   mounted() {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) {
-      this.user = user;
-      this.totalIncome = user.monthly_income || 0;
-      this.balance = user.monthly_customer_spending || 0;
-    }
     this.fetchCategoriesHome();
     this.fetchCategoriesExpense();
     this.fetchCategoriesIncome();
+    this.fetchProfile();
     window.addEventListener("keydown", this.handleKeydown);
   },
 };
