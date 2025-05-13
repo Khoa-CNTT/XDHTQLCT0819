@@ -189,29 +189,41 @@
               <div class="form-group">
                 <label>Mật khẩu cũ:</label>
                 <input
-                  type="password"
+                  :type="showOldPassword ? 'text' : 'password'"
                   v-model="passwordForm.current_password"
                   class="form-input"
                   required
                 />
+                <button type="button" @click="toggleOldPassword" class="password-toggle-btn">
+                <Eye v-if="!showOldPassword" />
+                <EyeOff v-if="showOldPassword" />
+              </button>
               </div>
               <div class="form-group">
                 <label>Mật khẩu mới:</label>
                 <input
-                  type="password"
+                  :type="showNewPassword ? 'text' : 'password'"
                   v-model="passwordForm.new_password"
                   class="form-input"
                   required
                 />
+                <button type="button" @click="toggleNewPassword" class="password-toggle-btn">
+                <Eye v-if="!showNewPassword" />
+                <EyeOff v-if="showNewPassword" />
+              </button>
               </div>
               <div class="form-group">
                 <label>Xác nhận mật khẩu mới:</label>
                 <input
-                  type="password"
+                  :type="showConfirmPassword ? 'text' : 'password'"
                   v-model="passwordForm.new_password_confirmation"
                   class="form-input"
                   required
                 />
+                <button type="button" @click="toggleConfirmPassword" class="password-toggle-btn">
+                <Eye v-if="!showConfirmPassword" />
+                <EyeOff v-if="showConfirmPassword" />
+              </button>
               </div>
               <div class="form-actions">
                 <button
@@ -239,6 +251,8 @@ import {
   Phone as PhoneIcon,
   MapPin as MapPinIcon,
   CalendarDays as CalendarDaysIcon,
+  Eye,
+  EyeOff,
 } from "lucide-vue-next";
 import { useToast } from "vue-toastification";
 
@@ -251,6 +265,8 @@ export default {
     PhoneIcon,
     MapPinIcon,
     CalendarDaysIcon,
+    Eye,
+    EyeOff,
   },
   setup() {
     const activeTab = ref("account");
@@ -263,6 +279,22 @@ export default {
       new_password: "",
       new_password_confirmation: "",
     });
+
+    const showOldPassword = ref(false); // Điều khiển việc hiển thị mật khẩu cũ
+    const showNewPassword = ref(false); // Điều khiển việc hiển thị mật khẩu mới
+    const showConfirmPassword = ref(false); // Điều khiển việc hiển thị mật khẩu xác nhận
+
+    const toggleOldPassword = () => {
+      showOldPassword.value = !showOldPassword.value;
+    };
+
+    const toggleNewPassword = () => {
+      showNewPassword.value = !showNewPassword.value;
+    };
+
+    const toggleConfirmPassword = () => {
+      showConfirmPassword.value = !showConfirmPassword.value;
+    };
 
     const fetchProfile = async () => {
       try {
@@ -418,6 +450,13 @@ export default {
       apiImage,
       translateRole,
       passwordForm,
+      passwordForm,
+      showOldPassword,
+      showNewPassword,
+      showConfirmPassword,
+      toggleOldPassword,
+      toggleNewPassword,
+      toggleConfirmPassword,
     };
   },
 };
@@ -810,6 +849,26 @@ input[type="file"] {
   color: white;
   border-radius: 5px;
   cursor: pointer;
+}
+
+.password-input {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.password-toggle-btn {
+  background: transparent;
+  border: none;
+  position: absolute;
+  right: 30px;
+  cursor: pointer;
+  color: #00a3e0;
+}
+
+.password-toggle-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* Animation */
