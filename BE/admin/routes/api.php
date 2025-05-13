@@ -95,6 +95,7 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
 
     Route::prefix('recurringtransaction')->group(function () {
         Route::get('/', [RecurringtransactionController::class, 'index']);
+        Route::get('/test-recurring-transactions', [RecurringTransactionController::class, 'runRecurring']); //oker
         Route::post('/', [RecurringtransactionController::class, 'store']);
         Route::get('{id}', [RecurringtransactionController::class, 'edit']);
         Route::put('{id}', [RecurringtransactionController::class, 'update']);

@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Recurringtransaction;
 use App\Models\Savingoal;
 use App\Models\Transaction;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 
 class RecurringtransactionController extends Controller
@@ -120,7 +122,7 @@ class RecurringtransactionController extends Controller
 
 
 
-    // 
+    // CRON
     public function processRecurringTransactions()
     {
         $recurringTransactions = Recurringtransaction::all();
@@ -146,13 +148,20 @@ class RecurringtransactionController extends Controller
 
         switch ($period) {
             case 'daily':
-                return $transactionDate->isToday();
+                return $transactionDate->lte($today);
+
             case 'weekly':
-                return $transactionDate->isSameDay($today->subWeeks(1));
+                $weeksDiff = $transactionDate->diffInWeeks($today, false);
+                return $weeksDiff >= 0 && $transactionDate->addWeeks($weeksDiff)->isSameDay($today);
+
             case 'monthly':
-                return $transactionDate->isSameDay($today->subMonths(1));
+                $monthsDiff = $transactionDate->diffInMonths($today, false);
+                return $monthsDiff >= 0 && $transactionDate->addMonths($monthsDiff)->isSameDay($today);
+
             case 'yearly':
-                return $transactionDate->isSameDay($today->subYears(1));
+                $yearsDiff = $transactionDate->diffInYears($today, false);
+                return $yearsDiff >= 0 && $transactionDate->addYears($yearsDiff)->isSameDay($today);
+
             default:
                 return false;
         }
@@ -160,15 +169,23 @@ class RecurringtransactionController extends Controller
 
     private function createTransaction($recurringTransaction)
     {
+        $amount = $recurringTransaction->amount;
+
         Transaction::create([
             'user_id' => $recurringTransaction->user_id,
             'category_id' => $recurringTransaction->category_id,
-            'amount' => $recurringTransaction->amount,
+            'amount' => $amount,
             'transaction_date' => Carbon::today(),
             'type' => 'cash',
             'transaction_type' => 'expense',
             'description' => $recurringTransaction->description,
         ]);
+
+        $user = User::find($recurringTransaction->user_id);
+        if ($user && Schema::hasColumn('users', 'monthly_customer_spending')) {
+            $user->monthly_customer_spending -= $amount;
+            $user->save();
+        }
     }
 
     private function updateSavingoal($recurringTransaction)
@@ -204,5 +221,10 @@ class RecurringtransactionController extends Controller
         }
 
         $recurringTransaction->save();
+    }
+    public function runRecurring()
+    {
+        $this->processRecurringTransactions();
+        return response()->json(['message' => 'Các giao dịch định kỳ được xử lý trong ngày hôm nay.']);
     }
 }
