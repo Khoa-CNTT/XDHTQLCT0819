@@ -12,6 +12,7 @@ import Category from "@/views/Category.vue";
 import Account from "@/views/Account.vue";
 import Profile from "@/views/Profile.vue";
 import Budget from "@/views/Budget.vue";
+import RecurringTransactions from "@/views/RecurringTransactions.vue";
 
 const routes = [
   {
@@ -87,7 +88,14 @@ const routes = [
     name: "budget",
     component: Budget,
     meta: { requiresAuth: true },
+  },
+  {
+    path: "/quan-ly-giao-dich-dinh-ky",
+    name: "quan-ly-giao-dich-dinh-ky",
+    component: RecurringTransactions,
+    meta: { requiresAuth: true },
   }
+   
 ];
 
 const router = createRouter({
