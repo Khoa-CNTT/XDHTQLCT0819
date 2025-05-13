@@ -46,6 +46,11 @@
                 >Tài khoản</router-link
               >
             </li>
+            <li>
+              <router-link to="/quan-ly-giao-dich-dinh-ky" class="nav-link"
+                >Quản lý giao dịch định kỳ</router-link
+              >
+            </li>
           </template>
 
           <template v-if="isAdmin">
