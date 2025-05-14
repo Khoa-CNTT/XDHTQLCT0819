@@ -267,6 +267,13 @@
 
     <!-- Nút mở modal -->
     <div class="action-buttons">
+      <button class="action-btn-a" @click="openVoiceModal">
+        <i class="fa-solid fa-microphone-lines"></i>
+        <span class="tooltip-text">Nói</span>
+      </button>
+      <button class="action-btn-a" @click="openChatBox">
+        <i class="fa-solid">🤖</i>
+      </button>
       <button class="action-btn" @click="openIncomeModal">
         <i class="fas fa-coins"></i>
         <span class="tooltip-text">Thêm thu nhập</span>
@@ -274,13 +281,6 @@
       <button class="action-btn" @click="openExpenseModal">
         <i class="fas fa-plus"></i>
         <span class="tooltip-text">Thêm chi tiêu</span>
-      </button>
-      <button class="action-btn" @click="openVoiceModal">
-        <i class="fa-solid fa-microphone-lines"></i>
-        <span class="tooltip-text">Nói</span>
-      </button>
-      <button class="action-btn" @click="openChatBox">
-        <i class="fa-solid">🤖</i>
       </button>
     </div>
 
@@ -1325,6 +1325,29 @@ body {
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
+.action-btn-a {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+    animation: pulse 2s infinite;
+
+}
+.action-btn-a:hover {
+  background-color: #059669;
+  transform: scale(1.1);
+}
+
 .action-btn:hover {
   background-color: #059669;
   transform: scale(1.1);
@@ -1809,6 +1832,20 @@ body {
     height: 200px;
     opacity: 0;
     border-width: 1px;
+  }
+}
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
   }
 }
 

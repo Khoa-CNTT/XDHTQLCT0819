@@ -10,7 +10,14 @@
         />
       </router-link>
 
-      <div class="nav-menu">
+      <!-- Toggle Button -->
+      <button class="nav-toggle" @click="toggleMenu">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
+
+      <div class="nav-menu" :class="{ open: isMenuOpen }">
         <ul class="nav-list">
           <template v-if="!isAdmin">
             <li>
@@ -36,10 +43,8 @@
                 >Danh mục</router-link
               >
             </li>
-             <li>
-              <router-link to="/budget" class="nav-link"
-                >Ngân sách</router-link
-              >
+            <li>
+              <router-link to="/budget" class="nav-link">Ngân sách</router-link>
             </li>
             <li>
               <router-link to="/quan-ly-tai-khoan" class="nav-link"
@@ -107,13 +112,16 @@ export default {
     return {
       isAdmin: false,
       isDropdownOpen: false,
+      isMenuOpen: false,
       user: null,
-      defaultAvatar: "/default-avatar.png",
     };
   },
   methods: {
     toggleDropdown() {
       this.isDropdownOpen = !this.isDropdownOpen;
+    },
+    toggleMenu() {
+      this.isMenuOpen = !this.isMenuOpen;
     },
     apiImage(filename) {
       return `/api/get-image/${filename}`;
@@ -168,7 +176,6 @@ export default {
         this.isDropdownOpen = false;
       }
     },
-    
   },
   mounted() {
     try {
@@ -206,11 +213,36 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 0;
+  padding: 1rem;
+  flex-wrap: wrap;
 }
 
 .logo-img {
   width: 100px;
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 22px;
+  width: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.nav-toggle .bar {
+  height: 3px;
+  width: 100%;
+  background-color: #333;
+  border-radius: 2px;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
 }
 
 .nav-list {
@@ -220,6 +252,7 @@ export default {
   margin: 0;
   padding: 0;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .nav-link {
@@ -250,7 +283,6 @@ export default {
   width: 100%;
 }
 
-/* Profile styles */
 .profile-dropdown {
   position: relative;
 }
@@ -302,5 +334,72 @@ export default {
 .dropdown-link:hover {
   background-color: #f3f4f6;
   color: #0ea5e9;
+}
+
+/* 🔽 Responsive */
+@media (max-width: 768px) {
+  .nav-toggle {
+    display: flex;
+  }
+
+  .nav-menu {
+    width: 100%;
+    flex-direction: column;
+    display: none;
+  }
+
+  .nav-menu.open {
+    display: flex;
+  }
+
+  .nav-list {
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .nav-link {
+    font-size: 1.1rem;
+    width: 100%;
+  }
+
+  .profile-dropdown {
+    align-self: flex-end;
+    margin-top: 1rem;
+  }
+
+  .dropdown-menu {
+    right: 10px;
+    left: auto;
+  }
+
+  .logo-img {
+    width: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav {
+    padding: 0.5rem;
+  }
+
+  .nav-link {
+    font-size: 1rem;
+  }
+
+  .logo-img {
+    width: 70px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dropdown-menu {
+    min-width: 150px;
+    top: 42px;
+  }
 }
 </style>
