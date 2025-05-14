@@ -357,6 +357,7 @@ export default {
       userMessage: "",
       loading: false,
       messages: [],
+      isFirstMessage: true,
       newTransaction: {
         transaction_date: "",
         type: "cash",
@@ -726,7 +727,7 @@ export default {
     async sendMessage() {
       const message = this.userMessage.trim();
       if (!message) return;
-
+      this.userMessage = "";
       this.messages.push({ sender: "user", text: message });
       this.loading = true;
 
@@ -751,7 +752,6 @@ export default {
       }
 
       this.loading = false;
-      this.userMessage = "";
     },
   },
   mounted() {
@@ -2015,5 +2015,4 @@ body {
 .chatbot-close-btn:hover {
   color: #333;
 }
-
 </style>
