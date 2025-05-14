@@ -2016,16 +2016,4 @@ body {
   color: #333;
 }
 
-@keyframes blink {
-  0%,
-  20% {
-    color: transparent;
-  }
-  50% {
-    color: #000;
-  }
-  100% {
-    color: transparent;
-  }
-}
 </style>
