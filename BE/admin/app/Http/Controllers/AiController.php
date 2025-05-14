@@ -528,4 +528,159 @@ PROMPT;
 
         return 'expense';
     }
+
+
+    // CHAT BOX
+
+    public function CreatePromptChatBox($context = null)
+    {
+        return <<<PROMPT
+Bạn là trợ lý tài chính cá nhân thông minh. Hãy trả lời câu hỏi người dùng dựa vào thông tin được cung cấp.
+
+Thông tin của người dùng:
+{{USER_INFO}}
+
+Lịch sử giao dịch gần đây:
+{{TRANSACTION_HISTORY}}
+
+Phân loại giao dịch theo danh mục:
+{{CATEGORY_STATISTICS}}
+
+Câu hỏi: "{{USER_QUESTION}}"
+
+Lưu ý:
+- Trả lời ngắn gọn, rõ ràng và hữu ích
+- Sử dụng ngôn ngữ thân thiện
+- Đưa ra lời khuyên hoặc gợi ý (nếu phù hợp)
+- Không sử dụng từ ngữ quá kỹ thuật
+- Trả lời bằng tiếng Việt
+PROMPT;
+    }
+
+    public function chatBox(Request $request)
+    {
+        $authUser = auth()->user();
+        $userQuestion = $request->message;
+
+        if (empty($userQuestion)) {
+            return response()->json(['error' => true, 'message' => 'Bạn chưa nhập câu hỏi!'], 400);
+        }
+
+        try {
+            $userInfo = DB::table('users')->where('id', $authUser->id)->first();
+            $userInfoText = "- Thu nhập hàng tháng: " . number_format($userInfo->monthly_income) . " đồng\n";
+            $userInfoText .= "- Chi tiêu hàng tháng: " . number_format($userInfo->monthly_customer_spending) . " đồng\n";
+
+            $startDate = Carbon::now()->subMonths(3)->startOfMonth();
+            $transactions = Transaction::where('user_id', $authUser->id)
+                ->where('transaction_date', '>=', $startDate)
+                ->with('category')
+                ->orderBy('transaction_date', 'desc')
+                ->get();
+
+            $transactionHistory = "";
+            foreach ($transactions as $index => $transaction) {
+                if ($index < 10) {
+                    $transactionHistory .= "- " . Carbon::parse($transaction->transaction_date)->format('d/m/Y') . ": ";
+                    $transactionHistory .= ($transaction->transaction_type == 'income' ? "+" : "-") . number_format($transaction->amount) . "đ ";
+                    $transactionHistory .= "(" . $transaction->description . ")";
+                    $transactionHistory .= $transaction->category ? " [" . $transaction->category->name . "]" : "";
+                    $transactionHistory .= "\n";
+                }
+            }
+
+            $lastThreeMonths = [];
+
+            for ($i = 2; $i >= 0; $i--) {
+                $month = Carbon::now()->subMonths($i);
+                $lastThreeMonths[$month->format('Y-m')] = [
+                    'label' => $month->format('m/Y'),
+                    'categories' => []
+                ];
+            }
+
+            foreach ($transactions as $transaction) {
+                $monthKey = Carbon::parse($transaction->transaction_date)->format('Y-m');
+
+                if (isset($lastThreeMonths[$monthKey]) && $transaction->category_id) {
+                    $categoryName = $transaction->category ? $transaction->category->name : 'Khác';
+                    $categoryId = $transaction->category_id;
+
+                    if (!isset($lastThreeMonths[$monthKey]['categories'][$categoryId])) {
+                        $lastThreeMonths[$monthKey]['categories'][$categoryId] = [
+                            'name' => $categoryName,
+                            'income' => 0,
+                            'expense' => 0
+                        ];
+                    }
+
+                    if ($transaction->transaction_type == 'income') {
+                        $lastThreeMonths[$monthKey]['categories'][$categoryId]['income'] += $transaction->amount;
+                    } else {
+                        $lastThreeMonths[$monthKey]['categories'][$categoryId]['expense'] += $transaction->amount;
+                    }
+                }
+            }
+
+            $categoryStatisticsText = "";
+            foreach ($lastThreeMonths as $monthKey => $monthData) {
+                $categoryStatisticsText .= "Tháng " . $monthData['label'] . ":\n";
+
+                if (empty($monthData['categories'])) {
+                    $categoryStatisticsText .= "- Không có dữ liệu\n";
+                } else {
+                    foreach ($monthData['categories'] as $categoryId => $categoryData) {
+                        if ($categoryData['expense'] > 0) {
+                            $categoryStatisticsText .= "- " . $categoryData['name'] . ": -" . number_format($categoryData['expense']) . "đ\n";
+                        }
+                        if ($categoryData['income'] > 0) {
+                            $categoryStatisticsText .= "- " . $categoryData['name'] . ": +" . number_format($categoryData['income']) . "đ\n";
+                        }
+                    }
+                }
+                $categoryStatisticsText .= "\n";
+            }
+
+            // Tạo prompt
+            $prompt = $this->CreatePromptChatBox();
+            $prompt = str_replace(
+                ['{{USER_INFO}}', '{{TRANSACTION_HISTORY}}', '{{CATEGORY_STATISTICS}}', '{{USER_QUESTION}}'],
+                [$userInfoText, $transactionHistory, $categoryStatisticsText, $userQuestion],
+                $prompt
+            );
+
+            $api_key = 'AIzaSyASMyZotUMFskPC3IMAbrPnKJq8Rm_sL-M';
+            $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $api_key;
+
+            $client = new Client([
+                'base_uri' => 'https://generativelanguage.googleapis.com',
+                'timeout'  => 30.0,
+            ]);
+
+            $response = $client->post($url, [
+                'json' => [
+                    'contents' => [[
+                        'parts' => [['text' => $prompt]]
+                    ]]
+                ],
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ]
+            ]);
+
+            $body = json_decode($response->getBody(), true);
+            $botResponse = trim($body['candidates'][0]['content']['parts'][0]['text'] ?? 'Tôi không thể trả lời câu hỏi này lúc này.');
+
+            return response()->json([
+                'success' => true,
+                'question' => $userQuestion,
+                'answer' => $botResponse
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Lỗi khi xử lý: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

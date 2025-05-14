@@ -13,6 +13,7 @@ import Account from "@/views/Account.vue";
 import Profile from "@/views/Profile.vue";
 import Budget from "@/views/Budget.vue";
 import RecurringTransactions from "@/views/RecurringTransactions.vue";
+import ReportAdmin from "@/views/ReportAdmin.vue";
 
 const routes = [
   {
@@ -94,8 +95,13 @@ const routes = [
     name: "quan-ly-giao-dich-dinh-ky",
     component: RecurringTransactions,
     meta: { requiresAuth: true },
-  }
-   
+  },
+  {
+    path: "/report-admin",
+    name: "report-admin",
+    component: ReportAdmin,
+    meta: { requiresAuth: true },
+  },
 ];
 
 const router = createRouter({

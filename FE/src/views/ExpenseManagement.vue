@@ -223,6 +223,48 @@
       </div>
     </div>
 
+    <!-- CHAT BOX -->
+    <div v-if="showChatBox" class="chatbot-modal">
+      <div class="chatbot-box">
+        <!-- Header -->
+        <div class="chatbot-header">
+          <i class="fas fa-piggy-bank chatbot-avatar-icon"></i>
+          <span class="chatbot-name">Chatbot</span>
+          <button class="chatbot-close-btn" @click="showChatBox = false">
+            &times;
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="chatbot-body">
+          <div
+            v-for="(msg, index) in messages"
+            :key="index"
+            :class="['chatbot-message', msg.sender]"
+          >
+            {{ msg.text }}
+          </div>
+          <div v-if="loading" class="chatbot-message bot loading-dots">
+            <span>.</span><span>.</span><span>.</span>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="chatbot-footer">
+          <input
+            type="text"
+            placeholder="Nhập tin nhắn..."
+            class="chatbot-input"
+            v-model="userMessage"
+            @keyup.enter="sendMessage"
+          />
+          <button class="chatbot-send-btn" @click="sendMessage">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Nút mở modal -->
     <div class="action-buttons">
       <button class="action-btn" @click="openIncomeModal">
@@ -236,6 +278,9 @@
       <button class="action-btn" @click="openVoiceModal">
         <i class="fa-solid fa-microphone-lines"></i>
         <span class="tooltip-text">Nói</span>
+      </button>
+      <button class="action-btn" @click="openChatBox">
+        <i class="fa-solid">🤖</i>
       </button>
     </div>
 
@@ -304,10 +349,14 @@ export default {
       balance: 0,
       showDetailModal: false,
       showVoiceModal: false,
+      showChatBox: false,
       categoryDetail: null,
 
       showAddTransactionModal: false,
       showIncomeModal: false,
+      userMessage: "",
+      loading: false,
+      messages: [],
       newTransaction: {
         transaction_date: "",
         type: "cash",
@@ -500,6 +549,9 @@ export default {
     openVoiceModal() {
       this.showVoiceModal = true;
     },
+    openChatBox() {
+      this.showChatBox = true;
+    },
     closeOpenVoiceModal() {
       this.showVoiceModal = false;
     },
@@ -515,6 +567,8 @@ export default {
         this.showAddTransactionModal = false;
         this.showIncomeModal = false;
         this.showDetailModal = false;
+        this.showChatBox = false;
+        this.showVoiceModal = false;
       }
     },
 
@@ -668,6 +722,37 @@ export default {
         console.log("Kết thúc nhận dạng.");
       };
     },
+    // CHATBOX
+    async sendMessage() {
+      const message = this.userMessage.trim();
+      if (!message) return;
+
+      this.messages.push({ sender: "user", text: message });
+      this.loading = true;
+
+      try {
+        const res = await axios.post(
+          "/api/ai/chatbox/send",
+          { message },
+          {
+            headers: {
+              Authorization:
+                `Bearer ${localStorage.getItem("auth_token")}` || "",
+            },
+          }
+        );
+        if (res.data.answer) {
+          this.messages.push({ sender: "bot", text: res.data.answer });
+        }
+        localStorage.setItem("chatMessages", JSON.stringify(this.messages));
+      } catch (error) {
+        console.error(error);
+        this.messages.push({ sender: "bot", text: "Xin lỗi, có lỗi xảy ra." });
+      }
+
+      this.loading = false;
+      this.userMessage = "";
+    },
   },
   mounted() {
     this.fetchCategoriesHome();
@@ -675,6 +760,30 @@ export default {
     this.fetchCategoriesIncome();
     this.fetchProfile();
     window.addEventListener("keydown", this.handleKeydown);
+  },
+  created() {
+    const storedMessages = JSON.parse(localStorage.getItem("chatMessages"));
+    if (storedMessages) {
+      this.messages = storedMessages;
+    } else {
+      this.messages.push({
+        sender: "bot",
+        text: "Chào bạn! Mình có thể giúp gì về chi tiêu?",
+      });
+      this.messages.push({
+        sender: "bot",
+        text: "Ví dụ, bạn có thể hỏi về cách theo dõi chi phí hoặc các mẹo tiết kiệm!",
+      });
+      this.messages.push({
+        sender: "bot",
+        text: "Bạn có thể hỏi về cách quản lý chi tiêu tiền trọ, tiền ăn uống, hay các khoản chi phí khác.",
+      });
+      this.messages.push({
+        sender: "bot",
+        text: "Làm thế nào để tiết kiệm tiền ăn uống mỗi tháng?' hoặc 'Làm sao để chia khoản chi phí tiền trọ hợp lý?'",
+      });
+      localStorage.setItem("chatMessages", JSON.stringify(this.messages));
+    }
   },
 };
 </script>
@@ -1741,5 +1850,182 @@ body {
   max-width: 100%;
   position: relative;
   text-align: center;
+}
+
+.chatbot-modal {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 400px;
+  height: 440px;
+  max-height: 80vh;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  font-family: Arial, sans-serif;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chatbot-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #ddd;
+}
+
+.chatbot-avatar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  border-radius: 50%;
+  background-color: #ffe0e0;
+  color: #ff6699;
+  margin-right: 10px;
+}
+
+.chatbot-name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.chatbot-body {
+  flex: 1;
+  padding: 16px;
+  max-height: 325px;
+  overflow-y: auto;
+  background-color: #fff;
+  scroll-behavior: smooth;
+}
+
+.chatbot-body::-webkit-scrollbar {
+  width: 6px;
+}
+.chatbot-body::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+.chatbot-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatbot-message {
+  padding: 10px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  max-width: 85%;
+  word-wrap: break-word;
+}
+
+.chatbot-message.user {
+  background-color: #e3f2fd;
+  align-self: flex-end;
+}
+
+.chatbot-message.bot {
+  background-color: #f0f0f0;
+  align-self: flex-start;
+}
+
+.chatbot-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.chatbot-btn {
+  background-color: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.chatbot-btn:hover {
+  background-color: #1565c0;
+}
+
+.chatbot-footer {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-top: 1px solid #ddd;
+  background-color: #fafafa;
+}
+
+.chatbot-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.chatbot-send-btn {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  margin-left: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chatbot-send-btn i {
+  font-size: 16px;
+}
+.loading-dots span {
+  display: inline-block;
+  animation: blink 1.4s infinite both;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.chatbot-close-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.chatbot-close-btn:hover {
+  color: #333;
+}
+
+@keyframes blink {
+  0%,
+  20% {
+    color: transparent;
+  }
+  50% {
+    color: #000;
+  }
+  100% {
+    color: transparent;
+  }
 }
 </style>
