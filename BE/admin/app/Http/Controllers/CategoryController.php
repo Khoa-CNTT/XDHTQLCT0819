@@ -218,7 +218,7 @@ class CategoryController extends Controller
             'icon' => $request->icon,
             'user_id' => Auth::id(),
         ]);
-        $this->logAction('Đã thêm mới danh mục: ' . $category->name . 'thành công');
+        $this->logAction('Đã thêm mới danh mục: ' . $category->name . ' thành công');
         return response()->json([
             'message' => 'Tạo danh mục thành công',
             'category' => $category

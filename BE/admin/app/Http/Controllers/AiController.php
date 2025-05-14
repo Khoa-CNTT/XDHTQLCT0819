@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
+use App\Models\User;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -531,7 +533,6 @@ PROMPT;
 
 
     // CHAT BOX
-
     public function CreatePromptChatBox($context = null)
     {
         return <<<PROMPT
@@ -554,12 +555,20 @@ Lưu ý:
 - Đưa ra lời khuyên hoặc gợi ý (nếu phù hợp)
 - Không sử dụng từ ngữ quá kỹ thuật
 - Trả lời bằng tiếng Việt
+- Nếu người dùng muốn thực hiện các hành động sau, hãy trả về theo định dạng JSON đặc biệt:
+  - Thêm danh mục: {"action":"add_category","category_name":"Tên danh mục","type":"income hoặc expense"}
+  - Thêm giao dịch: {"action":"add_transaction","category_id":ID,"amount":TIỀN,"description":"MÔ TẢ","transaction_type":"income/expense"}
+  - Xóa danh mục: {"action":"delete_category","category_id":ID}
+  - Xóa danh mục và giao dịch: {"action":"delete_category_with_transactions","category_id":ID}
+  - Cập nhật tên danh mục: {"action":"update_category","category_id":ID,"new_name":"Tên mới"}
+  - Xóa giao dịch: {"action":"delete_transaction","transaction_id":ID}
 PROMPT;
     }
 
+
     public function chatBox(Request $request)
     {
-        $authUser = auth()->user();
+        $authUser = Auth::user();
         $userQuestion = $request->message;
 
         if (empty($userQuestion)) {
@@ -568,8 +577,32 @@ PROMPT;
 
         try {
             $userInfo = DB::table('users')->where('id', $authUser->id)->first();
-            $userInfoText = "- Thu nhập hàng tháng: " . number_format($userInfo->monthly_income) . " đồng\n";
-            $userInfoText .= "- Chi tiêu hàng tháng: " . number_format($userInfo->monthly_customer_spending) . " đồng\n";
+
+            $currentMonth = Carbon::now()->startOfMonth();
+            $totalExpense = Transaction::where('user_id', $authUser->id)
+                ->where('transaction_type', 'expense')
+                ->where('transaction_date', '>=', $currentMonth)
+                ->sum('amount');
+
+            $userInfoText = "Thông tin người dùng:\n";
+            $userInfoText .= "- Thu nhập hiện tại: " . number_format($userInfo->monthly_income) . " đồng\n";
+            $userInfoText .= "- Tổng chi tiêu tháng này: " . number_format($totalExpense) . " đồng\n";
+            $userInfoText .= "- Số dư hiện tại: " . number_format($userInfo->monthly_customer_spending) . " đồng\n";
+
+            foreach ((array) $userInfo as $key => $value) {
+                $userInfoText .= "- " . ucfirst($key) . ": " . $value . "\n";
+            }
+
+            $categories = Category::where('user_id', $authUser->id)
+                ->orWhereNull('user_id')
+                ->select('id', 'name', 'type')
+                ->get();
+
+            $categoriesText = "Danh mục hiện có:\n";
+            foreach ($categories as $category) {
+                $categoriesText .= "- ID: " . $category->id . ", Tên: " . $category->name . ", Loại: " . $category->type . "\n";
+            }
+            $userInfoText .= "\n" . $categoriesText;
 
             $startDate = Carbon::now()->subMonths(3)->startOfMonth();
             $transactions = Transaction::where('user_id', $authUser->id)
@@ -581,7 +614,8 @@ PROMPT;
             $transactionHistory = "";
             foreach ($transactions as $index => $transaction) {
                 if ($index < 10) {
-                    $transactionHistory .= "- " . Carbon::parse($transaction->transaction_date)->format('d/m/Y') . ": ";
+                    $transactionHistory .= "- ID: " . $transaction->id . " - ";
+                    $transactionHistory .= Carbon::parse($transaction->transaction_date)->format('d/m/Y') . ": ";
                     $transactionHistory .= ($transaction->transaction_type == 'income' ? "+" : "-") . number_format($transaction->amount) . "đ ";
                     $transactionHistory .= "(" . $transaction->description . ")";
                     $transactionHistory .= $transaction->category ? " [" . $transaction->category->name . "]" : "";
@@ -630,18 +664,289 @@ PROMPT;
                     $categoryStatisticsText .= "- Không có dữ liệu\n";
                 } else {
                     foreach ($monthData['categories'] as $categoryId => $categoryData) {
-                        if ($categoryData['expense'] > 0) {
-                            $categoryStatisticsText .= "- " . $categoryData['name'] . ": -" . number_format($categoryData['expense']) . "đ\n";
-                        }
-                        if ($categoryData['income'] > 0) {
-                            $categoryStatisticsText .= "- " . $categoryData['name'] . ": +" . number_format($categoryData['income']) . "đ\n";
-                        }
+                        $categoryStatisticsText .= "- " . $categoryData['name'] . ": -" . number_format($categoryData['expense']) . "đ\n";
+                        $categoryStatisticsText .= "- " . $categoryData['name'] . ": +" . number_format($categoryData['income']) . "đ\n";
                     }
                 }
                 $categoryStatisticsText .= "\n";
             }
 
-            // Tạo prompt
+            // 3. Kiểm tra nếu người dùng muốn thêm danh mục mới
+            if (preg_match('/thêm danh mục|tạo danh mục|danh mục mới/i', strtolower($userQuestion))) {
+                // Trích xuất tên danh mục từ câu hỏi
+                preg_match('/["\']([^"\']+)["\']|tên (?:là|:)\s*([^\s,\.]+)|danh mục\s+([^\s,\.]+)/i', $userQuestion, $matches);
+                $categoryName = $matches[1] ?? $matches[2] ?? $matches[3] ?? null;
+
+                preg_match('/loại\s*(?:là|:)?\s*(thu nhập|chi tiêu|income|expense)/i', $userQuestion, $typeMatches);
+                $categoryType = $typeMatches[1] ?? null;
+
+                if ($categoryType) {
+                    $categoryType = strtolower($categoryType);
+                    if ($categoryType === 'thu nhập' || $categoryType === 'income') {
+                        $categoryType = 'income';
+                    } else {
+                        $categoryType = 'expense';
+                    }
+                } else {
+                    $categoryType = 'expense';
+                }
+
+                if ($categoryName) {
+                    $newCategory = new Category();
+                    $newCategory->name = $categoryName;
+                    $newCategory->user_id = $authUser->id;
+                    $newCategory->slug = Str::slug($categoryName);
+                    $newCategory->type = $categoryType;
+                    $newCategory->save();
+
+                    return response()->json([
+                        'success' => true,
+                        'question' => $userQuestion,
+                        'answer' => "Đã thêm danh mục mới thành công! ",
+                        'action' => 'add_category',
+                        'category' => [
+                            'id' => $newCategory->id,
+                            'name' => $newCategory->name,
+                            'slug' => $newCategory->slug,
+                            'type' => $newCategory->type
+                        ]
+                    ]);
+                }
+            }
+
+            // 4. Kiểm tra nếu người dùng muốn thêm giao dịch mới
+            if (preg_match('/thêm giao dịch|tạo giao dịch|giao dịch mới/i', strtolower($userQuestion))) {
+                preg_match('/danh mục (?:id|ID)?\s*:?\s*(\d+)/i', $userQuestion, $categoryMatches);
+                preg_match('/số tiền\s*:?\s*(\d+(?:[,.]\d+)?)/i', $userQuestion, $amountMatches);
+                preg_match('/mô tả\s*:?\s*["\']([^"\']+)["\']|mô tả\s*:?\s*(\S+)/i', $userQuestion, $descMatches);
+                preg_match('/loại\s*:?\s*(thu nhập|chi tiêu|income|expense)/i', $userQuestion, $typeMatches);
+
+                $categoryId = $categoryMatches[1] ?? null;
+                $amount = $amountMatches[1] ?? null;
+                $description = $descMatches[1] ?? $descMatches[2] ?? null;
+                $type = $typeMatches[1] ?? null;
+
+                if ($type) {
+                    $type = strtolower($type);
+                    $type = ($type === 'thu nhập' || $type === 'income') ? 'income' : 'expense';
+                }
+
+                if ($categoryId && $amount && $description && $type) {
+                    $newTransaction = new Transaction();
+                    $newTransaction->user_id = $authUser->id;
+                    $newTransaction->category_id = $categoryId;
+                    $newTransaction->amount = $amount;
+                    $newTransaction->description = $description;
+                    $newTransaction->transaction_type = $type;
+                    $newTransaction->transaction_date = Carbon::now();
+                    $newTransaction->type = 'cash';
+                    $newTransaction->save();
+
+                    $amountValue = $amount;
+                    if ($type === 'income') {
+                        $authUser->monthly_income += $amountValue;
+                        $authUser->monthly_customer_spending += $amountValue;
+                    } else {
+                        $authUser->monthly_customer_spending -= $amountValue;
+                    }
+                    User::where('id', $authUser->id)->update([
+                        'monthly_income' => $authUser->monthly_income,
+                        'monthly_customer_spending' => $authUser->monthly_customer_spending,
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'question' => $userQuestion,
+                        'answer' => "Đã thêm giao dịch mới thành công!",
+                        'action' => 'add_transaction',
+                        'transaction' => [
+                            'id' => $newTransaction->id,
+                            'amount' => $newTransaction->amount,
+                            'description' => $newTransaction->description,
+                            'type' => $newTransaction->transaction_type,
+                            'category_id' => $newTransaction->category_id
+                        ]
+                    ]);
+                }
+            }
+
+
+            // 5. CHỨC NĂNG MỚI: Xóa danh mục (và các giao dịch liên quan nếu có)
+            if (preg_match('/xóa danh mục|xoa danh muc|xoá danh mục/i', strtolower($userQuestion))) {
+                preg_match('/(?:id|ID)?\s*:?\s*(\d+)/i', $userQuestion, $categoryMatches);
+                $categoryId = $categoryMatches[1] ?? null;
+
+                $deleteTransactions = preg_match('/xóa giao dịch liên quan|xóa tất cả giao dịch|xoá cả giao dịch/i', strtolower($userQuestion));
+
+                if ($categoryId) {
+                    $category = Category::where('id', $categoryId)
+                        ->where('user_id', $authUser->id)
+                        ->first();
+
+                    if ($category) {
+                        $relatedTransactions = Transaction::where('category_id', $categoryId)
+                            ->where('user_id', $authUser->id)
+                            ->get();
+
+                        $transactionCount = $relatedTransactions->count();
+
+                        if ($transactionCount > 0) {
+                            if ($deleteTransactions) {
+                                $incomeTotal = 0;
+                                $expenseTotal = 0;
+
+                                foreach ($relatedTransactions as $transaction) {
+                                    $amount =  $transaction->amount;
+                                    if ($transaction->transaction_type === 'income') {
+                                        $incomeTotal += $amount;
+                                    } else {
+                                        $expenseTotal += $amount;
+                                    }
+                                }
+
+                                $newIncome = max(0, $authUser->monthly_income - $incomeTotal);
+                                $newSpending = max(0, $authUser->monthly_customer_spending - $incomeTotal + $expenseTotal);
+
+                                User::where('id', $authUser->id)->update([
+                                    'monthly_income' => $newIncome,
+                                    'monthly_customer_spending' => $newSpending
+                                ]);
+
+                                Transaction::where('category_id', $categoryId)
+                                    ->where('user_id', $authUser->id)
+                                    ->delete();
+
+                                $category->delete();
+
+                                return response()->json([
+                                    'success' => true,
+                                    'question' => $userQuestion,
+                                    'answer' => "Đã xóa danh mục và {$transactionCount} giao dịch liên quan thành công!",
+                                    'action' => 'delete_category_with_transactions',
+                                    'category_id' => $categoryId,
+                                    'transactions_deleted' => $transactionCount
+                                ]);
+                            } else {
+                                return response()->json([
+                                    'success' => false,
+                                    'question' => $userQuestion,
+                                    'answer' => "Danh mục này có {$transactionCount} giao dịch liên quan. Bạn có muốn xóa cả danh mục và các giao dịch liên quan không? Nếu có, vui lòng gõ 'xóa danh mục ID: {$categoryId} và xóa giao dịch liên quan'.",
+                                ]);
+                            }
+                        } else {
+                            $category->delete();
+
+                            return response()->json([
+                                'success' => true,
+                                'question' => $userQuestion,
+                                'answer' => "Đã xóa danh mục thành công!",
+                                'action' => 'delete_category',
+                                'category_id' => $categoryId
+                            ]);
+                        }
+                    } else {
+                        return response()->json([
+                            'success' => false,
+                            'question' => $userQuestion,
+                            'answer' => "Không tìm thấy danh mục với ID: {$categoryId} hoặc danh mục không thuộc về bạn.",
+                        ]);
+                    }
+                }
+            }
+
+
+            // 6. CHỨC NĂNG MỚI: Cập nhật tên danh mục
+            if (preg_match('/cập nhật danh mục|cap nhat danh muc|đổi tên danh mục|doi ten danh muc/i', strtolower($userQuestion))) {
+                preg_match('/(?:id|ID)?\s*:?\s*(\d+)/i', $userQuestion, $categoryMatches);
+                preg_match('/tên mới\s*:?\s*["\']([^"\']+)["\']|tên mới\s*:?\s*(\S+)/i', $userQuestion, $nameMatches);
+
+                $categoryId = $categoryMatches[1] ?? null;
+                $newName = $nameMatches[1] ?? $nameMatches[2] ?? null;
+
+                if ($categoryId && $newName) {
+                    // Kiểm tra xem danh mục có thuộc về người dùng không
+                    $category = Category::where('id', $categoryId)
+                        ->where('user_id', $authUser->id)
+                        ->first();
+
+                    if ($category) {
+                        // Cập nhật tên danh mục
+                        $category->name = $newName;
+                        $category->slug = Str::slug($newName);
+                        $category->save();
+
+                        return response()->json([
+                            'success' => true,
+                            'question' => $userQuestion,
+                            'answer' => "Đã cập nhật tên danh mục thành công!",
+                            'action' => 'update_category',
+                            'category' => [
+                                'id' => $category->id,
+                                'name' => $category->name,
+                                'slug' => $category->slug,
+                                'type' => $category->type
+                            ]
+                        ]);
+                    } else {
+                        return response()->json([
+                            'success' => false,
+                            'question' => $userQuestion,
+                            'answer' => "Không tìm thấy danh mục với ID: " . $categoryId . " hoặc danh mục không thuộc về bạn.",
+                        ]);
+                    }
+                }
+            }
+
+            // 7. CHỨC NĂNG MỚI: Xóa giao dịch
+            if (preg_match('/xóa giao dịch|xoa giao dich|xoá giao dịch/i', strtolower($userQuestion))) {
+                preg_match('/(?:id|ID)?\s*:?\s*(\d+)/i', $userQuestion, $transactionMatches);
+                $transactionId = $transactionMatches[1] ?? null;
+
+                if ($transactionId) {
+                    $transaction = Transaction::where('id', $transactionId)
+                        ->where('user_id', $authUser->id)
+                        ->first();
+
+                    if ($transaction) {
+                        $amount =  $transaction->amount;
+                        $type = $transaction->transaction_type;
+
+                        $newIncome = $authUser->monthly_income;
+                        $newSpending = $authUser->monthly_customer_spending;
+
+                        if ($type === 'income') {
+                            $newIncome = max(0, $newIncome - $amount);
+                            $newSpending = max(0, $newSpending - $amount);
+                        } else {
+                            $newSpending = max(0, $newSpending + $amount);
+                        }
+
+                        User::where('id', $authUser->id)->update([
+                            'monthly_income' => $newIncome,
+                            'monthly_customer_spending' => $newSpending
+                        ]);
+
+                        $transaction->delete();
+
+                        return response()->json([
+                            'success' => true,
+                            'question' => $userQuestion,
+                            'answer' => "Đã xóa giao dịch thành công!",
+                            'action' => 'delete_transaction',
+                            'transaction_id' => $transactionId
+                        ]);
+                    } else {
+                        return response()->json([
+                            'success' => false,
+                            'question' => $userQuestion,
+                            'answer' => "Không tìm thấy giao dịch với ID: " . $transactionId . " hoặc giao dịch không thuộc về bạn.",
+                        ]);
+                    }
+                }
+            }
+
+
+            // 8. Tạo prompt cho AI
             $prompt = $this->CreatePromptChatBox();
             $prompt = str_replace(
                 ['{{USER_INFO}}', '{{TRANSACTION_HISTORY}}', '{{CATEGORY_STATISTICS}}', '{{USER_QUESTION}}'],
@@ -670,6 +975,215 @@ PROMPT;
 
             $body = json_decode($response->getBody(), true);
             $botResponse = trim($body['candidates'][0]['content']['parts'][0]['text'] ?? 'Tôi không thể trả lời câu hỏi này lúc này.');
+
+            // 9. Kiểm tra nếu phản hồi của bot có chứa JSON đặc biệt
+            if (strpos($botResponse, '{"action":') !== false) {
+                preg_match('/({.*})/', $botResponse, $matches);
+                if (isset($matches[1])) {
+                    $actionData = json_decode($matches[1], true);
+
+                    if ($actionData && isset($actionData['action'])) {
+                        if ($actionData['action'] === 'add_category' && isset($actionData['category_name'])) {
+                            $categoryType = $actionData['type'] ?? 'expense';
+
+                            $newCategory = new Category();
+                            $newCategory->name = $actionData['category_name'];
+                            $newCategory->user_id = $authUser->id;
+                            $newCategory->slug = Str::slug($actionData['category_name']);
+                            $newCategory->type = $categoryType;
+                            $newCategory->save();
+
+                            return response()->json([
+                                'success' => true,
+                                'question' => $userQuestion,
+                                'answer' => "Đã thêm danh mục mới thành công!",
+                                'action' => 'add_category',
+                                'category' => [
+                                    'id' => $newCategory->id,
+                                    'name' => $newCategory->name,
+                                    'slug' => $newCategory->slug,
+                                    'type' => $newCategory->type
+                                ]
+                            ]);
+                        }
+
+                        // Xoá giao dịch
+                        else if (
+                            $actionData['action'] === 'add_transaction' &&
+                            isset($actionData['category_id']) &&
+                            isset($actionData['amount']) &&
+                            isset($actionData['description']) &&
+                            isset($actionData['transaction_type'])
+                        ) {
+                            $newTransaction = new Transaction();
+                            $newTransaction->user_id = $authUser->id;
+                            $newTransaction->category_id = $actionData['category_id'];
+                            $newTransaction->amount = $actionData['amount'];
+                            $newTransaction->description = $actionData['description'];
+                            $newTransaction->transaction_type = $actionData['transaction_type'];
+                            $newTransaction->transaction_date = Carbon::now();
+                            $newTransaction->type = 'cash';
+                            $newTransaction->save();
+
+                            $amountValue = $actionData['amount'];
+
+                            if ($newTransaction->transaction_type === 'income') {
+                                $authUser->monthly_income += $amountValue;
+                                $authUser->monthly_customer_spending += $amountValue;
+                            } else if ($newTransaction->transaction_type === 'expense') {
+                                $authUser->monthly_customer_spending -= $amountValue;
+                            }
+
+                            User::where('id', $authUser->id)->update([
+                                'monthly_income' => $authUser->monthly_income,
+                                'monthly_customer_spending' => $authUser->monthly_customer_spending,
+                            ]);
+
+                            return response()->json([
+                                'success' => true,
+                                'question' => $userQuestion,
+                                'answer' => "Đã thêm giao dịch mới thành công!",
+                                'action' => 'add_transaction',
+                                'transaction' => [
+                                    'id' => $newTransaction->id,
+                                    'amount' => $newTransaction->amount,
+                                    'description' => $newTransaction->description,
+                                    'type' => $newTransaction->transaction_type,
+                                    'category_id' => $newTransaction->category_id
+                                ]
+                            ]);
+                        }
+
+                        // xoá danh mục với các giao dịch liên quan
+                        else if ($actionData['action'] === 'delete_category_with_transactions' && isset($actionData['category_id'])) {
+                            $categoryId = $actionData['category_id'];
+
+                            $category = Category::where('id', $categoryId)
+                                ->where('user_id', $authUser->id)
+                                ->first();
+
+                            if ($category) {
+                                $transactions = Transaction::where('category_id', $categoryId)
+                                    ->where('user_id', $authUser->id)
+                                    ->get();
+
+                                $transactionCount = $transactions->count();
+
+                                foreach ($transactions as $transaction) {
+                                    $amountValue = $transaction->amount;
+                                    if ($transaction->transaction_type === 'income') {
+                                        $authUser->monthly_income -= $amountValue;
+                                        $authUser->monthly_customer_spending -= $amountValue;
+                                    } else if ($transaction->transaction_type === 'expense') {
+                                        $authUser->monthly_customer_spending += $amountValue;
+                                    }
+
+                                    $transaction->delete();
+                                }
+
+                                $category->delete();
+
+                                User::where('id', $authUser->id)->update([
+                                    'monthly_income' => $authUser->monthly_income,
+                                    'monthly_customer_spending' => $authUser->monthly_customer_spending,
+                                ]);
+
+                                return response()->json([
+                                    'success' => true,
+                                    'question' => $userQuestion,
+                                    'answer' => "Đã xóa danh mục và " . $transactionCount . " giao dịch liên quan thành công!",
+                                    'action' => 'delete_category_with_transactions',
+                                    'category_id' => $categoryId,
+                                    'transactions_deleted' => $transactionCount
+                                ]);
+                            } else {
+                                return response()->json([
+                                    'success' => false,
+                                    'question' => $userQuestion,
+                                    'answer' => "Không tìm thấy danh mục với ID: " . $categoryId . " hoặc danh mục không thuộc về bạn.",
+                                ]);
+                            }
+                        }
+
+                        // cập nhật tên danh mục
+                        else if ($actionData['action'] === 'update_category' && isset($actionData['category_id']) && isset($actionData['new_name'])) {
+                            $categoryId = $actionData['category_id'];
+                            $newName = $actionData['new_name'];
+
+                            $category = Category::where('id', $categoryId)
+                                ->where('user_id', $authUser->id)
+                                ->first();
+
+                            if ($category) {
+                                $category->name = $newName;
+                                $category->slug = Str::slug($newName);
+                                $category->save();
+
+                                return response()->json([
+                                    'success' => true,
+                                    'question' => $userQuestion,
+                                    'answer' => "Đã cập nhật tên danh mục thành công!",
+                                    'action' => 'update_category',
+                                    'category' => [
+                                        'id' => $category->id,
+                                        'name' => $category->name,
+                                        'slug' => $category->slug,
+                                        'type' => $category->type
+                                    ]
+                                ]);
+                            } else {
+                                return response()->json([
+                                    'success' => false,
+                                    'question' => $userQuestion,
+                                    'answer' => "Không tìm thấy danh mục với ID: " . $categoryId . " hoặc danh mục không thuộc về bạn.",
+                                ]);
+                            }
+                        }
+
+                        // xoá giao dịch
+                        else if ($actionData['action'] === 'delete_transaction' && isset($actionData['transaction_id'])) {
+                            $transactionId = $actionData['transaction_id'];
+
+                            $transaction = Transaction::where('id', $transactionId)
+                                ->where('user_id', $authUser->id)
+                                ->first();
+
+                            if ($transaction) {
+                                $amountValue = $transaction->amount;
+
+                                if ($transaction->transaction_type === 'income') {
+                                    $authUser->monthly_income -= $amountValue;
+                                    $authUser->monthly_customer_spending -= $amountValue;
+                                } else if ($transaction->transaction_type === 'expense') {
+                                    $authUser->monthly_customer_spending += $amountValue;
+                                }
+
+                                $transaction->delete();
+
+                                User::where('id', $authUser->id)->update([
+                                    'monthly_income' => $authUser->monthly_income,
+                                    'monthly_customer_spending' => $authUser->monthly_customer_spending,
+                                ]);
+
+                                return response()->json([
+                                    'success' => true,
+                                    'question' => $userQuestion,
+                                    'answer' => "Đã xóa giao dịch thành công!",
+                                    'action' => 'delete_transaction',
+                                    'transaction_id' => $transactionId
+                                ]);
+                            } else {
+                                return response()->json([
+                                    'success' => false,
+                                    'question' => $userQuestion,
+                                    'answer' => "Không tìm thấy giao dịch với ID: " . $transactionId . " hoặc giao dịch không thuộc về bạn.",
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
 
             return response()->json([
                 'success' => true,

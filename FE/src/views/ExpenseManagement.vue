@@ -746,6 +746,8 @@ export default {
           this.messages.push({ sender: "bot", text: res.data.answer });
         }
         localStorage.setItem("chatMessages", JSON.stringify(this.messages));
+        this.fetchCategoriesHome();
+        this.fetchProfile();
       } catch (error) {
         console.error(error);
         this.messages.push({ sender: "bot", text: "Xin lỗi, có lỗi xảy ra." });
