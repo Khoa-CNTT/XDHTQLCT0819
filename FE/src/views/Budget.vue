@@ -1,12 +1,16 @@
 <template>
   <div class="budget-container">
     <!-- Budget Header -->
-    <div class="budget-header">
-      <h1 class="budget-title">Quản lý ngân sách</h1>
-      <button class="add-btn" @click="openBudgetModal">
+    <div class="card shadow-sm mb-4" style="height: 70px;">
+      <div class="card-title-budget d-flex justify-content-between align-items-center" style="padding: 15px;">
+        <h5 class="mb-0">
+          <i class="fas fa-coins me-2"></i>Quản lý ngân sách
+        </h5>
+        <button class="add-btn" @click="openBudgetModal">
         <span class="add-btn-icon">+</span>
         Thêm ngân sách mới
       </button>
+      </div>
     </div>
 
     <!-- Summary Cards -->
@@ -555,12 +559,17 @@ export default {
 }
 
 .budget-container {
-  max-width: 1000px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 20px;
   background-color: #ffffff;
-  color: #1f2937;
   line-height: 1.5;
+}
+
+.card-title-budget {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .budget-header {
@@ -568,12 +577,6 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-}
-
-.budget-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
 }
 
 .add-btn {
@@ -1005,13 +1008,72 @@ export default {
 }
 
 /* Responsive styles */
+
+@media (max-width: 992px) {
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .budget-table td {
+    max-width: 150px;
+  }
+}
 @media (max-width: 768px) {
   .summary-cards {
     grid-template-columns: 1fr;
   }
-
+  
   .hide-mobile {
     display: none;
+  }
+  
+  .budget-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .budget-header h1 {
+    margin-bottom: 12px;
+  }
+  .alert-box {
+    padding: 10px;
+  }
+  
+  .alert-content {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 576px) {
+  .budget-container {
+    padding: 12px;
+  }
+  
+  .card-value {
+    font-size: 20px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions button {
+    width: 100%;
+  }
+  
+  .modal-content {
+    width: 95%;
+  }
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .alert-box {
+    flex-direction: column;
+  }
+  
+  .alert-icon {
+    margin-bottom: 4px;
   }
 }
 </style>
