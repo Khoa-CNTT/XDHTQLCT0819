@@ -110,12 +110,17 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!localStorage.getItem("auth_token");
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next("/login");
-  } else {
-    next();
+  const authToken = localStorage.getItem("auth_token");
+
+  if (to.meta.requiresAuth && !authToken) {
+    return next("/login");
   }
+
+  if (to.path === "/login" && authToken) {
+    return next("/quan-li-chi-tieu");
+  }
+
+  return next();
 });
 
 export default router;
