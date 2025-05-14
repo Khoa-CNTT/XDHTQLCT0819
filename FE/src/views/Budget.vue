@@ -1,12 +1,16 @@
 <template>
   <div class="budget-container">
     <!-- Budget Header -->
-    <div class="budget-header">
-      <h1 class="budget-title">Quản lý ngân sách</h1>
-      <button class="add-btn" @click="openBudgetModal">
+    <div class="card shadow-sm mb-4" style="height: 70px;">
+      <div class="card-title-budget d-flex justify-content-between align-items-center" style="padding: 15px;">
+        <h5 class="mb-0">
+          <i class="fas fa-coins me-2"></i>Quản lý ngân sách
+        </h5>
+        <button class="add-btn" @click="openBudgetModal">
         <span class="add-btn-icon">+</span>
         Thêm ngân sách mới
       </button>
+      </div>
     </div>
 
     <!-- Summary Cards -->
@@ -555,12 +559,17 @@ export default {
 }
 
 .budget-container {
-  max-width: 1000px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 20px;
   background-color: #ffffff;
-  color: #1f2937;
   line-height: 1.5;
+}
+
+.card-title-budget {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .budget-header {
@@ -568,12 +577,6 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-}
-
-.budget-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
 }
 
 .add-btn {

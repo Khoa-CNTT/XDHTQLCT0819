@@ -14,6 +14,7 @@ import Profile from "@/views/Profile.vue";
 import Budget from "@/views/Budget.vue";
 import RecurringTransactions from "@/views/RecurringTransactions.vue";
 import ReportAdmin from "@/views/ReportAdmin.vue";
+import ActivityLogs from "@/views/ActivityLogs.vue";
 
 const routes = [
   {
@@ -102,6 +103,13 @@ const routes = [
     component: ReportAdmin,
     meta: { requiresAuth: true },
   },
+  {
+    path: "/nhat-ki-hoat-dong",
+    name: "nhat-ki-hoat-dong",
+    component: ActivityLogs,    
+    meta: { requiresAuth: true },
+  },
+
 ];
 
 const router = createRouter({
