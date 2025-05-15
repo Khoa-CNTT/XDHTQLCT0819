@@ -266,7 +266,6 @@ class AuthController extends Controller
         $request->validate([
             'current_password' => 'required',
             'new_password' => 'required|min:8',
-            'new_password_confirmation' => 'required|same:new_password',
         ], $messages);
 
         $user = $request->user();
@@ -279,7 +278,7 @@ class AuthController extends Controller
 
         if ($request->new_password !== $request->new_password_confirmation) {
             return response()->json([
-                'error' => 'Mật khẩu không trùng nhau!',
+                'error' => 'Mật khẩu xác nhận không khớp!',
             ], 400);
         }
 
