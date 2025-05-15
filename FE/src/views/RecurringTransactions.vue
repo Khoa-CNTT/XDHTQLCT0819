@@ -1,9 +1,11 @@
 <template>
-  <div class="recurring-transactions">
+  <div class="rocker-recurring-transactions">
     <!-- Main card container -->
-    <div class="card">
-      <div class="card-header">
-        <h1 class="header-title">Quản lý giao dịch định kỳ</h1>
+    <div class="card shadow-sm mb-4 mt-2" style="height: 70px;">
+      <div class="card-title d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-coins me-2"></i>Quản lý giao dịch định kỳ
+        </h5>
         <button 
           class="btn btn-primary add-transaction-btn"
           @click="openAddTransactionModal"
@@ -11,7 +13,9 @@
           <i class="fas fa-plus"></i> Thêm giao dịch
         </button>
       </div>
-      
+    </div>
+
+    <div class="card shadow-sm">
       <div class="card-body">
         <!-- Loading indicator -->
         <div v-if="loading" class="loading-container">
@@ -22,7 +26,7 @@
         <div v-else>
           <!-- Table header -->
           <div class="transaction-header">
-            <div class="transaction-row header-row">
+            <div class="transaction-row header-row ">
               <div class="col col-description">
                 <i class="fas fa-file-alt icon-header"></i> Mô tả
               </div>
@@ -596,28 +600,16 @@ export default {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   margin-bottom: 20px;
-  border: 1px solid #eaeaea;
-  max-width: 1200px;
+  border: 2px solid #eaeaea;
   margin-left: auto;
   margin-right: auto;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 24px;
-  border-bottom: 1px solid #eaeaea;
-  background-color: #fff;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.header-title {
+.card-title {
   font-size: 32px;
   font-weight: 600;
   color: #1a202c;
-  margin: 0;
+  margin: 10px 24px;
 }
 
 /* Button styles */
@@ -679,16 +671,16 @@ export default {
 
 /* Icon buttons */
 .btn-icon {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 14px;
+  font-size: 18px;
   background-color: transparent;
   color: #64748b;
 }
@@ -715,7 +707,7 @@ export default {
 
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 3px;
 }
 
 /* Header icons */
@@ -740,25 +732,28 @@ export default {
 
 .transaction-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 1fr 0.8fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 0.5fr;
   align-items: center;
   gap: 12px;
-  min-width: 800px;
+  min-width: 500px;
 }
 
 .header-row {
   padding: 14px 24px;
   font-weight: 600;
   color: #64748b;
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
 }
 
 .transaction-list .transaction-row {
-  padding: 16px 24px;
+  padding: 20px 24px;
+  padding-left: 50px;
   border-bottom: 1px solid #eaeaea;
   transition: background-color 0.2s ease;
+  display: flex;
 }
 
 .transaction-list .transaction-row:last-child {
@@ -773,11 +768,10 @@ export default {
   font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-right: 8px;
+  padding-right: 10px;
 }
 
 .col-amount {
-  text-align: right;
   font-weight: 600;
 }
 
@@ -846,12 +840,11 @@ export default {
 }
 
 .empty-icon {
-  font-size: 48px;
   margin-bottom: 16px;
   color: #94a3b8;
   background-color: #f1f5f9;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;

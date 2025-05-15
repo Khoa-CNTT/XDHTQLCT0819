@@ -89,6 +89,9 @@
               <router-link to="/profile" class="dropdown-link"
                 >Thông tin tài khoản</router-link
               >
+              <router-link to="/nhat-ky-hoat-dong" class="dropdown-link"
+                >Nhật ký hoạt động</router-link
+                >
               <a href="#" class="dropdown-link" @click.prevent="handleLogout"
                 >Đăng xuất</a
               >
