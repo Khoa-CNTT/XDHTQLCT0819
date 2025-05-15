@@ -616,7 +616,7 @@ PROMPT;
                 if ($index < 10) {
                     $transactionHistory .= "- ID: " . $transaction->id . " - ";
                     $transactionHistory .= Carbon::parse($transaction->transaction_date)->format('d/m/Y') . ": ";
-                    $transactionHistory .= ($transaction->transaction_type == 'income' ? "+" : "-") . number_format($transaction->amount) . "đ ";
+                    $transactionHistory .= $transaction->amount;
                     $transactionHistory .= "(" . $transaction->description . ")";
                     $transactionHistory .= $transaction->category ? " [" . $transaction->category->name . "]" : "";
                     $transactionHistory .= "\n";
