@@ -1226,4 +1226,431 @@ input[type="number"] {
     display: none;
   }
 }
+/* ====== ENHANCED RESPONSIVE DESIGN ====== */
+
+/* Large Desktop (1440px and above) */
+@media (min-width: 1440px) {
+  .recurring-transactions {
+    padding: 80px;
+  }
+  
+  .card {
+    max-width: 1400px;
+  }
+  
+  .card-title {
+    font-size: 36px;
+  }
+  
+  .transaction-row {
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 0.5fr;
+  }
+}
+
+/* Standard Desktop and Laptop (1200px - 1439px) */
+@media (min-width: 1200px) and (max-width: 1439px) {
+  .recurring-transactions {
+    padding: 60px;
+  }
+  
+  .card {
+    max-width: 1140px;
+  }
+}
+
+/* Small Desktop and Large Tablet Landscape (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .recurring-transactions {
+    padding: 50px;
+  }
+  
+  .card {
+    max-width: 940px;
+  }
+  
+  .card-title {
+    font-size: 28px;
+  }
+  
+  .transaction-row {
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 0.6fr;
+    gap: 10px;
+  }
+}
+
+/* Tablet (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .recurring-transactions {
+    padding: 40px 30px;
+  }
+  
+  .card {
+    max-width: 100%;
+    border-radius: 10px;
+  }
+  
+  .card-title {
+    font-size: 26px;
+    margin: 8px 20px;
+  }
+  
+  .card-header {
+    padding: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .header-title {
+    font-size: 20px;
+    width: 100%;
+  }
+  
+  .add-transaction-btn {
+    margin-top: 8px;
+  }
+  
+  .transaction-row {
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 0.8fr;
+    gap: 8px;
+    min-width: 450px;
+  }
+  
+  /* Hide less important columns on tablets */
+  .transaction-row .col:nth-child(5) {
+    display: none;
+  }
+  
+  .btn {
+    font-size: 13px;
+    padding: 9px 16px;
+  }
+  
+  .modal-container {
+    max-width: 90%;
+  }
+}
+
+/* iPad Pro and other large tablets specific */
+@media only screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: portrait) {
+  .recurring-transactions {
+    padding: 45px 35px;
+  }
+  
+  .card {
+    max-width: 100%;
+  }
+  
+  .transaction-row {
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 0.8fr;
+  }
+  
+  .card-title {
+    font-size: 30px;
+  }
+}
+
+/* iPad Pro and other large tablets landscape */
+@media only screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .recurring-transactions {
+    padding: 50px 40px;
+  }
+  
+  .card {
+    max-width: 96%;
+  }
+}
+
+/* iPad and standard tablets */
+@media only screen and (min-width: 768px) and (max-width: 1023px) {
+  .recurring-transactions {
+    padding: 35px 25px;
+  }
+  
+  .transaction-row {
+    grid-template-columns: 1.2fr 1fr 1fr 1fr 0.8fr;
+  }
+  
+  .card-body {
+    overflow-x: auto;
+  }
+}
+
+/* Mobile phones (320px - 767px) */
+@media (max-width: 767px) {
+  .recurring-transactions {
+    padding: 20px 15px;
+  }
+  
+  .card {
+    border-radius: 8px;
+    margin-left: -5px;
+    margin-right: -5px;
+    width: calc(100% + 10px);
+    border-width: 1px;
+  }
+  
+  .card-title {
+    font-size: 22px;
+    margin: 8px 16px;
+  }
+  
+  .card-header {
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .header-title {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  
+  .add-transaction-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Mobile card view - stack items vertically */
+  .transaction-list .transaction-row {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    min-width: auto;
+    position: relative;
+  }
+  
+  .col {
+    padding: 8px 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: right;
+  }
+  
+  .col::before {
+    content: attr(data-label);
+    font-weight: 500;
+    color: #64748b;
+    text-align: left;
+    flex-shrink: 0;
+    padding-right: 12px;
+    font-size: 13px;
+  }
+  
+  .transaction-header {
+    display: none;
+  }
+  
+  .col-actions {
+    border-bottom: none;
+    justify-content: flex-end;
+    padding-top: 12px;
+  }
+  
+  .action-buttons {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .modal-header, .modal-footer {
+    padding: 16px;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .form-group label {
+    font-size: 13px;
+  }
+  
+  .form-control {
+    padding: 10px 12px;
+  }
+  
+  .modal-header h2 {
+    font-size: 16px;
+  }
+  
+  .btn {
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+  
+  .category-badge, .goal-badge {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .empty-state {
+    padding: 40px 16px;
+  }
+  
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .delete-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 36px;
+  }
+}
+
+/* iPhone SE and other small phones (320px - 375px) */
+@media (max-width: 375px) {
+  .recurring-transactions {
+    padding: 15px 10px;
+  }
+  
+  .card {
+    border-radius: 6px;
+    margin-bottom: 15px;
+  }
+  
+  .card-title {
+    font-size: 20px;
+    margin: 6px 12px;
+  }
+  
+  .card-header {
+    padding: 12px;
+  }
+  
+  .header-title {
+    font-size: 16px;
+  }
+  
+  .transaction-list .transaction-row {
+    padding: 12px;
+  }
+  
+  .col {
+    font-size: 13px;
+  }
+  
+  .col::before {
+    font-size: 12px;
+  }
+  
+  .btn {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  
+  .modal-container {
+    max-width: 95%;
+  }
+  
+  .modal-header h2 {
+    font-size: 15px;
+  }
+  
+  .modal-header, .modal-footer, .modal-body {
+    padding: 12px;
+  }
+  
+  .delete-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 30px;
+  }
+}
+
+/* Mobile Landscape mode */
+@media (max-height: 500px) and (orientation: landscape) {
+  .recurring-transactions {
+    padding: 15px;
+  }
+  
+  .modal-container {
+    max-height: 85vh;
+  }
+  
+  .modal-body {
+    max-height: 50vh;
+  }
+  
+  .card-header {
+    padding: 12px 16px;
+  }
+  
+  .empty-state {
+    padding: 30px 16px;
+  }
+  
+  .empty-icon {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* Device-specific fixes */
+
+/* iPhone X/11/12/13/14 Notch devices */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .modal-overlay {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .recurring-transactions {
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    padding-left: max(15px, env(safe-area-inset-left));
+    padding-right: max(15px, env(safe-area-inset-right));
+  }
+}
+
+/* iPad specific adjustments */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+  .transaction-row {
+    min-width: 700px;
+  }
+  
+  .card-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Foldable devices (like Samsung Fold) */
+@media screen and (max-width: 280px) {
+  .recurring-transactions {
+    padding: 10px 5px;
+  }
+  
+  .card-title {
+    font-size: 18px;
+  }
+  
+  .btn {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+  
+  .col::before {
+    font-size: 11px;
+  }
+  
+  .modal-container {
+    max-width: 98%;
+  }
+}
 </style>
+
