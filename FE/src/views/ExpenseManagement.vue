@@ -321,6 +321,12 @@
                   {{ formatCurrency(transaction.amount) }}
                 </span>
               </div>
+              <button
+                class="btn btn-sm btn-danger"
+                @click="deleteTransacrion(transaction.id, categoryDetail.id)"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
             </li>
           </ul>
           <!-- Close modal button -->
@@ -336,6 +342,8 @@
 <script>
 import axios from "axios";
 import { useToast } from "vue-toastification";
+import Swal from "sweetalert2";
+
 export default {
   data() {
     return {
@@ -614,6 +622,42 @@ export default {
         await this.fetchCategoriesHome();
       } catch (error) {
         toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+      }
+    },
+
+    async deleteTransacrion(id, categoryId) {
+      const toast = useToast();
+      const result = await Swal.fire({
+        title: "Xác nhận xoá",
+        text: "⚠️ Bạn có chắc chắn muốn xoá giao dịch này khỏi danh mục?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Xoá",
+        cancelButtonText: "Huỷ",
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await axios.delete(`/api/transaction/${id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+            },
+          });
+          toast.success("Đã xoá giao dịch khỏi danh mục thành công!");
+          const user = JSON.parse(localStorage.getItem("user"));
+          if (user) {
+            user.monthly_income = res.data.monthly_income;
+            user.monthly_customer_spending = res.data.monthly_customer_spending;
+            localStorage.setItem("user", JSON.stringify(user));
+          }
+          this.openCategoryDetail(categoryId);
+          await this.fetchCategoriesHome();
+        } catch (err) {
+          console.error(err);
+          toast.error("Đã xoá giao dịch khỏi danh mục thất bại!");
+        }
       }
     },
 
