@@ -158,7 +158,13 @@ class UserController extends Controller
         }
 
         if ($request->has('phone')) {
-            $rules['phone'] = 'nullable|string|max:15|unique:users,phone,' . $user->id;
+            $rules['phone'] = [
+                'nullable',
+                'string',
+                'max:15',
+                'regex:/^(0|\+84)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-5]|9[0-9])[0-9]{7}$/',
+                'unique:users,phone,' . $user->id
+            ];
         }
 
         if ($request->has('fullName')) {
@@ -180,6 +186,7 @@ class UserController extends Controller
             'phone.unique' => 'Số điện thoại đã tồn tại.',
             'fullName.string' => 'Họ tên phải là chuỗi.',
             'fullName.max' => 'Họ tên không được vượt quá 255 ký tự.',
+            'phone.regex' => 'Số điện thoại không hợp lệ',
             'address.string' => 'Địa chỉ phải là chuỗi.',
             'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
         ];
