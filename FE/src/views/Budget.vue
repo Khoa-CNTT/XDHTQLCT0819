@@ -65,75 +65,75 @@
       </div>
     </div>
 
-    <!-- Budget Details Section -->
-    <div class="budget-section">
-      <h2 class="section-header">Chi tiết ngân sách</h2>
+   <!-- Budget Details Section -->
+<div class="budget-section">
+  <h2 class="section-header">Chi tiết ngân sách</h2>
 
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Đang tải dữ liệu...</p>
-      </div>
+  <div v-if="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Đang tải dữ liệu...</p>
+  </div>
 
-      <div
-        v-else-if="
-          budgetSummary.detailed && budgetSummary.detailed.length === 0
-        "
-        class="empty-state"
-      >
-        <p>
-          Chưa có ngân sách nào được thiết lập. Vui lòng thêm ngân sách mới.
-        </p>
-      </div>
+  <div
+    v-else-if="budgetSummary.detailed && budgetSummary.detailed.length === 0"
+    class="empty-state"
+  >
+    <p>Chưa có ngân sách nào được thiết lập. Vui lòng thêm ngân sách mới.</p>
+  </div>
 
-      <table v-else class="budget-table">
-        <thead>
-          <tr>
-            <th>Danh mục</th>
-            <th>Ngân sách</th>
-            <th>Đã chi</th>
-            <th class="hide-mobile">Ngưỡng cảnh báo</th>
-            <th>Trạng thái</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(budget, index) in budgetSummary.detailed" :key="index">
-            <td>
-              <div class="category-cell">
-                <div
-                  class="category-icon"
-                  :style="{ backgroundColor: getCategoryColor(budget.status) }"
-                >
-                  <i :class="getCategoryIcon(budget.icon)"></i>
-                </div>
-                <div>{{ budget.category_name }}</div>
-              </div>
-            </td>
-            <td>{{ budget.budget_limit }}</td>
-            <td>{{ budget.spent }}</td>
-            <td class="hide-mobile">{{ budget.warning_threshold }}</td>
-            <td>
-              <span
-                class="badge"
-                :class="'badge-' + getStatusType(budget.status)"
+  <!-- 🔧 Bọc bảng trong div để cuộn ngang nếu bị tràn -->
+  <div class="table-responsive">
+    <table class="budget-table">
+      <thead>
+        <tr>
+          <th>Danh mục</th>
+          <th>Ngân sách</th>
+          <th>Đã chi</th>
+          <th class="hide-mobile">Ngưỡng cảnh báo</th>
+          <th>Trạng thái</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(budget, index) in budgetSummary.detailed" :key="index">
+          <td>
+            <div class="category-cell">
+              <div
+                class="category-icon"
+                :style="{ backgroundColor: getCategoryColor(budget.status) }"
               >
-                {{ budget.status }}
-              </span>
-            </td>
-            <td>
-              <div class="action-buttons">
-                <button class="btn btn-edit" @click="editBudget(budget.id)">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-delete" @click="deleteBudget(budget.id)">
-                  <i class="fas fa-trash"></i>
-                </button>
+                <i :class="getCategoryIcon(budget.icon)"></i>
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+              <div>{{ budget.category_name }}</div>
+            </div>
+          </td>
+          <td>{{ budget.budget_limit }}</td>
+          <td>{{ budget.spent }}</td>
+          <td class="hide-mobile">{{ budget.warning_threshold }}</td>
+          <td>
+            <span
+              class="badge"
+              :class="'badge-' + getStatusType(budget.status)"
+            >
+              {{ budget.status }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-edit" @click="editBudget(budget.id)">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-delete" @click="deleteBudget(budget.id)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 
     <!-- Modal for adding/editing budget -->
     <div class="modal" v-if="showModal">
@@ -589,8 +589,10 @@ export default {
   align-items: center;
   gap: 8px;
   font-weight: 500;
+  font-size: 16px;
   cursor: pointer;
   transition: background-color 0.2s;
+  white-space: nowrap;
 }
 
 .add-btn:hover {
@@ -1076,4 +1078,28 @@ export default {
     margin-bottom: 4px;
   }
 }
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .add-btn {
+    padding: 6px 12px;
+    font-size: 14px;
+    gap: 6px;
+  }
+
+  .add-btn-icon {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .add-btn {
+    padding: 4px 10px;
+    font-size: 13px;
+  }
+
+  .add-btn span:not(.add-btn-icon) {
+    display: none; /* Ẩn text, chỉ giữ icon */
+  }
+}
+
 </style>

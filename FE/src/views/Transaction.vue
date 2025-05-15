@@ -75,9 +75,9 @@
       <p>TransactionsCount: {{ transactions.length }}</p>
     </div>
 
-     <div class="row">
-      <div class="col-6">
-        <!-- Danh sách giao dịch chi tiêu -->
+    <div class="row">
+  <!-- Cột chi tiêu -->
+  <div class="col-12 col-md-6">
     <div class="transaction-list">
       <h3 class="list-title">Danh sách chi tiêu</h3>
       <div v-if="isLoading" class="loading">Đang tải...</div>
@@ -92,43 +92,41 @@
       >
         <div class="item-details">
           <div>
-            <span class="category">{{
-              txn.description || "Không có mô tả"
-            }}</span>
+            <span class="category">{{ txn.description || "Không có mô tả" }}</span>
             <div class="note">{{ formatDate(txn.transaction_date) }}</div>
           </div>
           <div class="amount negative">-{{ formatNumber(txn.amount) }} VND</div>
         </div>
       </div>
     </div>
-     </div>
-      <div class="col-6">
-        <!-- Danh sách giao dịch thu nhập -->
-        <div class="transaction-list">
-          <h3 class="list-title">Danh sách thu nhập</h3>
-          <div v-if="isLoading" class="loading">Đang tải...</div>
-          <div v-else-if="filteredIncomes.length === 0" class="no-data">
-            Không có dữ liệu thu nhập trong thời gian đã chọn
+  </div>
+
+  <!-- Cột thu nhập -->
+  <div class="col-12 col-md-6">
+    <div class="transaction-list">
+      <h3 class="list-title">Danh sách thu nhập</h3>
+      <div v-if="isLoading" class="loading">Đang tải...</div>
+      <div v-else-if="filteredIncomes.length === 0" class="no-data">
+        Không có dữ liệu thu nhập trong thời gian đã chọn
+      </div>
+      <div
+        v-else
+        v-for="(txn, index) in filteredIncomes"
+        :key="'income-' + index"
+        class="transaction-item"
+      >
+        <div class="item-details">
+          <div>
+            <span class="category">{{ txn.description || "Không có mô tả" }}</span>
+            <div class="note">{{ formatDate(txn.transaction_date) }}</div>
           </div>
-          <div
-            v-else
-            v-for="(txn, index) in filteredIncomes"
-            :key="'income-' + index"
-            class="transaction-item"
-          >
-            <div class="item-details">
-              <div>
-                <span class="category">{{
-                  txn.description || "Không có mô tả"
-                }}</span>
-                <div class="note">{{ formatDate(txn.transaction_date) }}</div>
-              </div>
-              <div class="amount income">+{{ formatNumber(txn.amount) }} VND</div>
-            </div>
-          </div>
+          <div class="amount income">+{{ formatNumber(txn.amount) }} VND</div>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
   </div>
 </template>
 

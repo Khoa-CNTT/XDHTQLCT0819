@@ -20,13 +20,13 @@
           placeholder="Tìm kiếm danh mục..."
         />
         <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
+          <table class="table table-striped align-middle">
+            <thead class="table-light">
               <tr>
                 <th>#</th>
                 <th>Tên danh mục</th>
                 <th>Loại</th>
-                <th></th>
+                <th class="d-none d-md-table-cell">Biểu tượng</th>
                 <th>Tổng tiền</th>
                 <th>Hành động</th>
               </tr>
@@ -45,7 +45,9 @@
                     {{ cat.type === "income" ? "Thu nhập" : "Chi tiêu" }}
                   </span>
                 </td>
-                <td><i :class="cat.icon"></i></td>
+                <td class="d-none d-md-table-cell">
+                  <i :class="cat.icon"></i>
+                </td>
                 <td>
                   <span
                     :class="[
@@ -59,24 +61,26 @@
                   </span>
                 </td>
                 <td>
-                  <button
-                    class="btn btn-sm btn-warning me-2"
-                    @click="openEdit(cat)"
-                  >
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button
-                    class="btn btn-sm btn-danger me-2"
-                    @click="deleteCategory(cat.id)"
-                  >
-                    <i class="fas fa-trash"></i>
-                  </button>
-                  <button
-                    class="btn btn-sm btn-info"
-                    @click="openCategoryDetail(cat.id)"
-                  >
-                    <i class="fas fa-info-circle"></i>
-                  </button>
+                  <div class="d-flex flex-wrap gap-1">
+                    <button
+                      class="btn btn-sm btn-warning"
+                      @click="openEdit(cat)"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-danger"
+                      @click="deleteCategory(cat.id)"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-info"
+                      @click="openCategoryDetail(cat.id)"
+                    >
+                      <i class="fas fa-info-circle"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -786,6 +790,22 @@ export default {
 
   .modal-content p strong {
     min-width: 120px;
+  }
+}
+@media (max-width: 576px) {
+  .table td,
+  .table th {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .table .btn {
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
   }
 }
 </style>
