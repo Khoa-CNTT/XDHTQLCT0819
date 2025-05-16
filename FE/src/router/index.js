@@ -15,6 +15,7 @@ import Budget from "@/views/Budget.vue";
 import RecurringTransactions from "@/views/RecurringTransactions.vue";
 import ReportAdmin from "@/views/ReportAdmin.vue";
 import ActivityLogs from "@/views/ActivityLogs.vue";
+import ContactAdmin from '@/views/ContactAdmin.vue';
 
 const routes = [
   {
@@ -107,7 +108,12 @@ const routes = [
     path: "/nhat-ky-hoat-dong",
     name: "nhat-ky-hoat-dong",
     component: ActivityLogs,
-  }
+  },
+  {
+    path: "/quan-li-lien-he",
+    name: "quan-li-lien-he",
+    component: ContactAdmin,
+  },
 ];
 
 const router = createRouter({

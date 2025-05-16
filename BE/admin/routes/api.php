@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExampleController;
 use App\Http\Controllers\RecurringtransactionController;
 use App\Http\Controllers\ReportController;
@@ -24,6 +25,8 @@ Route::post('/reset-password', [AuthController::class, 'reset']);
 Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::get('/get-image/{filename}', [UserController::class, 'getImage'])
     ->where('filename', '.*');
+
+Route::post('/contact', [ContactController::class, 'store']);
 
 Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -118,5 +121,9 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
         Route::put('/user/block/{id}', [UserController::class, 'block']);
         Route::get('/dashboard-stats', [UserController::class, 'getStats']);
 
+        Route::get('/contact', [ContactController::class, 'index']);
+        Route::get('/contact/{id}', [ContactController::class, 'show']);
+        Route::put('/contact/{id}', [ContactController::class, 'update']);
+        Route::delete('/contact/{id}', [ContactController::class, 'destroy']);
     });
 });

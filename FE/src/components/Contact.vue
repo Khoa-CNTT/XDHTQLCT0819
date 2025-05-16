@@ -1,88 +1,145 @@
 <template>
-    <section id="contact" class="section">
-      <h2 class="section-title">Liên hệ với chúng tôi</h2>
-      <div class="contact-wrapper">
-        <form class="contact-form">
-          <div class="form-group">
-            <label for="contact-name">Họ và tên</label>
-            <input
-              type="text"
-              id="contact-name"
-              required
-              placeholder="Nhập họ và tên"
-            />
-          </div>
-          <div class="form-group">
-            <label for="contact-email">Email</label>
-            <input
-              type="email"
-              id="contact-email"
-              required
-              placeholder="Nhập email"
-            />
-          </div>
-          <div class="form-group">
-            <label for="contact-message">Nội dung</label>
-            <textarea
-              id="contact-message"
-              rows="5"
-              required
-              placeholder="Nhập nội dung liên hệ"
-            ></textarea>
-          </div>
-          <button type="submit" class="btn-primary">Gửi liên hệ</button>
-        </form>
-        <div class="contact-info">
-          <h3>Thông tin liên hệ</h3>
-          <p>Nếu bạn có bất kỳ câu hỏi nào, hãy liên hệ với chúng tôi qua:</p>
-          <ul>
-            <li>
-              <span class="contact-icon">📧</span>
-              Email: <a href="hale.020031982@gmail.com">support@saveup.com</a>
-            </li>
-            <li>
-              <span class="contact-icon">📞</span>
-              Hotline: <a href="tel:0983057130">0983057130</a>
-            </li>
-            <li>
-              <span class="contact-icon">🏠</span>
-              Địa chỉ: 117 Đường Phạm Nhữ Tăng, Quận Thanh Khê, TP.Đà Nẵng
-            </li>
-          </ul>
-          <!-- Liên kết mạng xã hội -->
-          <div class="social-links">
-            <h4>Kết nối với chúng tôi</h4>
-            <div class="social-icons">
-              <a href="https://www.facebook.com/profile.php?id=100075416786651" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-              <a href="https://x.com/home?lang=vi" class="social-icon"><i class="fab fa-twitter"></i></a>
-              <a href="https://www.instagram.com/vanmanhit.03/" class="social-icon"><i class="fab fa-instagram"></i></a>
-              <a href="https://www.instagram.com/vanmanhit.03/" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
-            </div>
+  <section id="contact" class="section">
+    <h2 class="section-title">Liên hệ với chúng tôi</h2>
+    <div class="contact-wrapper">
+      <form class="contact-form" @submit.prevent="submitContact">
+        <div class="form-group">
+          <label for="contact-name">Họ và tên</label>
+          <input
+            type="text"
+            id="contact-name"
+            v-model="form.name"
+            required
+            placeholder="Nhập họ và tên"
+          />
+        </div>
+        <div class="form-group">
+          <label for="contact-email">Email</label>
+          <input
+            type="email"
+            id="contact-email"
+            v-model="form.email"
+            required
+            placeholder="Nhập email"
+          />
+        </div>
+        <div class="form-group">
+          <label for="contact-message">Nội dung</label>
+          <textarea
+            id="contact-message"
+            rows="5"
+            v-model="form.description"
+            required
+            placeholder="Nhập nội dung liên hệ"
+          ></textarea>
+        </div>
+        <button type="submit" class="btn-primary" :disabled="loading">
+          {{ loading ? "Đang gửi..." : "Gửi liên hệ" }}
+        </button>
+      </form>
+
+      <div class="contact-info">
+        <!-- ... phần thông tin liên hệ và mạng xã hội giữ nguyên ... -->
+        <h3>Thông tin liên hệ</h3>
+        <p>Nếu bạn có bất kỳ câu hỏi nào, hãy liên hệ với chúng tôi qua:</p>
+        <ul>
+          <li>
+            <span class="contact-icon">📧</span>
+            Email: <a href="mailto:support@saveup.com">support@saveup.com</a>
+          </li>
+          <li>
+            <span class="contact-icon">📞</span>
+            Hotline: <a href="tel:0983057130">0983057130</a>
+          </li>
+          <li>
+            <span class="contact-icon">🏠</span>
+            Địa chỉ: 117 Đường Phạm Nhữ Tăng, Quận Thanh Khê, TP.Đà Nẵng
+          </li>
+        </ul>
+        <!-- Liên kết mạng xã hội -->
+        <div class="social-links">
+          <h4>Kết nối với chúng tôi</h4>
+          <div class="social-icons">
+            <a
+              href="https://www.facebook.com/profile.php?id=100075416786651"
+              class="social-icon"
+              target="_blank"
+              rel="noopener"
+              ><i class="fab fa-facebook-f"></i
+            ></a>
+            <a
+              href="https://x.com/home?lang=vi"
+              class="social-icon"
+              target="_blank"
+              rel="noopener"
+              ><i class="fab fa-twitter"></i
+            ></a>
+            <a
+              href="https://www.instagram.com/vanmanhit.03/"
+              class="social-icon"
+              target="_blank"
+              rel="noopener"
+              ><i class="fab fa-instagram"></i
+            ></a>
+            <a
+              href="https://www.instagram.com/vanmanhit.03/"
+              class="social-icon"
+              target="_blank"
+              rel="noopener"
+              ><i class="fab fa-linkedin-in"></i
+            ></a>
           </div>
         </div>
       </div>
-  
-      <!-- CTA -->
-      <div class="cta-section">
-        <h3>Khám phá thêm về SaveUp</h3>
-        <p>Quay lại trang chủ để tìm hiểu các tính năng nổi bật của chúng tôi.</p>
-        <a href="#home" class="btn-primary">Về trang chủ</a>
-      </div>
-    </section>
-  </template>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <h3>Khám phá thêm về SaveUp</h3>
+      <p>Quay lại trang chủ để tìm hiểu các tính năng nổi bật của chúng tôi.</p>
+      <a href="#home" class="btn-primary">Về trang chủ</a>
+    </div>
+  </section>
+</template>
 
 <script>
+import axios from "axios";
+import { useToast } from "vue-toastification";
 export default {
-  name: "HelloWorld",
-  props: {
-    msg: String,
+  name: "ContactSection",
+  data() {
+    return {
+      form: {
+        name: "",
+        email: "",
+        description: "",
+      },
+      loading: false,
+    };
+  },
+  methods: {
+    async submitContact() {
+      const toast = useToast();
+      this.loading = true;
+      try {
+        const response = await axios.post("/api/contact", this.form);
+        toast.success(response.data.message);
+        this.form.name = "";
+        this.form.email = "";
+        this.form.description = "";
+      } catch (error) {
+        toast.error(error.response.data.message);
+      } finally {
+        this.loading = false;
+      }
+    },
   },
 };
 </script>
-
 <style scoped>
 /* Đảm bảo phần tử cha không bị ảnh hưởng bởi style toàn cục */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
