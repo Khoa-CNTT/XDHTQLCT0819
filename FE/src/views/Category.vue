@@ -807,5 +807,103 @@ export default {
   .table-responsive {
     overflow-x: auto;
   }
+
+  .d-flex.justify-content-end.gap-2 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .d-flex.justify-content-end.gap-2 .btn {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+@media (max-width: 992px) {
+  .modal-content {
+    max-width: 98vw;
+    padding: 1.2rem;
+  }
+  .modal-content h5 {
+    font-size: 1.2rem;
+    padding: 1rem 1rem;
+  }
+  .btn-custom {
+    min-width: 70px;
+    height: 38px;
+    font-size: 0.95rem;
+    margin-top: 2%;
+  }
+}
+@media (max-width: 768px) {
+  .modal-content {
+    max-width: 100vw;
+    padding: 0.7rem;
+    border-radius: 8px;
+  }
+  .modal-content h5 {
+    font-size: 1.1rem;
+    padding: 0.8rem 0.7rem;
+  }
+  .btn-custom {
+    min-width: 60px;
+    height: 36px;
+    font-size: 0.9rem;
+    margin-top: 1.5%;
+  }
+  .form-control, .form-select {
+    font-size: 0.95rem;
+    padding: 8px 10px;
+  }
+  .modal-content p, .modal-content li {
+    font-size: 0.95rem;
+    padding: 0.4rem 0;
+  }
+  .modal-content li {
+    padding: 0.7rem;
+  }
+}
+@media (max-width: 576px) {
+  .modal-content {
+    max-width: 100vw;
+    min-width: 0;
+    padding: 0.4rem;
+    border-radius: 6px;
+  }
+  .modal-content h5 {
+    font-size: 1rem;
+    padding: 0.6rem 0.4rem;
+  }
+  .btn-custom {
+    min-width: 50px;
+    height: 32px;
+    font-size: 0.85rem;
+    margin-top: 1%;
+  }
+  .form-control, .form-select {
+    font-size: 0.9rem;
+    padding: 7px 8px;
+  }
+  .modal-content p, .modal-content li {
+    font-size: 0.9rem;
+    padding: 0.3rem 0;
+  }
+  .modal-content li {
+    padding: 0.5rem;
+  }
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table td,
+  .table th {
+    font-size: 12px;
+    padding: 6px 4px;
+    white-space: nowrap;
+  }
+  .table .btn {
+    padding: 3px 5px;
+    font-size: 11px;
+  }
 }
 </style>

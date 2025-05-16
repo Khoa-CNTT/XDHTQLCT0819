@@ -188,42 +188,48 @@
             <form @submit.prevent="changePassword">
               <div class="form-group">
                 <label>Mật khẩu cũ:</label>
-                <input
-                  :type="showOldPassword ? 'text' : 'password'"
-                  v-model="passwordForm.current_password"
-                  class="form-input"
-                  required
-                />
-                <button type="button" @click="toggleOldPassword" class="password-toggle-btn">
-                <Eye v-if="!showOldPassword" />
-                <EyeOff v-if="showOldPassword" />
-              </button>
+                <div class="password-wrapper">
+                  <input
+                    :type="showOldPassword ? 'text' : 'password'"
+                    v-model="passwordForm.current_password"
+                    class="form-input"
+                    required
+                  />
+                  <button type="button" @click="toggleOldPassword" class="password-toggle-btn">
+                    <Eye v-if="!showOldPassword" />
+                    <EyeOff v-if="showOldPassword" />
+                  </button>
+                </div>
               </div>
               <div class="form-group">
                 <label>Mật khẩu mới:</label>
-                <input
-                  :type="showNewPassword ? 'text' : 'password'"
-                  v-model="passwordForm.new_password"
-                  class="form-input"
-                  required
-                />
-                <button type="button" @click="toggleNewPassword" class="password-toggle-btn">
-                <Eye v-if="!showNewPassword" />
-                <EyeOff v-if="showNewPassword" />
-              </button>
+                <div class="password-wrapper">
+                  <input
+                    :type="showNewPassword ? 'text' : 'password'"
+                    v-model="passwordForm.new_password"
+                    class="form-input"
+                    required
+                  />
+                  <button type="button" @click="toggleNewPassword" class="password-toggle-btn">
+                    <Eye v-if="!showNewPassword" />
+                    <EyeOff v-if="showNewPassword" />
+                  </button>
+                </div>
               </div>
               <div class="form-group">
                 <label>Xác nhận mật khẩu mới:</label>
-                <input
-                  :type="showConfirmPassword ? 'text' : 'password'"
-                  v-model="passwordForm.new_password_confirmation"
-                  class="form-input"
-                  required
-                />
-                <button type="button" @click="toggleConfirmPassword" class="password-toggle-btn">
-                <Eye v-if="!showConfirmPassword" />
-                <EyeOff v-if="showConfirmPassword" />
-              </button>
+                <div class="password-wrapper">
+                  <input
+                    :type="showConfirmPassword ? 'text' : 'password'"
+                    v-model="passwordForm.new_password_confirmation"
+                    class="form-input"
+                    required
+                  />
+                  <button type="button" @click="toggleConfirmPassword" class="password-toggle-btn">
+                    <Eye v-if="!showConfirmPassword" />
+                    <EyeOff v-if="showConfirmPassword" />
+                  </button>
+                </div>
               </div>
               <div class="form-actions">
                 <button
@@ -853,6 +859,7 @@ input[type="file"] {
 
 .form-group {
   margin-bottom: 15px;
+  position: relative;
 }
 
 .form-label {
@@ -864,6 +871,7 @@ input[type="file"] {
 .form-input {
   width: 100%;
   padding: 10px;
+  padding-right: 40px;
   border: 1px solid #d0d0d0;
   border-radius: 5px;
   font-size: 1rem;
@@ -896,25 +904,54 @@ input[type="file"] {
   font-size: 1rem;
 }
 
-.password-input {
-  display: flex;
-  align-items: center;
+.password-wrapper {
   position: relative;
+  width: 100%;
+}
+
+.password-wrapper .form-input {
+  padding-right: 48px; /* Đủ chỗ cho icon */
 }
 
 .password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
-  position: absolute;
-  right: 10px;
   cursor: pointer;
   color: #00a3e0;
-  padding: 0;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+  z-index: 2;
+}
+
+.password-toggle-btn:hover {
+  background: #e8f7fc;
+  color: #0056b3;
 }
 
 .password-toggle-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.2;
+  display: block;
+}
+
+/* Dark mode support for password toggle */
+@media (prefers-color-scheme: dark) {
+  body.dark-mode-enabled .password-toggle-btn {
+    color: #4da3ff;
+  }
+  
+  body.dark-mode-enabled .password-toggle-btn:hover {
+    color: #80b3ff;
+  }
 }
 
 /* Animation */

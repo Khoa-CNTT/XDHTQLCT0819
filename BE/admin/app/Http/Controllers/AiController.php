@@ -26,28 +26,28 @@ class AiController extends Controller
             ->implode(",\n    ");
 
         return <<<PROMPT
-Câu đầu vào: "$text"
+            Câu đầu vào: "$text"
 
-Yêu cầu: Trích xuất thông tin từ câu trên và trả về đúng định dạng JSON hợp lệ với các trường sau:
+            Yêu cầu: Trích xuất thông tin từ câu trên và trả về đúng định dạng JSON hợp lệ với các trường sau:
 
-{
-    "amount": (số tiền tính bằng đơn vị đồng, là số nguyên, ví dụ: 25000),
-    "type": "cash" hoặc "transfer",
-    "description": (mô tả ngắn gọn hành động chi tiêu, ví dụ: "Ăn bún bò", "Uống cà phê"),
-    "category_id": (id của danh mục phù hợp, chọn từ các ID trong bảng dưới hoặc null nếu không phù hợp)
-}
+            {
+                "amount": (số tiền tính bằng đơn vị đồng, là số nguyên, ví dụ: 25000),
+                "type": "cash" hoặc "transfer",
+                "description": (mô tả ngắn gọn hành động chi tiêu, ví dụ: "Ăn bún bò", "Uống cà phê"),
+                "category_id": (id của danh mục phù hợp, chọn từ các ID trong bảng dưới hoặc null nếu không phù hợp)
+            }
 
-Dưới đây là danh sách danh mục để tham chiếu category_id:
-{
-    $category_json_string
-}
+            Dưới đây là danh sách danh mục để tham chiếu category_id:
+            {
+                $category_json_string
+            }
 
-Ghi nhớ:
-- Trả về một chuỗi JSON hợp lệ duy nhất (double quotes, đúng cú pháp JSON).
-- Không ghi chú thích, không giải thích thêm.
-- Nếu không trích xuất được thì trả về đúng: null (chữ thường).
-PROMPT;
-    }
+            Ghi nhớ:
+            - Trả về một chuỗi JSON hợp lệ duy nhất (double quotes, đúng cú pháp JSON).
+            - Không ghi chú thích, không giải thích thêm.
+            - Nếu không trích xuất được thì trả về đúng: null (chữ thường).
+            PROMPT;
+                }
 
     public function AIVoid(Request $request)
     {
@@ -390,28 +390,28 @@ PROMPT;
             ->implode(",\n    ");
 
         return <<<PROMPT
-Mô tả giao dịch: "$description"
+            Mô tả giao dịch: "$description"
 
-Yêu cầu: Trích xuất thông tin từ mô tả giao dịch trên và trả về đúng định dạng JSON hợp lệ với các trường sau:
+            Yêu cầu: Trích xuất thông tin từ mô tả giao dịch trên và trả về đúng định dạng JSON hợp lệ với các trường sau:
 
-{
-    "amount": (số tiền tính bằng đơn vị đồng, là số nguyên, lấy từ mô tả nếu có hoặc để 0),
-    "type": "transfer",
-    "description": (mô tả ngắn gọn hành động chi tiêu hoặc thu nhập, tối đa 50 ký tự),
-    "category_id": (id của danh mục phù hợp, chọn từ các ID trong bảng dưới hoặc null nếu không phù hợp)
-}
+            {
+                "amount": (số tiền tính bằng đơn vị đồng, là số nguyên, lấy từ mô tả nếu có hoặc để 0),
+                "type": "transfer",
+                "description": (mô tả ngắn gọn hành động chi tiêu hoặc thu nhập, tối đa 50 ký tự),
+                "category_id": (id của danh mục phù hợp, chọn từ các ID trong bảng dưới hoặc null nếu không phù hợp)
+            }
 
-Dưới đây là danh sách danh mục để tham chiếu category_id:
-{
-    $category_json_string
-}
+            Dưới đây là danh sách danh mục để tham chiếu category_id:
+            {
+                $category_json_string
+            }
 
-Ghi nhớ:
-- Trả về một chuỗi JSON hợp lệ duy nhất (double quotes, đúng cú pháp JSON).
-- Không ghi chú thích, không giải thích thêm.
-- Nếu không trích xuất được thì trả về đúng: null (chữ thường).
-PROMPT;
-    }
+            Ghi nhớ:
+            - Trả về một chuỗi JSON hợp lệ duy nhất (double quotes, đúng cú pháp JSON).
+            - Không ghi chú thích, không giải thích thêm.
+            - Nếu không trích xuất được thì trả về đúng: null (chữ thường).
+            PROMPT;
+                }
 
     private function determineTransactionType($description)
     {
@@ -536,34 +536,34 @@ PROMPT;
     public function CreatePromptChatBox($context = null)
     {
         return <<<PROMPT
-Bạn là trợ lý tài chính cá nhân thông minh. Hãy trả lời câu hỏi người dùng dựa vào thông tin được cung cấp.
+            Bạn là trợ lý tài chính cá nhân thông minh. Hãy trả lời câu hỏi người dùng dựa vào thông tin được cung cấp.
 
-Thông tin của người dùng:
-{{USER_INFO}}
+            Thông tin của người dùng:
+            {{USER_INFO}}
 
-Lịch sử giao dịch gần đây:
-{{TRANSACTION_HISTORY}}
+            Lịch sử giao dịch gần đây:
+            {{TRANSACTION_HISTORY}}
 
-Phân loại giao dịch theo danh mục:
-{{CATEGORY_STATISTICS}}
+            Phân loại giao dịch theo danh mục:
+            {{CATEGORY_STATISTICS}}
 
-Câu hỏi: "{{USER_QUESTION}}"
+            Câu hỏi: "{{USER_QUESTION}}"
 
-Lưu ý:
-- Trả lời ngắn gọn, rõ ràng và hữu ích
-- Sử dụng ngôn ngữ thân thiện
-- Đưa ra lời khuyên hoặc gợi ý (nếu phù hợp)
-- Không sử dụng từ ngữ quá kỹ thuật
-- Trả lời bằng tiếng Việt
-- Nếu người dùng muốn thực hiện các hành động sau, hãy trả về theo định dạng JSON đặc biệt:
-  - Thêm danh mục: {"action":"add_category","category_name":"Tên danh mục","type":"income hoặc expense"}
-  - Thêm giao dịch: {"action":"add_transaction","category_id":ID,"amount":TIỀN,"description":"MÔ TẢ","transaction_type":"income/expense"}
-  - Xóa danh mục: {"action":"delete_category","category_id":ID}
-  - Xóa danh mục và giao dịch: {"action":"delete_category_with_transactions","category_id":ID}
-  - Cập nhật tên danh mục: {"action":"update_category","category_id":ID,"new_name":"Tên mới"}
-  - Xóa giao dịch: {"action":"delete_transaction","transaction_id":ID}
-PROMPT;
-    }
+            Lưu ý:
+            - Trả lời ngắn gọn, rõ ràng và hữu ích
+            - Sử dụng ngôn ngữ thân thiện
+            - Đưa ra lời khuyên hoặc gợi ý (nếu phù hợp)
+            - Không sử dụng từ ngữ quá kỹ thuật
+            - Trả lời bằng tiếng Việt
+            - Nếu người dùng muốn thực hiện các hành động sau, hãy trả về theo định dạng JSON đặc biệt:
+            - Thêm danh mục: {"action":"add_category","category_name":"Tên danh mục","type":"income hoặc expense"}
+            - Thêm giao dịch: {"action":"add_transaction","category_id":ID,"amount":TIỀN,"description":"MÔ TẢ","transaction_type":"income/expense"}
+            - Xóa danh mục: {"action":"delete_category","category_id":ID}
+            - Xóa danh mục và giao dịch: {"action":"delete_category_with_transactions","category_id":ID}
+            - Cập nhật tên danh mục: {"action":"update_category","category_id":ID,"new_name":"Tên mới"}
+            - Xóa giao dịch: {"action":"delete_transaction","transaction_id":ID}
+            PROMPT;
+                }
 
 
     public function chatBox(Request $request)
