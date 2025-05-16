@@ -60,8 +60,8 @@ class SavingoalController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name'       => 'required|string|max:255',
-                'target'     => 'required|numeric|min:0',
-                'save_money' => 'required|numeric|min:0',
+                'target'     => 'required|numeric|min:0|digits_between:1,20',
+                'save_money' => 'required|numeric|min:0|digits_between:1,20',
                 'start_day'  => 'required|date',
                 'end_day'    => 'required|date|after_or_equal:start_day',
             ]);
@@ -139,8 +139,8 @@ class SavingoalController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'name'                => 'required|string|max:255',
-                'target'              => 'required|numeric|min:0',
-                'save_money'          => 'required|numeric|min:0',
+                'target'              => 'required|numeric|min:0|digits_between:1,20',
+                'save_money'          => 'required|numeric|min:0|digits_between:1,20',
                 'start_day'           => 'required|date',
                 'end_day'             => 'required|date|after_or_equal:start_day',
             ]);

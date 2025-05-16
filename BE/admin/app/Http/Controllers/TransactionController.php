@@ -65,12 +65,32 @@ class TransactionController extends Controller
             $validator = Validator::make($request->all(), [
                 'account_id'       => 'nullable|exists:accounts,id',
                 'category_id'      => 'nullable|exists:categories,id',
-                'amount'           => 'required|numeric|min:0',
+                'amount'           => 'required|numeric|min:0|digits_between:1,20',
                 'transaction_date' => 'nullable|date',
                 'transaction_type' => 'nullable|in:income,expense',
                 'type'             => 'required|in:cash,transfer',
                 'address'          => 'nullable|string|max:255',
                 'description'      => 'nullable|string',
+            ], [
+                'account_id.exists'       => 'Tài khoản đã chọn không hợp lệ.',
+                'category_id.exists'      => 'Danh mục đã chọn không hợp lệ.',
+
+                'amount.required'         => 'Vui lòng nhập số tiền.',
+                'amount.numeric'          => 'Số tiền phải là một số.',
+                'amount.min'              => 'Số tiền không được nhỏ hơn 0.',
+                'amount.digits_between'   => 'Số tiền không được vượt quá 20 chữ số.',
+
+                'transaction_date.date'   => 'Ngày giao dịch không hợp lệ.',
+
+                'transaction_type.in'     => 'Loại giao dịch phải là thu nhập hoặc chi tiêu.',
+
+                'type.required'           => 'Vui lòng chọn hình thức thanh toán.',
+                'type.in'                 => 'Hình thức thanh toán không hợp lệ.',
+
+                'address.string'          => 'Địa chỉ phải là chuỗi ký tự.',
+                'address.max'             => 'Địa chỉ không được vượt quá 255 ký tự.',
+
+                'description.string'      => 'Mô tả phải là chuỗi ký tự.',
             ]);
 
             if ($validator->fails()) {
@@ -147,15 +167,34 @@ class TransactionController extends Controller
             $transaction = Transaction::where('user_id', auth()->id())->findOrFail($id);
 
             $validator = Validator::make($request->all(), [
-                'account_id'            => 'nullable|exists:accounts,id',
-                'category_id'           => 'nullable|exists:categories,id',
-                'amount'                => 'required|numeric|min:0',
-                'transaction_date'      => 'required|date',
-                'type'                  => 'required|in:cash,transfer',
-                'transaction_type'      => 'required|in:income,expense',
-                'address'               => 'required|string|max:255',
-                'recurring_transaction' => 'required|boolean',
-                'description'           => 'nullable|string',
+                'account_id'       => 'nullable|exists:accounts,id',
+                'category_id'      => 'nullable|exists:categories,id',
+                'amount'           => 'required|numeric|min:0|digits_between:1,20',
+                'transaction_date' => 'nullable|date',
+                'transaction_type' => 'nullable|in:income,expense',
+                'type'             => 'required|in:cash,transfer',
+                'address'          => 'nullable|string|max:255',
+                'description'      => 'nullable|string',
+            ], [
+                'account_id.exists'       => 'Tài khoản đã chọn không hợp lệ.',
+                'category_id.exists'      => 'Danh mục đã chọn không hợp lệ.',
+
+                'amount.required'         => 'Vui lòng nhập số tiền.',
+                'amount.numeric'          => 'Số tiền phải là một số.',
+                'amount.min'              => 'Số tiền không được nhỏ hơn 0.',
+                'amount.digits_between'   => 'Số tiền không được vượt quá 20 chữ số.',
+
+                'transaction_date.date'   => 'Ngày giao dịch không hợp lệ.',
+
+                'transaction_type.in'     => 'Loại giao dịch phải là thu nhập hoặc chi tiêu.',
+
+                'type.required'           => 'Vui lòng chọn hình thức thanh toán.',
+                'type.in'                 => 'Hình thức thanh toán không hợp lệ.',
+
+                'address.string'          => 'Địa chỉ phải là chuỗi ký tự.',
+                'address.max'             => 'Địa chỉ không được vượt quá 255 ký tự.',
+
+                'description.string'      => 'Mô tả phải là chuỗi ký tự.',
             ]);
 
             if ($validator->fails()) {

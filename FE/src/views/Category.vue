@@ -575,8 +575,16 @@ export default {
         };
         await this.fetchCategories();
       } catch (error) {
-        toast.error(error);
-        toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+        const errors = error.response?.data?.errors;
+        if (errors) {
+          Object.values(errors).forEach((fieldErrors) => {
+            fieldErrors.forEach((message) => {
+              toast.error(message);
+            });
+          });
+        } else {
+          toast.error("Dữ liệu không hợp lệ.");
+        }
       }
     },
     closeAddTransactionModal() {
@@ -851,11 +859,13 @@ export default {
     font-size: 0.9rem;
     margin-top: 1.5%;
   }
-  .form-control, .form-select {
+  .form-control,
+  .form-select {
     font-size: 0.95rem;
     padding: 8px 10px;
   }
-  .modal-content p, .modal-content li {
+  .modal-content p,
+  .modal-content li {
     font-size: 0.95rem;
     padding: 0.4rem 0;
   }
@@ -880,11 +890,13 @@ export default {
     font-size: 0.85rem;
     margin-top: 1%;
   }
-  .form-control, .form-select {
+  .form-control,
+  .form-select {
     font-size: 0.9rem;
     padding: 7px 8px;
   }
-  .modal-content p, .modal-content li {
+  .modal-content p,
+  .modal-content li {
     font-size: 0.9rem;
     padding: 0.3rem 0;
   }

@@ -621,7 +621,16 @@ export default {
         };
         await this.fetchCategoriesHome();
       } catch (error) {
-        toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+         const errors = error.response?.data?.errors;
+        if (errors) {
+          Object.values(errors).forEach((fieldErrors) => {
+            fieldErrors.forEach((message) => {
+              toast.error(message);
+            });
+          });
+        } else {
+          toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+        }
       }
     },
 
@@ -690,7 +699,16 @@ export default {
         };
         await this.fetchCategoriesHome();
       } catch (error) {
-        toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+          const errors = error.response?.data?.errors;
+        if (errors) {
+          Object.values(errors).forEach((fieldErrors) => {
+            fieldErrors.forEach((message) => {
+              toast.error(message);
+            });
+          });
+        } else {
+          toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+        }
       }
     },
 
