@@ -17,7 +17,7 @@ class BudgetController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|exists:categories,id',
-            'budget_limit' => 'required|numeric',
+            'budget_limit' => 'required|numeric|digits_between:1,20',
             'warning_threshold' => 'required|numeric',
         ], [
             'category_id.required' => 'Vui lòng chọn danh mục.',
@@ -26,6 +26,9 @@ class BudgetController extends Controller
             'budget_limit.numeric' => 'Hạn mức ngân sách phải là số.',
             'warning_threshold.required' => 'Vui lòng nhập ngưỡng cảnh báo.',
             'warning_threshold.numeric' => 'Ngưỡng cảnh báo phải là số.',
+            'warning_threshold.digits_between' => 'Ngưỡng cảnh báo không được vượt quá 20 chữ số.',
+
+
         ]);
 
         if ($validator->fails()) {
