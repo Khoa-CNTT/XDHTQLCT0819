@@ -26,9 +26,9 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Tên</th>
+                <th>Tên người liên hệ</th>
                 <th>Email</th>
-                <th>Mô tả</th>
+                <th>Nội dung liên hệ </th>
                 <th>Ngày tạo liên hệ</th>
                 <th>Hành động</th>
               </tr>
