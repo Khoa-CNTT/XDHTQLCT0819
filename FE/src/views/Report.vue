@@ -745,7 +745,7 @@ export default {
   font-size: 1rem;
   color: #475569;
   font-weight: 500;
-}
+} 
 
 /* Thống kê tổng quan */
 .summary {
