@@ -164,7 +164,7 @@ export default {
             .then(() => {
               localStorage.removeItem("auth_token");
               localStorage.removeItem("user");
-
+              localStorage.removeItem("chatMessages");
               const toast = useToast();
               toast.success("Tài khoản đã đăng xuất thành công!", {
                 timeout: 3000,
