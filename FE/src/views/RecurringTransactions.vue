@@ -289,7 +289,7 @@ export default {
       }
     }
   },
-  created() {
+  mounted() {
     this.fetchData()
   },
   methods: {
@@ -578,10 +578,6 @@ export default {
   }
 }
 </script>
-
-
-
-
 <style scoped>
 /* Main styles */
 .recurring-transactions {
