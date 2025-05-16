@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('avatar')->nullable();
             $table->string('currency', 10)->default('VND');
             $table->string('verify_token')->nullable();
+            $table->timestamp('last_login')->nullable(); 
             $table->timestamps();
         });
     }

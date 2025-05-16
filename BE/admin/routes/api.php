@@ -17,7 +17,7 @@ use App\Http\Controllers\UserController;
 
 Route::get('/example', [ExampleController::class, 'index']);
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail']);
 Route::get('/reset-password', [AuthController::class, 'resetShow']);
 Route::post('/reset-password', [AuthController::class, 'reset']);
@@ -116,5 +116,7 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
         Route::put('/user/update', [UserController::class, 'update']);
         Route::delete('/user/{id}', [UserController::class, 'destroy']);
         Route::put('/user/block/{id}', [UserController::class, 'block']);
+        Route::get('/dashboard-stats', [UserController::class, 'getStats']);
+
     });
 });

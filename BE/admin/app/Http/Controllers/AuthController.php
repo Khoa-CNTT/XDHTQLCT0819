@@ -214,6 +214,7 @@ class AuthController extends Controller
             return response()->json(['error' => 'Tài khoản bị khóa'], 401);
         }
         $user->status = true;
+        $user->last_login = Carbon::now();
         $user->save();
 
         $token = $user->createToken('API Token')->plainTextToken;

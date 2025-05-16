@@ -64,6 +64,11 @@
                 >Quản lý người dùng</router-link
               >
             </li>
+            <li>
+              <router-link to="/report-admin" class="nav-link text-dark"
+                >Thống kê lượng người dùng</router-link
+              >
+            </li>
           </template>
 
           <li class="profile-dropdown">
@@ -91,7 +96,7 @@
               >
               <router-link to="/nhat-ky-hoat-dong" class="dropdown-link"
                 >Nhật ký hoạt động</router-link
-                >
+              >
               <a href="#" class="dropdown-link" @click.prevent="handleLogout"
                 >Đăng xuất</a
               >
@@ -218,6 +223,8 @@ export default {
   justify-content: space-between;
   padding: 1rem;
   flex-wrap: wrap;
+  backdrop-filter: none;
+  background-color: #ffffff;
 }
 
 .logo-img {
@@ -339,8 +346,14 @@ export default {
   color: #0ea5e9;
 }
 
-/* 🔽 Responsive */
 @media (max-width: 768px) {
+  .nav {
+    padding: 0.5rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
   .nav-toggle {
     display: flex;
   }
@@ -385,6 +398,9 @@ export default {
 @media (max-width: 480px) {
   .nav {
     padding: 0.5rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.8);
   }
 
   .nav-link {
@@ -406,3 +422,4 @@ export default {
   }
 }
 </style>
+

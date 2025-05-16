@@ -3,12 +3,21 @@
     <!-- User Stats Cards -->
     <div class="stats-grid">
       <div v-for="(stat, index) in userStats" :key="index" class="stat-card">
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3 class="stat-title">{{ stat.title }}</h3>
+        <component
+          :is="stat.title === 'Tổng người dùng' ? 'router-link' : 'div'"
+          v-bind="
+            stat.title === 'Tổng người dùng'
+              ? { to: '/quan-ly-nguoi-dung', class: 'stat-content-link' }
+              : {}
+          "
+        >
+          <div class="stat-content">
+            <div class="stat-header">
+              <h3 class="stat-title">{{ stat.title }}</h3>
+            </div>
+            <p class="stat-value">{{ stat.value }}</p>
           </div>
-          <p class="stat-value">{{ stat.value }}</p>
-        </div>
+        </component>
       </div>
     </div>
 
@@ -21,19 +30,19 @@
         <div class="card-body">
           <div class="chart-controls">
             <div class="tab-controls">
-              <button 
-                v-for="(tab, index) in tabs" 
+              <button
+                v-for="(tab, index) in tabs"
                 :key="index"
                 @click="activeTab = tab.value"
                 class="tab-button"
-                :class="{ 'active': activeTab === tab.value }"
+                :class="{ active: activeTab === tab.value }"
               >
                 {{ tab.label }}
               </button>
             </div>
             <div class="date-picker">
               <CalendarIcon class="icon" />
-              <span>23/03/2025 - 01/04/2025</span>
+              <span>{{ dateRangeText }}</span>
             </div>
           </div>
 
@@ -56,9 +65,9 @@
           </div>
 
           <div class="user-stats">
-            <div 
-              v-for="(stat, index) in userManagement" 
-              :key="index" 
+            <div
+              v-for="(stat, index) in userManagement"
+              :key="index"
               class="user-stat-item"
             >
               <div class="user-stat-label">
@@ -80,134 +89,257 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
-import { 
-  Calendar as CalendarIcon, 
+import { ref, onMounted, watch, computed } from "vue";
+import {
+  Calendar as CalendarIcon,
   Users as UsersIcon,
   UserPlus as UserPlusIcon,
   UserCheck as UserCheckIcon,
-  UserX as UserXIcon
-} from 'lucide-vue-next';
-import Chart from 'chart.js/auto';
+  UserX as UserXIcon,
+} from "lucide-vue-next";
+import Chart from "chart.js/auto";
+import axios from "axios";
 
-// Stats Data
-const userStats = [
-  { title: "Tổng người dùng", value: "100" },
-  { title: "Lượng truy cập hôm qua", value: "100" },
-  { title: "Lượng truy cập tuần trước", value: "220" },
-  { title: "Lượng truy cập tháng trước", value: "300" }
-];
-
-const tabs = [
-  { label: 'Tuần', value: 'tuần' },
-  { label: 'Tháng', value: 'tháng' },
-  { label: 'Năm', value: 'năm' }
-];
-
-const activeTab = ref('tuần');
-
-// Quản lý người dùng
-const userManagement = [
-  { icon: UserPlusIcon, label: 'Người dùng mới', value: '12', period: 'tuần này' },
-  { icon: UserCheckIcon, label: 'Người dùng hoạt động', value: '78', period: 'tháng này' },
-  { icon: UserXIcon, label: 'Người dùng không hoạt động', value: '22', period: 'tháng này' }
-];
-
-// Chart setup
+// State
+const loading = ref(true);
+const statsData = ref(null);
+const activeTab = ref("tuần");
 const chartRef = ref(null);
 let chart = null;
 
+// Tabs
+const tabs = [
+  { label: "Tuần", value: "tuần" },
+  { label: "Tháng", value: "tháng" },
+  { label: "Năm", value: "năm" },
+];
+
+// Format date range text for tabs
+const dateRangeText = computed(() => {
+  const now = new Date();
+  let start, end;
+
+  if (activeTab.value === "tuần") {
+    // Bắt đầu từ Thứ Hai (T2) đến Chủ Nhật (CN)
+    const day = now.getDay(); // 0 = CN, 1 = T2, ..., 6 = T7
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    start = new Date(now);
+    start.setDate(now.getDate() + diffToMonday);
+    end = new Date(start);
+    end.setDate(start.getDate() + 6);
+  } else if (activeTab.value === "tháng") {
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  } else {
+    start = new Date(now.getFullYear(), 0, 1);
+    end = new Date(now.getFullYear(), 11, 31);
+  }
+
+  const formatDate = (date) => {
+    return `${date.getDate().toString().padStart(2, "0")}/${(
+      date.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}/${date.getFullYear()}`;
+  };
+
+  return `${formatDate(start)} - ${formatDate(end)}`;
+});
+
+// Computed user stats
+const userStats = computed(() => {
+  if (!statsData.value)
+    return Array(4).fill({ title: "Loading...", value: "..." });
+
+  return [
+    { title: "Tổng người dùng", value: statsData.value.total_users.toString() },
+    {
+      title: "Lượng truy cập hôm qua",
+      value: statsData.value.login_yesterday.toString(),
+    },
+    {
+      title: "Lượng truy cập tuần trước",
+      value: statsData.value.login_last_week.toString(),
+    },
+    {
+      title: "Lượng truy cập tháng trước",
+      value: statsData.value.login_last_month.toString(),
+    },
+  ];
+});
+
+// Computed user management stats
+const userManagement = computed(() => {
+  if (!statsData.value)
+    return Array(3).fill({
+      icon: UsersIcon,
+      label: "Loading...",
+      value: "...",
+      period: "",
+    });
+
+  return [
+    {
+      icon: UserPlusIcon,
+      label: "Người dùng mới",
+      value: statsData.value.new_users_this_week.toString(),
+      period: "tuần này",
+    },
+    {
+      icon: UserCheckIcon,
+      label: "Người dùng hoạt động",
+      value: statsData.value.active_users.toString(),
+      period: "tháng này",
+    },
+    {
+      icon: UserXIcon,
+      label: "Người dùng không hoạt động",
+      value: statsData.value.inactive_users.toString(),
+      period: "tháng này",
+    },
+  ];
+});
+
+// Chart data based on tab
 const getChartData = () => {
-  if (activeTab.value === 'tuần') {
+  if (!statsData.value) {
+    return { labels: [], data: [] };
+  }
+
+  if (activeTab.value === "tuần") {
+    const weekData = statsData.value.weekly_stats;
     return {
-      labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'],
-      data: [15, 35, 30, 45, 35, 25, 30]
+      labels: weekData.map((item) => item.day),
+      data: weekData.map((item) => item.count),
     };
-  } else if (activeTab.value === 'tháng') {
+  } else if (activeTab.value === "tháng") {
+    const monthData = statsData.value.monthly_stats;
     return {
-      labels: Array.from({ length: 30 }, (_, i) => `${i + 1}`),
-      data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 50) + 10)
+      labels: monthData.map((item) => item.day.toString()),
+      data: monthData.map((item) => item.count),
     };
   } else {
-    const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+    const months = [
+      "T1",
+      "T2",
+      "T3",
+      "T4",
+      "T5",
+      "T6",
+      "T7",
+      "T8",
+      "T9",
+      "T10",
+      "T11",
+      "T12",
+    ];
+    const yearData = statsData.value.yearly_stats;
     return {
       labels: months,
-      data: Array.from({ length: 12 }, () => Math.floor(Math.random() * 500) + 100)
+      data: yearData.map((item) => item.count),
     };
   }
 };
 
+// Render chart
 const renderChart = () => {
-  const ctx = chartRef.value.getContext('2d');
+  if (!chartRef.value) return;
+
+  const ctx = chartRef.value.getContext("2d");
   const { labels, data } = getChartData();
 
   if (chart) chart.destroy();
 
   chart = new Chart(ctx, {
-    type: 'bar',
+    type: "bar",
     data: {
       labels,
-      datasets: [{
-        label: 'Lượt truy cập',
-        data,
-        backgroundColor: 'rgba(59, 130, 246, 0.85)',
-        borderRadius: 6,
-        barThickness: activeTab.value === 'tháng' ? 8 : 'flex',
-        maxBarThickness: 40
-      }]
+      datasets: [
+        {
+          label: "Lượt truy cập",
+          data,
+          backgroundColor: "rgba(59, 130, 246, 0.85)",
+          borderRadius: 6,
+          barThickness: activeTab.value === "tháng" ? 8 : "flex",
+          maxBarThickness: 40,
+        },
+      ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       animation: {
         duration: 500,
-        easing: 'easeOutQuart'
+        easing: "easeOutQuart",
       },
       scales: {
         y: {
           beginAtZero: true,
           grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
-          }
+            color: "rgba(0, 0, 0, 0.05)",
+          },
         },
         x: {
           grid: {
-            display: false
-          }
-        }
+            display: false,
+          },
+        },
       },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#fff',
-          titleColor: '#334155',
-          bodyColor: '#334155',
-          borderColor: '#e2e8f0',
+          backgroundColor: "#fff",
+          titleColor: "#334155",
+          bodyColor: "#334155",
+          borderColor: "#e2e8f0",
           borderWidth: 1,
           padding: 10,
           displayColors: false,
           titleFont: {
             size: 14,
-            weight: 'bold'
+            weight: "bold",
           },
           bodyFont: {
-            size: 13
+            size: 13,
           },
           callbacks: {
-            title: items => `${items[0].label}`,
-            label: ctx => `Lượt truy cập: ${ctx.parsed.y}`
-          }
-        }
-      }
-    }
+            title: (items) => `${items[0].label}`,
+            label: (ctx) => `Lượt truy cập: ${ctx.parsed.y}`,
+          },
+        },
+      },
+    },
   });
 };
 
-// Initialize and update chart when tab changes
+// Fetch stats from API
+const fetchStats = async () => {
+  loading.value = true;
+  try {
+    const response = await axios.get("/api/dashboard-stats", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+      },
+    });
+    if (response.data.status === "success") {
+      statsData.value = response.data.data;
+    } else {
+      console.error("Failed to fetch stats");
+    }
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+  } finally {
+    loading.value = false;
+    renderChart();
+  }
+};
+
+// Init on mount
 onMounted(() => {
-  renderChart();
+  fetchStats();
 });
 
+// Re-render chart when tab changes
 watch(activeTab, () => {
   renderChart();
 });
@@ -218,7 +350,8 @@ watch(activeTab, () => {
   max-width: 1280px;
   margin: 0 auto;
   padding: 1.5rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
 }
 
 /* Stats Grid */
@@ -245,7 +378,8 @@ watch(activeTab, () => {
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .stat-content {
@@ -453,5 +587,10 @@ watch(activeTab, () => {
   font-size: 0.75rem;
   color: #6b7280;
   margin-top: 0.125rem;
+}
+.stat-content-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 </style>

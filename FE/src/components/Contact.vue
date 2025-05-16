@@ -38,25 +38,25 @@
           <ul>
             <li>
               <span class="contact-icon">📧</span>
-              Email: <a href="mailto:support@saveup.com">support@saveup.com</a>
+              Email: <a href="hale.020031982@gmail.com">support@saveup.com</a>
             </li>
             <li>
               <span class="contact-icon">📞</span>
-              Hotline: <a href="tel:19001234">1900 1234</a>
+              Hotline: <a href="tel:0983057130">0983057130</a>
             </li>
             <li>
               <span class="contact-icon">🏠</span>
-              Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM
+              Địa chỉ: 117 Đường Phạm Nhữ Tăng, Quận Thanh Khê, TP.Đà Nẵng
             </li>
           </ul>
           <!-- Liên kết mạng xã hội -->
           <div class="social-links">
             <h4>Kết nối với chúng tôi</h4>
             <div class="social-icons">
-              <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-              <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
-              <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-              <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+              <a href="https://www.facebook.com/profile.php?id=100075416786651" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+              <a href="https://x.com/home?lang=vi" class="social-icon"><i class="fab fa-twitter"></i></a>
+              <a href="https://www.instagram.com/vanmanhit.03/" class="social-icon"><i class="fab fa-instagram"></i></a>
+              <a href="https://www.instagram.com/vanmanhit.03/" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
             </div>
           </div>
         </div>

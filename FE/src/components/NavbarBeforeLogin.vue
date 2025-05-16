@@ -2,26 +2,23 @@
   <header class="header">
     <nav class="nav container">
       <a href="/" class="logo">
-        <img
-          src="/logo.png"
-          alt="SaveUp Logo"
-          class="logo-img"
-          loading="lazy"
-        />
+        <img src="/logo.png" alt="SaveUp Logo" class="logo-img" loading="lazy" />
       </a>
+      
+      <button class="nav-toggle" @click="toggleMenu" aria-label="Toggle menu" :aria-expanded="isMenuOpen">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
 
-      <div class="nav-menu">
+      <div :class="['nav-menu', { 'nav-menu--active': isMenuOpen }]">
         <ul class="nav-list">
           <li><a href="#home" class="nav-link text-dark">Trang chủ</a></li>
           <li><a href="#features" class="nav-link text-dark">Tính năng</a></li>
           <li><a href="#guide" class="nav-link text-dark">Hướng dẫn</a></li>
           <li><a href="#terms" class="nav-link text-dark">Điều khoản</a></li>
           <li><a href="#contact" class="nav-link text-dark">Liên hệ</a></li>
-          <li>
-            <router-link to="/login" class="nav-link login"
-              >Đăng nhập</router-link
-            >
-          </li>
+          <li><router-link to="/login" class="nav-link login">Đăng nhập</router-link></li>
         </ul>
       </div>
     </nav>
@@ -31,6 +28,16 @@
 <script>
 export default {
   name: "NavbarBeforeLogin",
+  data() {
+    return {
+      isMenuOpen: false,
+    };
+  },
+  methods: {
+    toggleMenu() {
+      this.isMenuOpen = !this.isMenuOpen;
+    },
+  },
 };
 </script>
 
@@ -55,6 +62,29 @@ export default {
 
 .logo-img {
   width: 100px;
+}
+
+/* Ẩn nút toggle khi desktop */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.nav-toggle .bar {
+  width: 25px;
+  height: 3px;
+  background-color: #000;
+  border-radius: 2px;
+}
+
+/* Menu mặc định trên desktop */
+.nav-menu {
+  display: block;
 }
 
 .nav-list {
@@ -87,11 +117,19 @@ export default {
   width: 100%;
 }
 
-/* 🔽 Responsive cho tablet và điện thoại */
+/* --- Responsive --- */
 @media (max-width: 768px) {
-  .nav {
-    flex-direction: column;
-    align-items: flex-start;
+  .nav-toggle {
+    display: flex;
+  }
+
+  .nav-menu {
+    display: none;
+    width: 100%;
+  }
+
+  .nav-menu.nav-menu--active {
+    display: block;
   }
 
   .nav-list {
