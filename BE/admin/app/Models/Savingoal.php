@@ -20,5 +20,6 @@ class Savingoal extends Model
         'end_day',
         'savings_percentage',
         'save_money_today',
+        'is_completed'
     ];
 }

@@ -20,13 +20,13 @@
           placeholder="Tìm kiếm danh mục..."
         />
         <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
+          <table class="table table-striped align-middle">
+            <thead class="table-light">
               <tr>
                 <th>#</th>
                 <th>Tên danh mục</th>
                 <th>Loại</th>
-                <th></th>
+                <th class="d-none d-md-table-cell">Biểu tượng</th>
                 <th>Tổng tiền</th>
                 <th>Hành động</th>
               </tr>
@@ -45,7 +45,9 @@
                     {{ cat.type === "income" ? "Thu nhập" : "Chi tiêu" }}
                   </span>
                 </td>
-                <td><i :class="cat.icon"></i></td>
+                <td class="d-none d-md-table-cell">
+                  <i :class="cat.icon"></i>
+                </td>
                 <td>
                   <span
                     :class="[
@@ -59,24 +61,26 @@
                   </span>
                 </td>
                 <td>
-                  <button
-                    class="btn btn-sm btn-warning me-2"
-                    @click="openEdit(cat)"
-                  >
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button
-                    class="btn btn-sm btn-danger me-2"
-                    @click="deleteCategory(cat.id)"
-                  >
-                    <i class="fas fa-trash"></i>
-                  </button>
-                  <button
-                    class="btn btn-sm btn-info"
-                    @click="openCategoryDetail(cat.id)"
-                  >
-                    <i class="fas fa-info-circle"></i>
-                  </button>
+                  <div class="d-flex flex-wrap gap-1">
+                    <button
+                      class="btn btn-sm btn-warning"
+                      @click="openEdit(cat)"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-danger"
+                      @click="deleteCategory(cat.id)"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-info"
+                      @click="openCategoryDetail(cat.id)"
+                    >
+                      <i class="fas fa-info-circle"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -101,7 +105,12 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Loại</label>
-            <select v-model="form.type" class="form-select" required>
+            <select
+              v-model="form.type"
+              class="form-select"
+              :disabled="isEditing"
+              required
+            >
               <option value="">Chọn loại</option>
               <option value="income">Thu nhập</option>
               <option value="expense">Chi tiêu</option>
@@ -188,13 +197,15 @@
             </li>
           </ul>
 
-          <!-- Button to open Add Transaction Modal -->
+          <!-- Button to open Add Transaction Modal (only visible if category is not 'Khác') -->
           <button
+            v-if="categoryDetail.slug !== 'khac'"
             class="btn btn-primary"
             @click="openAddTransactionModal(categoryDetail.id)"
           >
             Thêm Giao Dịch
           </button>
+
           <!-- Close modal button -->
           <button class="btn btn-secondary" @click="closeDetailModal">
             Đóng
@@ -339,6 +350,14 @@ export default {
         this.form.icon = "fas fa-tshirt";
       } else if (name.includes("khác")) {
         this.form.icon = "fas fa-ellipsis-h";
+      } else if (
+        name.includes("làm đẹp") ||
+        name.includes("spa") ||
+        name.includes("mỹ phẩm") ||
+        name.includes("cắt tóc") ||
+        name.includes("salon")
+      ) {
+        this.form.icon = "fas fa-spa";
       } else {
         this.form.icon = "";
       }
@@ -414,7 +433,6 @@ export default {
     cancelForm() {
       this.showForm = false;
       this.form = { id: null, name: "", type: "", icon: "" };
-      useToast().info("🔔 Đã huỷ chỉnh sửa / thêm danh mục.");
     },
     async deleteCategory(id) {
       const toast = useToast();
@@ -476,6 +494,50 @@ export default {
       return regex.test(date);
     },
 
+    fetchCategoryBudgetStatus(categoryId) {
+      const toast = useToast();
+      axios
+        .get(`/api/budget/category/${categoryId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+        })
+        .then((response) => {
+          if (response.data && response.data.status) {
+            const formattedStatus = response.data.status.replace(
+              /<strong>(.*?)<\/strong>/g,
+              (_, category) => {
+                const uppercaseCategory = category.toUpperCase();
+                return uppercaseCategory;
+              }
+            );
+
+            if (formattedStatus.includes("đã vượt ngưỡng")) {
+              toast.error(formattedStatus, {
+                timeout: 5000,
+                position: "top-right",
+                dangerouslyUseHTMLString: true,
+              });
+            } else if (formattedStatus.includes("sắp vượt ngưỡng")) {
+              toast.warning(formattedStatus, {
+                timeout: 5000,
+                position: "top-right",
+                dangerouslyUseHTMLString: true,
+              });
+            } else {
+              toast.success(formattedStatus, {
+                timeout: 5000,
+                position: "top-right",
+                dangerouslyUseHTMLString: true,
+              });
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Lỗi khi lấy trạng thái ngân sách danh mục:", error);
+        });
+    },
+
     // HUY TODO:
     async addTransaction() {
       const toast = useToast();
@@ -502,6 +564,7 @@ export default {
         }
         this.openCategoryDetail(this.newTransaction.category_id);
         this.closeAddTransactionModal();
+        this.fetchCategoryBudgetStatus(this.newTransaction.category_id);
         this.newTransaction = {
           transaction_date: "",
           type: "cash",
@@ -727,6 +790,22 @@ export default {
 
   .modal-content p strong {
     min-width: 120px;
+  }
+}
+@media (max-width: 576px) {
+  .table td,
+  .table th {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .table .btn {
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
   }
 }
 </style>

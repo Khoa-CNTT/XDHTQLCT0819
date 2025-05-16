@@ -4,20 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\Savingoal;
 use App\Http\Controllers\Controller;
+use App\Mail\GoalCompletedMail;
+use App\Models\User;
+use App\Traits\UserActivityLogger;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 
 class SavingoalController extends Controller
 {
+    use UserActivityLogger;
+
     public function index()
     {
         try {
-            $userId = auth()->id();
+            $user = auth()->user();
 
-            $goals = Savingoal::where('user_id', $userId)->get()->map(function ($goal) {
+            $goals = Savingoal::where('user_id', $user->id)->get()->map(function ($goal) use ($user) {
                 $start = Carbon::parse($goal->start_day);
                 $end = Carbon::parse($goal->end_day);
                 $now = Carbon::now();
@@ -25,6 +31,11 @@ class SavingoalController extends Controller
                 $goal->duration_days = $start->diffInDays($end);
                 $goal->remaining_days = $now->diffInDays($end, false);
                 $goal->savings_percentage = round(($goal->save_money / $goal->target) * 100, 2);
+                if ($goal->savings_percentage >= 100 && !$goal->is_completed) {
+                    Mail::to($user->email)->send(new GoalCompletedMail($goal));
+
+                    Savingoal::where('id', $goal->id)->update(['is_completed' => true]);
+                }
 
                 return $goal;
             });
@@ -80,6 +91,7 @@ class SavingoalController extends Controller
                 : 0;
 
             $goal = Savingoal::create($data);
+            $this->logAction('Đã thêm mục tiêu: ' . $goal->name . ' thành công');
 
             return response()->json([
                 'success' => true,
@@ -154,6 +166,7 @@ class SavingoalController extends Controller
             }
 
             $goal->update($data);
+            $this->logAction('Đã cập nhật mục tiêu: ' . $goal->name . ' thành công');
 
             return response()->json([
                 'success' => true,
@@ -177,6 +190,7 @@ class SavingoalController extends Controller
         try {
             $goal = Savingoal::where('user_id', auth()->id())->findOrFail($id);
             $goal->delete();
+            $this->logAction('Đã xoá mục tiêu: ' . $goal->name . ' thành công');
 
             return response()->json([
                 'success' => true,
@@ -209,15 +223,39 @@ class SavingoalController extends Controller
                 ], 422);
             }
 
-            $goal = Savingoal::where('user_id', auth()->id())->findOrFail($id);
+            $user = User::find(auth()->id());
+
+            if ($user->monthly_customer_spending < $request->amount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Số dư không đủ để thêm vào mục tiêu.'
+                ], 400);
+            }
+
+            $goal = Savingoal::where('user_id', $user->id)->findOrFail($id);
+
+            if ($goal->is_completed) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Mục tiêu đã hoàn thành. Không thể thêm tiền nữa.'
+                ], 400);
+            }
+
+            $user->monthly_customer_spending -= $request->amount;
+            $user->save();
 
             $goal->save_money += $request->amount;
-            $goal->savings_percentage  = round(($goal->save_money / $goal->target) * 100, 2);
+            $goal->savings_percentage = round(($goal->save_money / $goal->target) * 100, 2);
             $goal->save();
+            $this->logAction('Đã Thêm tiền tiết kiệm cho mục tiêu: ' . $goal->name . ' thành công');
+
             return response()->json([
                 'success' => true,
-                'message' => 'Cập nhật số tiền tiết kiệm thành công.',
-                'data' => $goal
+                'message' => 'Thêm tiền tiết kiệm thành công!',
+                'data' => [
+                    'goal' => $goal,
+                    'monthly_customer_spending' => $user->monthly_customer_spending
+                ]
             ]);
         } catch (\Exception $e) {
             Log::error('Lỗi khi cập nhật tiết kiệm: ' . $e->getMessage());

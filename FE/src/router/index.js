@@ -7,10 +7,14 @@ import ExpenseManagement from "@/views/ExpenseManagement.vue";
 import Transaction from "@/views/Transaction.vue";
 import Target from "@/views/Target.vue";
 import Report from "@/views/Report.vue";
-import EditUser from "@/views/EditUser.vue"; 
+import EditUser from "@/views/EditUser.vue";
 import Category from "@/views/Category.vue";
 import Account from "@/views/Account.vue";
 import Profile from "@/views/Profile.vue";
+import Budget from "@/views/Budget.vue";
+import RecurringTransactions from "@/views/RecurringTransactions.vue";
+import ReportAdmin from "@/views/ReportAdmin.vue";
+import ActivityLogs from "@/views/ActivityLogs.vue";
 
 const routes = [
   {
@@ -57,30 +61,53 @@ const routes = [
     component: Report,
     meta: { requiresAuth: true },
   },
-   {
+  {
     path: "/quan-ly-nguoi-dung",
     name: "quan-ly-nguoi-dung",
     component: EditUser,
-    meta: { requiresAuth: true }, 
+    meta: { requiresAuth: true },
   },
   {
     path: "/quan-ly-danh-muc",
     name: "quan-ly-danh-muc",
     component: Category,
-    meta: { requiresAuth: true }, 
+    meta: { requiresAuth: true },
   },
   {
     path: "/quan-ly-tai-khoan",
     name: "quan-ly-tai-khoan",
     component: Account,
-    meta: { requiresAuth: true }, 
+    meta: { requiresAuth: true },
   },
-   {
+  {
     path: "/profile",
     name: "profile",
     component: Profile,
-    meta: { requiresAuth: true }, 
+    meta: { requiresAuth: true },
   },
+  {
+    path: "/budget",
+    name: "budget",
+    component: Budget,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/quan-ly-giao-dich-dinh-ky",
+    name: "quan-ly-giao-dich-dinh-ky",
+    component: RecurringTransactions,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/report-admin",
+    name: "report-admin",
+    component: ReportAdmin,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/nhat-ky-hoat-dong",
+    name: "nhat-ky-hoat-dong",
+    component: ActivityLogs,
+  }
 ];
 
 const router = createRouter({
@@ -89,12 +116,17 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!localStorage.getItem("auth_token");
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next("/login");
-  } else {
-    next();
+  const authToken = localStorage.getItem("auth_token");
+
+  if (to.meta.requiresAuth && !authToken) {
+    return next("/login");
   }
+
+  if (to.path === "/login" && authToken) {
+    return next("/quan-li-chi-tieu");
+  }
+
+  return next();
 });
 
 export default router;

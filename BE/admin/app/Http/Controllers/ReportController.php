@@ -78,7 +78,7 @@ class ReportController extends Controller
             case 'month':
                 return ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4', 'Tuần 5'];
             case 'year':
-                $startDate = Carbon::parse($start)->startOfYear(); 
+                $startDate = Carbon::parse($start)->startOfYear();
                 $labels = [];
                 for ($i = 0; $i < $periods; $i++) {
                     $month = $startDate->copy()->addMonths($i);
@@ -107,15 +107,29 @@ class ReportController extends Controller
         $data = Transaction::selectRaw('category_id, sum(amount) as total')
             ->where('user_id', $userId)
             ->where('transaction_type', 'expense')
+            ->whereNotNull('category_id')
             ->whereBetween('transaction_date', [$start, $end])
             ->groupBy('category_id')
             ->with('category:id,name,icon')
             ->get();
 
-        $labels = $data->pluck('category.name');
-        $values = $data->pluck('total');
+        $nullCategoryTotal = Transaction::where('user_id', $userId)
+            ->where('transaction_type', 'expense')
+            ->whereNull('category_id')
+            ->whereBetween('transaction_date', [$start, $end])
+            ->sum('amount');
 
+        $labels = $data->pluck('category.name')->toArray();
+        $values = $data->pluck('total')->toArray();
+        $percentages = [];
         $colors = [];
+
+        $totalExpense = array_sum($values) + $nullCategoryTotal;
+
+        foreach ($values as $index => $value) {
+            $percentages[$index] = $totalExpense > 0 ? round(($value / $totalExpense) * 100, 1) : 0;
+        }
+
         foreach ($data as $item) {
             $hash = crc32($item->category->name);
             $r = ($hash & 0xFF0000) >> 16;
@@ -124,7 +138,18 @@ class ReportController extends Controller
             $colors[] = "rgb($r, $g, $b)";
         }
 
-        return response()->json(compact('labels', 'values', 'colors'));
+        if ($nullCategoryTotal > 0) {
+            $labels[] = 'Khác';
+            $values[] = $nullCategoryTotal;
+            $percentages[] = $totalExpense > 0 ? round(($nullCategoryTotal / $totalExpense) * 100, 1) : 0;
+
+            $hash = crc32('Khác');
+            $r = ($hash & 0xFF0000) >> 16;
+            $g = ($hash & 0x00FF00) >> 8;
+            $b = $hash & 0x0000FF;
+            $colors[] = "rgb($r, $g, $b)";
+        }
+        return response()->json(compact('labels', 'values', 'colors', 'percentages', 'totalExpense'));
     }
 
     public function incomePie(Request $request)
@@ -142,15 +167,29 @@ class ReportController extends Controller
         $data = Transaction::selectRaw('category_id, sum(amount) as total')
             ->where('user_id', $userId)
             ->where('transaction_type', 'income')
+            ->whereNotNull('category_id')
             ->whereBetween('transaction_date', [$start, $end])
             ->groupBy('category_id')
             ->with('category:id,name,icon')
             ->get();
 
-        $labels = $data->pluck('category.name');
-        $values = $data->pluck('total');
+        $nullCategoryTotal = Transaction::where('user_id', $userId)
+            ->where('transaction_type', 'income')
+            ->whereNull('category_id')
+            ->whereBetween('transaction_date', [$start, $end])
+            ->sum('amount');
 
+        $labels = $data->pluck('category.name')->toArray();
+        $values = $data->pluck('total')->toArray();
+        $percentages = [];
         $colors = [];
+
+        $totalIncome = array_sum($values) + $nullCategoryTotal;
+
+        foreach ($values as $index => $value) {
+            $percentages[$index] = $totalIncome > 0 ? round(($value / $totalIncome) * 100, 1) : 0;
+        }
+
         foreach ($data as $item) {
             $hash = crc32($item->category->name);
             $r = ($hash & 0x00FF00) >> 8;
@@ -159,7 +198,18 @@ class ReportController extends Controller
             $colors[] = "rgb($r, $g, $b)";
         }
 
-        return response()->json(compact('labels', 'values', 'colors'));
+        if ($nullCategoryTotal > 0) {
+            $labels[] = 'Khác';
+            $values[] = $nullCategoryTotal;
+            $percentages[] = $totalIncome > 0 ? round(($nullCategoryTotal / $totalIncome) * 100, 1) : 0;
+
+            $hash = crc32('Khác');
+            $r = ($hash & 0x00FF00) >> 8;
+            $g = ($hash & 0xFF0000) >> 16;
+            $b = $hash & 0x0000FF;
+            $colors[] = "rgb($r, $g, $b)";
+        }
+        return response()->json(compact('labels', 'values', 'colors', 'percentages', 'totalIncome'));
     }
 
     public function summary(Request $request)
@@ -225,7 +275,6 @@ class ReportController extends Controller
                 return [$start->format('Y-m-d'), $end->format('Y-m-d'), 4];
         }
     }
-
 
     private function calculatePeriods($range, $start, $end)
     {

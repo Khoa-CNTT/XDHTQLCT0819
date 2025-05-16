@@ -42,6 +42,8 @@
                   <img
                     :src="user.avatar ? apiImage(user.avatar) : defaultAvatar"
                     class="avatar-sm rounded-circle"
+                    :alt="user.fullName"
+                    @error="onImageError($event)"
                   />
                 </td>
                 <td>{{ user.fullName }}</td>
@@ -264,6 +266,10 @@ export default {
     },
     apiImage(filename) {
       return `/api/get-image/${filename}`;
+    },
+    onImageError(event) {
+      event.target.src =
+        "https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg";
     },
     openEdit(user) {
       this.selectedUser = { ...user };

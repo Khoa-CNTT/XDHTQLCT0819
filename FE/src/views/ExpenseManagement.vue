@@ -3,7 +3,7 @@
     <!-- Hero Section -->
     <div class="hero-section">
       <div class="hero-content">
-        <h1>XIN CHÀO</h1>
+        <h1 style="text-transform: uppercase">XIN CHÀO {{ user.fullName }}</h1>
         <p>Hôm nay bạn đã chi tiêu những gì?</p>
         <form class="search-form" @submit.prevent>
           <input
@@ -79,8 +79,12 @@
           </div>
           <div class="form-group">
             <label>Danh mục</label>
-            <select v-model="newTransaction.category_id" required>
-              <option value="" disabled>Chọn danh mục</option>
+            <select
+              v-model="newTransaction.category_id"
+              required
+              :class="{ 'text-muted': !newTransaction.category_id }"
+            >
+              <option value="" disabled hidden>Chọn danh mục</option>
               <option
                 v-for="cat in categoryList2"
                 :key="cat.id"
@@ -123,30 +127,153 @@
         <h2 class="modal-title">Thêm thu nhập</h2>
         <form @submit.prevent="addIncome" class="modal-form">
           <div class="form-group">
-            <label>Nhập số tiền</label>
+            <label for="description" class="form-label">Nội dung</label>
             <input
               type="text"
-              v-model="income.amount"
-              @input="formatIncomeAmount"
+              id="description"
+              v-model="newTransaction.description"
+              class="form-control"
               required
             />
           </div>
+          <div class="form-group">
+            <label for="amount" class="form-label">Số tiền</label>
+            <input
+              type="number"
+              id="amount"
+              v-model="newTransaction.amount"
+              class="form-control"
+              required
+              min="0"
+            />
+          </div>
+          <div class="form-group">
+            <label>Danh mục</label>
+            <select
+              v-model="newTransaction.category_id"
+              required
+              :class="{ 'text-muted': !newTransaction.category_id }"
+            >
+              <option value="" disabled hidden>Chọn danh mục</option>
+              <option
+                v-for="cat in categoryList3"
+                :key="cat.id"
+                :value="cat.id"
+              >
+                {{ cat.name }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="mb-3">
+              <label for="transaction_date" class="form-label">Ngày</label>
+              <input
+                type="date"
+                id="transaction_date"
+                v-model="newTransaction.transaction_date"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+
           <div class="modal-actions">
             <button
               type="button"
               class="cancel-button"
               @click="closeIncomeModal"
             >
-              Huỷ
+              Đóng
             </button>
-            <button type="submit" class="add-button">Thêm</button>
+            <button type="submit" class="add-button">Thêm Giao Dịch</button>
           </div>
         </form>
       </div>
     </div>
 
+    <!-- MODAL VOICHAT -->
+    <div v-if="showVoiceModal" class="modal-void">
+      <div class="modal">
+        <form class="modal-form">
+          <div class="form-group">
+            <label>Hãy Nói Vào Đây</label>
+            <div class="row">
+              <div class="col-lg-12 text-center">
+                <i
+                  class="fa-solid fa-microphone-lines fa-5x"
+                  v-bind:class="{
+                    blinking: !recognitionActive,
+                    'active-microphone': recognitionActive,
+                  }"
+                  v-on:click="startRecognition()"
+                ></i>
+              </div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="cancel-voice-button"
+              @click="closeOpenVoiceModal"
+            >
+              Huỷ
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- CHAT BOX -->
+    <div v-if="showChatBox" class="chatbot-modal">
+      <div class="chatbot-box">
+        <!-- Header -->
+        <div class="chatbot-header">
+          <i class="fas fa-piggy-bank chatbot-avatar-icon"></i>
+          <span class="chatbot-name">Chatbot</span>
+          <button class="chatbot-close-btn" @click="showChatBox = false">
+            &times;
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="chatbot-body">
+          <div
+            v-for="(msg, index) in messages"
+            :key="index"
+            :class="['chatbot-message', msg.sender]"
+          >
+            {{ msg.text }}
+          </div>
+          <div v-if="loading" class="chatbot-message bot loading-dots">
+            <span>.</span><span>.</span><span>.</span>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="chatbot-footer">
+          <input
+            type="text"
+            placeholder="Nhập tin nhắn..."
+            class="chatbot-input"
+            v-model="userMessage"
+            @keyup.enter="sendMessage"
+          />
+          <button class="chatbot-send-btn" @click="sendMessage">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Nút mở modal -->
     <div class="action-buttons">
+      <button class="action-btn-a" @click="openVoiceModal">
+        <i class="fa-solid fa-microphone-lines"></i>
+        <span class="tooltip-text">Nói</span>
+      </button>
+      <button class="action-btn-a" @click="openChatBox">
+        <i class="fa-solid">🤖</i>
+      </button>
       <button class="action-btn" @click="openIncomeModal">
         <i class="fas fa-coins"></i>
         <span class="tooltip-text">Thêm thu nhập</span>
@@ -194,6 +321,12 @@
                   {{ formatCurrency(transaction.amount) }}
                 </span>
               </div>
+              <button
+                class="btn btn-sm btn-danger"
+                @click="deleteTransacrion(transaction.id, categoryDetail.id)"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
             </li>
           </ul>
           <!-- Close modal button -->
@@ -209,22 +342,30 @@
 <script>
 import axios from "axios";
 import { useToast } from "vue-toastification";
+import Swal from "sweetalert2";
 
 export default {
   data() {
     return {
+      user: {},
       selectedCategory: null,
       searchQuery: "",
       categoryList: [],
       categoryList2: [],
+      categoryList3: [],
       totalIncome: 0,
       balance: 0,
       showDetailModal: false,
-
+      showVoiceModal: false,
+      showChatBox: false,
       categoryDetail: null,
 
       showAddTransactionModal: false,
       showIncomeModal: false,
+      userMessage: "",
+      loading: false,
+      messages: [],
+      isFirstMessage: true,
       newTransaction: {
         transaction_date: "",
         type: "cash",
@@ -306,19 +447,100 @@ export default {
       }
     },
 
-    async fetchCategories() {
+    async fetchProfile() {
+      try {
+        const res = await axios.get("/api/user/profile", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+        });
+        this.user = res.data;
+        this.totalIncome = res.data.monthly_income || 0;
+        this.balance = res.data.monthly_customer_spending || 0;
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        this.showErrorNotification("Lỗi khi tải danh mục chi tiêu!");
+      }
+    },
+
+    async fetchCategoriesExpense() {
       try {
         const res = await axios.get("/api/categories", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
           },
+          params: {
+            type: "expense",
+          },
         });
 
-        this.categoryList2 = res.data;
+        this.categoryList2 = res.data.filter((item) => item.id !== -2);
       } catch (error) {
         console.error("Error fetching categories:", error);
         this.showErrorNotification("Lỗi khi tải danh mục chi tiêu!");
       }
+    },
+
+    async fetchCategoriesIncome() {
+      try {
+        const res = await axios.get("/api/categories", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+          params: {
+            type: "income",
+          },
+        });
+
+        this.categoryList3 = res.data.filter((item) => item.id !== -1);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        this.showErrorNotification("Lỗi khi tải danh mục thu nhập!");
+      }
+    },
+
+    fetchCategoryBudgetStatus(categoryId) {
+      const toast = useToast();
+      axios
+        .get(`/api/budget/category/${categoryId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+        })
+        .then((response) => {
+          if (response.data && response.data.status) {
+            const formattedStatus = response.data.status.replace(
+              /<strong>(.*?)<\/strong>/g,
+              (_, category) => {
+                const uppercaseCategory = category.toUpperCase();
+                return uppercaseCategory;
+              }
+            );
+
+            if (formattedStatus.includes("đã vượt ngưỡng")) {
+              toast.error(formattedStatus, {
+                timeout: 5000,
+                position: "top-right",
+                dangerouslyUseHTMLString: true,
+              });
+            } else if (formattedStatus.includes("sắp vượt ngưỡng")) {
+              toast.warning(formattedStatus, {
+                timeout: 5000,
+                position: "top-right",
+                dangerouslyUseHTMLString: true,
+              });
+            } else {
+              toast.success(formattedStatus, {
+                timeout: 5000,
+                position: "top-right",
+                dangerouslyUseHTMLString: true,
+              });
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Lỗi khi lấy trạng thái ngân sách danh mục:", error);
+        });
     },
 
     openExpenseModal() {
@@ -333,6 +555,16 @@ export default {
     closeIncomeModal() {
       this.showIncomeModal = false;
     },
+    openVoiceModal() {
+      this.showVoiceModal = true;
+    },
+    openChatBox() {
+      this.showChatBox = true;
+    },
+    closeOpenVoiceModal() {
+      this.showVoiceModal = false;
+    },
+
     closeDetailModal() {
       this.showDetailModal = false;
     },
@@ -344,6 +576,8 @@ export default {
         this.showAddTransactionModal = false;
         this.showIncomeModal = false;
         this.showDetailModal = false;
+        this.showChatBox = false;
+        this.showVoiceModal = false;
       }
     },
 
@@ -376,6 +610,7 @@ export default {
         }
         toast.success("Giao dịch đã được thêm thành công!");
         this.closeExpenseModal();
+        this.fetchCategoryBudgetStatus(this.newTransaction.category_id);
         this.newTransaction = {
           transaction_date: "",
           type: "cash",
@@ -386,15 +621,50 @@ export default {
         };
         await this.fetchCategoriesHome();
       } catch (error) {
-        toast.error("Error adding transaction:", error);
         toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
+      }
+    },
+
+    async deleteTransacrion(id, categoryId) {
+      const toast = useToast();
+      const result = await Swal.fire({
+        title: "Xác nhận xoá",
+        text: "⚠️ Bạn có chắc chắn muốn xoá giao dịch này khỏi danh mục?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Xoá",
+        cancelButtonText: "Huỷ",
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await axios.delete(`/api/transaction/${id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+            },
+          });
+          toast.success("Đã xoá giao dịch khỏi danh mục thành công!");
+          const user = JSON.parse(localStorage.getItem("user"));
+          if (user) {
+            user.monthly_income = res.data.monthly_income;
+            user.monthly_customer_spending = res.data.monthly_customer_spending;
+            localStorage.setItem("user", JSON.stringify(user));
+          }
+          this.openCategoryDetail(categoryId);
+          await this.fetchCategoriesHome();
+        } catch (err) {
+          console.error(err);
+          toast.error("Đã xoá giao dịch khỏi danh mục thất bại!");
+        }
       }
     },
 
     async addIncome() {
       const toast = useToast();
       try {
-        const res = await axios.put("/api/user/income", this.income, {
+        const res = await axios.post("/api/transaction", this.newTransaction, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
           },
@@ -407,7 +677,18 @@ export default {
           user.monthly_customer_spending = res.data.monthly_customer_spending;
           localStorage.setItem("user", JSON.stringify(user));
         }
+
         toast.success("Thêm thu nhập thành công");
+        this.closeIncomeModal();
+        this.newTransaction = {
+          transaction_date: "",
+          type: "cash",
+          amount: 0,
+          description: "",
+          address: "",
+          category_id: "",
+        };
+        await this.fetchCategoriesHome();
       } catch (error) {
         toast.error("Đã có lỗi xảy ra. Vui lòng thử lại.");
       }
@@ -428,16 +709,127 @@ export default {
         useToast().error("Không thể lấy chi tiết danh mục!");
       }
     },
+
+    async startRecognition() {
+      const toast = useToast();
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        toast.error("Trình duyệt không hỗ trợ SpeechRecognition");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "vi-VN";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+
+      recognition.onresult = async (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log("nhận diện" + transcript);
+
+        try {
+          const res = await axios.post(
+            "/api/ai/void",
+            { text: transcript },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+              },
+            }
+          );
+          const user = JSON.parse(localStorage.getItem("user"));
+          if (user) {
+            user.monthly_income = res.data.monthly_income;
+            user.monthly_customer_spending = res.data.monthly_customer_spending;
+            localStorage.setItem("user", JSON.stringify(user));
+          }
+          this.totalIncome = res.data.monthly_income;
+          this.balance = res.data.monthly_customer_spending;
+
+          toast.success(res.data.message);
+          this.fetchCategoriesHome();
+        } catch (error) {
+          toast.error(
+            "Hệ thống chưa nhận diện được thông tin. Vui lòng nói lại rõ ràng hơn (ví dụ: 'Chi 30 nghìn mua trà sữa')."
+          );
+        }
+      };
+
+      recognition.onerror = function (event) {
+        console.error("Lỗi nhận dạng: ", event.error);
+        alert("Lỗi nhận dạng giọng nói: " + event.error);
+      };
+
+      recognition.onend = function () {
+        console.log("Kết thúc nhận dạng.");
+      };
+    },
+    // CHATBOX
+    async sendMessage() {
+      const message = this.userMessage.trim();
+      if (!message) return;
+      this.userMessage = "";
+      this.messages.push({ sender: "user", text: message });
+      this.loading = true;
+
+      try {
+        const res = await axios.post(
+          "/api/ai/chatbox/send",
+          { message },
+          {
+            headers: {
+              Authorization:
+                `Bearer ${localStorage.getItem("auth_token")}` || "",
+            },
+          }
+        );
+        if (res.data.answer) {
+          this.messages.push({ sender: "bot", text: res.data.answer });
+        }
+        localStorage.setItem("chatMessages", JSON.stringify(this.messages));
+        this.fetchCategoriesHome();
+        this.fetchProfile();
+      } catch (error) {
+        console.error(error);
+        this.messages.push({ sender: "bot", text: "Xin lỗi, có lỗi xảy ra." });
+      }
+
+      this.loading = false;
+    },
   },
   mounted() {
     this.fetchCategoriesHome();
-    this.fetchCategories();
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) {
-      this.totalIncome = user.monthly_income;
-      this.balance = user.monthly_customer_spending;
-    }
+    this.fetchCategoriesExpense();
+    this.fetchCategoriesIncome();
+    this.fetchProfile();
     window.addEventListener("keydown", this.handleKeydown);
+  },
+  created() {
+    const storedMessages = JSON.parse(localStorage.getItem("chatMessages"));
+    if (storedMessages) {
+      this.messages = storedMessages;
+    } else {
+      this.messages.push({
+        sender: "bot",
+        text: "Chào bạn! Mình có thể giúp gì về chi tiêu?",
+      });
+      this.messages.push({
+        sender: "bot",
+        text: "Ví dụ, bạn có thể hỏi về cách theo dõi chi phí hoặc các mẹo tiết kiệm!",
+      });
+      this.messages.push({
+        sender: "bot",
+        text: "Bạn có thể hỏi về cách quản lý chi tiêu tiền trọ, tiền ăn uống, hay các khoản chi phí khác.",
+      });
+      this.messages.push({
+        sender: "bot",
+        text: "Làm thế nào để tiết kiệm tiền ăn uống mỗi tháng?' hoặc 'Làm sao để chia khoản chi phí tiền trọ hợp lý?'",
+      });
+      localStorage.setItem("chatMessages", JSON.stringify(this.messages));
+    }
   },
 };
 </script>
@@ -977,6 +1369,29 @@ body {
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
+.action-btn-a {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+    animation: pulse 2s infinite;
+
+}
+.action-btn-a:hover {
+  background-color: #059669;
+  transform: scale(1.1);
+}
+
 .action-btn:hover {
   background-color: #059669;
   transform: scale(1.1);
@@ -1148,7 +1563,6 @@ body {
   }
 }
 
-/* Media queries for responsiveness */
 @media (max-width: 640px) {
   .modal-content {
     max-width: 100%;
@@ -1158,5 +1572,530 @@ body {
   .modal-content p strong {
     min-width: 120px;
   }
+}
+.modal-void {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: backgroundFade 0.5s ease forwards;
+  backdrop-filter: blur(8px);
+}
+
+@keyframes backgroundFade {
+  from {
+    background-color: rgba(0, 0, 0, 0);
+  }
+  to {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+}
+.modal-void::before,
+.modal-void::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: transparent;
+  border: 3px solid rgba(16, 185, 129, 0.6);
+  width: 150px;
+  height: 150px;
+  z-index: -1;
+  animation: soundWave 2s infinite;
+}
+
+.modal-void::after {
+  animation-delay: 0.5s;
+}
+
+@keyframes soundWave {
+  0% {
+    width: 150px;
+    height: 150px;
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    width: 150px;
+    height: 150px;
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+
+.modal-void {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+}
+
+.modal-void .modal {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+  padding: 1.8rem;
+  height: 350px;
+  border-radius: 1.2rem;
+  width: 320px; /* More appropriate size */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 20px rgba(79, 70, 229, 0.15);
+  position: relative;
+  overflow: hidden;
+  animation: modalAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: none;
+}
+
+.modal-void .modal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #ff6b6b,
+    #feca57,
+    #1dd1a1,
+    #5f27cd,
+    #54a0ff
+  );
+  animation: borderGlow 3s infinite linear;
+  background-size: 500% 100%;
+}
+
+@keyframes borderGlow {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 0%;
+  }
+}
+
+@keyframes modalAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-void .form-group label {
+  display: block;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.modal-void .col-lg-12 {
+  position: relative;
+  padding: 1.5rem 0;
+}
+
+.modal-void .col-lg-12::before,
+.modal-void .col-lg-12::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.modal-void .col-lg-12::before {
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(254, 202, 87, 0.1) 30%,
+    rgba(29, 209, 161, 0.1) 60%,
+    rgba(84, 160, 255, 0.1) 90%,
+    transparent 100%
+  );
+  animation: colorPulse 3s infinite;
+}
+
+.modal-void .col-lg-12::after {
+  width: 180px;
+  height: 180px;
+  border: 2px dashed rgba(95, 39, 205, 0.3);
+  animation: rotate 10s linear infinite;
+}
+
+@keyframes colorPulse {
+  0% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.fa-microphone-lines {
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+  display: inline-block;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+  color: #5f27cd;
+}
+
+.blinking {
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+    color: #5f27cd;
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+    color: #54a0ff;
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+    color: #5f27cd;
+  }
+}
+
+.active-microphone {
+  color: #ff6b6b;
+  animation: activePulse 1s infinite;
+}
+
+@keyframes activePulse {
+  0% {
+    transform: scale(1);
+    color: #ff6b6b;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  }
+  25% {
+    color: #feca57;
+    text-shadow: 0 0 15px rgba(254, 202, 87, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    color: #1dd1a1;
+    text-shadow: 0 0 20px rgba(29, 209, 161, 0.7);
+  }
+  75% {
+    color: #54a0ff;
+    text-shadow: 0 0 15px rgba(84, 160, 255, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    color: #ff6b6b;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  }
+}
+
+.active-microphone + .sound-waves {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+.active-microphone ~ .sound-wave {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+.active-microphone ~ .sound-wave:nth-child(1) {
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(255, 107, 107, 0.5);
+  animation: wave 2s infinite;
+}
+
+.active-microphone ~ .sound-wave:nth-child(2) {
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(29, 209, 161, 0.5);
+  animation: wave 2s infinite 0.4s;
+}
+
+.active-microphone ~ .sound-wave:nth-child(3) {
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(84, 160, 255, 0.5);
+  animation: wave 2s infinite 0.8s;
+}
+
+@keyframes wave {
+  0% {
+    width: 60px;
+    height: 60px;
+    opacity: 1;
+    border-width: 2px;
+  }
+  100% {
+    width: 200px;
+    height: 200px;
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.cancel-voice-button {
+  padding: 0.7rem 23%;
+  background: linear-gradient(135deg, #5f27cd 0%, #6c5ce7 100%);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(95, 39, 205, 0.3);
+}
+
+.cancel-voice-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(95, 39, 205, 0.4);
+  background: linear-gradient(135deg, #6c5ce7 0%, #5f27cd 100%);
+}
+
+.cancel-voice-button:active {
+  transform: translateY(-1px);
+}
+
+.row {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+.col-lg-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+  position: relative;
+  text-align: center;
+}
+
+.chatbot-modal {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 400px;
+  height: 440px;
+  max-height: 80vh;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  font-family: Arial, sans-serif;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chatbot-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #ddd;
+}
+
+.chatbot-avatar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  border-radius: 50%;
+  background-color: #ffe0e0;
+  color: #ff6699;
+  margin-right: 10px;
+}
+
+.chatbot-name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.chatbot-body {
+  flex: 1;
+  padding: 16px;
+  max-height: 325px;
+  overflow-y: auto;
+  background-color: #fff;
+  scroll-behavior: smooth;
+}
+
+.chatbot-body::-webkit-scrollbar {
+  width: 6px;
+}
+.chatbot-body::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+.chatbot-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatbot-message {
+  padding: 10px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  max-width: 85%;
+  word-wrap: break-word;
+}
+
+.chatbot-message.user {
+  background-color: #e3f2fd;
+  align-self: flex-end;
+}
+
+.chatbot-message.bot {
+  background-color: #f0f0f0;
+  align-self: flex-start;
+}
+
+.chatbot-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.chatbot-btn {
+  background-color: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.chatbot-btn:hover {
+  background-color: #1565c0;
+}
+
+.chatbot-footer {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-top: 1px solid #ddd;
+  background-color: #fafafa;
+}
+
+.chatbot-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.chatbot-send-btn {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  margin-left: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chatbot-send-btn i {
+  font-size: 16px;
+}
+.loading-dots span {
+  display: inline-block;
+  animation: blink 1.4s infinite both;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.chatbot-close-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.chatbot-close-btn:hover {
+  color: #333;
 }
 </style>

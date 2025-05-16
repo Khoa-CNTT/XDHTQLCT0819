@@ -3,14 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Traits\UserActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class AccountController extends Controller
 {
-
+    use UserActivityLogger;
     public function index()
     {
         $userId = Auth::id();
@@ -47,14 +49,15 @@ class AccountController extends Controller
 
         $data = $request->all();
         $data['user_id'] = Auth::id();
-        $data['password'] = bcrypt($request->password);
+        $data['password'] = Crypt::encryptString($request->password);
 
         $account = Account::create($data);
 
+        $this->logAction('Tạo tài khoản mới');
         return response()->json(['message' => 'Tạo tài khoản thành công', 'account' => $account]);
     }
 
-  
+
     public function edit($id)
     {
         $userId = Auth::id();
@@ -69,7 +72,7 @@ class AccountController extends Controller
         return response()->json($account);
     }
 
-   
+
     public function update(Request $request, $id)
     {
         $userId = Auth::id();
@@ -84,17 +87,18 @@ class AccountController extends Controller
         $request->validate([
             'name'          => 'sometimes|string|unique:accounts,name,' . $account->id,
             'type'          => 'sometimes|in:mbank',
-            'number_card'   => 'sometimes|string|unique:accounts,number_card,' . $account->id, // đổi int thành string
+            'number_card'   => 'sometimes|string|unique:accounts,number_card,' . $account->id,
             'expired'       => 'sometimes|date|unique:accounts,expired,' . $account->id,
-            'password'      => 'sometimes|string|unique:accounts,password,' . $account->id, // đổi int thành string
+            'password'      => 'sometimes|string|unique:accounts,password,' . $account->id,
         ]);
 
         $account->update($request->only(['name', 'type', 'number_card', 'expired', 'password']));
+        $this->logAction('Cập nhật tài khoản: ' . $account->name . 'thành công');
 
         return response()->json(['message' => 'Cập nhật tài khoản thành công', 'account' => $account]);
     }
 
-  
+
     public function destroy($id)
     {
         $userId = Auth::id();
@@ -107,6 +111,7 @@ class AccountController extends Controller
         }
 
         $account->delete();
+        $this->logAction('Đã xoá tài khoản: ' . $account->name . 'thành công');
         return response()->json(['message' => 'Xóa tài khoản thành công']);
     }
 
@@ -123,7 +128,7 @@ class AccountController extends Controller
                     'message' => 'Tài khoản không tồn tại hoặc không thể cập nhật.'
                 ], 404);
             }
-
+            $this->logAction('Đặt tài khoản :' . $account->name . ' làm tài khoản chính');
             return response()->json([
                 'success' => true,
                 'message' => 'Tài khoản chính đã được cập nhật thành công.',

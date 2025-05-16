@@ -51,7 +51,7 @@
           Tháng này
         </button>
         <button class="btn-fetch" @click="fetchMBTransactions">
-          Tải giao dịch MB Bank
+          Tải giao dịch MB Bank hôm nay
         </button>
       </div>
     </div>
@@ -59,11 +59,11 @@
     <!-- Thông tin tài chính -->
     <div class="finance-info">
       <div class="info-card income-card">
-        <span class="label">Thu Nhập:</span>
+        <span class="label">Tổng thu nhập:</span>
         <span class="value income">{{ formatNumber(totalIncome) }} VND</span>
       </div>
       <div class="info-card expense-card">
-        <span class="label">Chi tiêu:</span>
+        <span class="label">Tổng chi tiêu:</span>
         <span class="value expense">{{ formatNumber(totalExpense) }} VND</span>
       </div>
     </div>
@@ -75,32 +75,9 @@
       <p>TransactionsCount: {{ transactions.length }}</p>
     </div>
 
-    <!-- Danh sách giao dịch thu nhập -->
-    <div class="transaction-list">
-      <h3 class="list-title">Danh sách thu nhập</h3>
-      <div v-if="isLoading" class="loading">Đang tải...</div>
-      <div v-else-if="filteredIncomes.length === 0" class="no-data">
-        Không có dữ liệu thu nhập trong thời gian đã chọn
-      </div>
-      <div
-        v-else
-        v-for="(txn, index) in filteredIncomes"
-        :key="'income-' + index"
-        class="transaction-item"
-      >
-        <div class="item-details">
-          <div>
-            <span class="category">{{
-              txn.description || "Không có mô tả"
-            }}</span>
-            <div class="note">{{ formatDate(txn.transaction_date) }}</div>
-          </div>
-          <div class="amount income">+{{ formatNumber(txn.amount) }} VND</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Danh sách giao dịch chi tiêu -->
+    <div class="row">
+  <!-- Cột chi tiêu -->
+  <div class="col-12 col-md-6">
     <div class="transaction-list">
       <h3 class="list-title">Danh sách chi tiêu</h3>
       <div v-if="isLoading" class="loading">Đang tải...</div>
@@ -115,9 +92,7 @@
       >
         <div class="item-details">
           <div>
-            <span class="category">{{
-              txn.description || "Không có mô tả"
-            }}</span>
+            <span class="category">{{ txn.description || "Không có mô tả" }}</span>
             <div class="note">{{ formatDate(txn.transaction_date) }}</div>
           </div>
           <div class="amount negative">-{{ formatNumber(txn.amount) }} VND</div>
@@ -125,10 +100,39 @@
       </div>
     </div>
   </div>
+
+  <!-- Cột thu nhập -->
+  <div class="col-12 col-md-6">
+    <div class="transaction-list">
+      <h3 class="list-title">Danh sách thu nhập</h3>
+      <div v-if="isLoading" class="loading">Đang tải...</div>
+      <div v-else-if="filteredIncomes.length === 0" class="no-data">
+        Không có dữ liệu thu nhập trong thời gian đã chọn
+      </div>
+      <div
+        v-else
+        v-for="(txn, index) in filteredIncomes"
+        :key="'income-' + index"
+        class="transaction-item"
+      >
+        <div class="item-details">
+          <div>
+            <span class="category">{{ txn.description || "Không có mô tả" }}</span>
+            <div class="note">{{ formatDate(txn.transaction_date) }}</div>
+          </div>
+          <div class="amount income">+{{ formatNumber(txn.amount) }} VND</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div>
 </template>
 
 <script>
 import axios from "axios";
+import { useToast } from "vue-toastification";
 
 export default {
   name: "TransactionPage",
@@ -296,21 +300,24 @@ export default {
     },
 
     async fetchMBTransactions() {
+      const toast = useToast();
       try {
         this.isLoading = true;
-        const response = await axios.get("/api/mb-bank", {
+        const res = await axios.get("/api/ai/get-mbank", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
           },
         });
-
-        if (response.status === 200) {
-          alert("✅ Đã tải giao dịch từ MB Bank");
-          await this.fetchTransactions();
+        toast.success(res.data.message);
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user) {
+          user.monthly_income = res.data.monthly_income;
+          user.monthly_customer_spending = res.data.monthly_customer_spending;
+          localStorage.setItem("user", JSON.stringify(user));
         }
-      } catch (err) {
-        console.error("❌ Lỗi tải giao dịch MB Bank", err);
-        alert("❌ Lỗi tải giao dịch MB Bank");
+        this.fetchTransactions();
+      } catch (error) {
+        toast.error(error.response.data.error);
       } finally {
         this.isLoading = false;
       }

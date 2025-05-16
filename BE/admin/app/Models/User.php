@@ -39,7 +39,8 @@ class User extends Authenticatable
         'isActived',
         'isBlocked',
         'status',
-        'verify_token'
+        'verify_token',
+        'last_login'
     ];
 
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\ResetPasswordMail;
 use App\Mail\VerifyEmailMail;
 use App\Models\User;
+use App\Traits\UserActivityLogger;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    use UserActivityLogger;
 
     /**
      * @OA\Post(
@@ -212,9 +214,11 @@ class AuthController extends Controller
             return response()->json(['error' => 'Tài khoản bị khóa'], 401);
         }
         $user->status = true;
+        $user->last_login = Carbon::now();
         $user->save();
 
         $token = $user->createToken('API Token')->plainTextToken;
+        $this->logAction('Đăng nhập thành công', $user->id);
 
         return response()->json([
             'message' => 'Đăng nhập thành công',
@@ -232,6 +236,8 @@ class AuthController extends Controller
         $user->save();
 
         $user->currentAccessToken()->delete();
+
+        $this->logAction('Đăng xuất thành công');
 
         return response()->json([
             'message' => 'Đăng xuất thành công'
@@ -261,7 +267,6 @@ class AuthController extends Controller
         $request->validate([
             'current_password' => 'required',
             'new_password' => 'required|min:8',
-            'new_password_confirmation' => 'required|same:new_password',
         ], $messages);
 
         $user = $request->user();
@@ -274,13 +279,13 @@ class AuthController extends Controller
 
         if ($request->new_password !== $request->new_password_confirmation) {
             return response()->json([
-                'error' => 'Mật khẩu không trùng nhau!',
+                'error' => 'Mật khẩu xác nhận không khớp!',
             ], 400);
         }
 
         $user->password = Hash::make($request->new_password);
         $user->save();
-
+        $this->logAction('Đã đổi mật khẩu thành công');
         return response()->json([
             'message' => 'Đã đổi mật khẩu thành công!',
         ]);
@@ -398,6 +403,7 @@ class AuthController extends Controller
             ->update(['password' => Hash::make($request->password)]);
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+        $this->logAction('Mật khẩu đã được đặt lại thành công');
 
         return response()->json([
             'redirect_url' => env('FRONTEND_LOGIN_URL', 'http://127.0.0.1:8080/login') . '?message=' . urlencode('Mật khẩu đã được đặt lại thành công') . '&status=success'

@@ -10,7 +10,14 @@
         />
       </router-link>
 
-      <div class="nav-menu">
+      <!-- Toggle Button -->
+      <button class="nav-toggle" @click="toggleMenu">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
+
+      <div class="nav-menu" :class="{ open: isMenuOpen }">
         <ul class="nav-list">
           <template v-if="!isAdmin">
             <li>
@@ -37,8 +44,16 @@
               >
             </li>
             <li>
+              <router-link to="/budget" class="nav-link">Ngân sách</router-link>
+            </li>
+            <li>
               <router-link to="/quan-ly-tai-khoan" class="nav-link"
                 >Tài khoản</router-link
+              >
+            </li>
+            <li>
+              <router-link to="/quan-ly-giao-dich-dinh-ky" class="nav-link"
+                >Quản lý giao dịch định kỳ</router-link
               >
             </li>
           </template>
@@ -49,26 +64,42 @@
                 >Quản lý người dùng</router-link
               >
             </li>
+            <li>
+              <router-link to="/report-admin" class="nav-link text-dark"
+                >Thống kê lượng người dùng</router-link
+              >
+            </li>
           </template>
 
           <li class="profile-dropdown">
             <button type="button" class="profile-btn" @click="toggleDropdown">
-              <img
-                :src="user?.avatar ? apiImage(user.avatar) : defaultAvatar"
-                alt="Profile"
-                class="avatar"
-              />
+              <template v-if="user?.avatar">
+                <img
+                  :src="apiImage(user.avatar)"
+                  alt="Profile"
+                  class="avatar"
+                />
+              </template>
+              <div v-else class="avatar-placeholder">
+                <img
+                  src="https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg"
+                  alt="Profile"
+                  class="avatar"
+                />
+              </div>
               <span class="caret">&#9662;</span>
             </button>
 
-            <!-- Gộp dropdown -->
             <div v-if="isDropdownOpen" class="dropdown-menu">
-              <router-link to="/profile" class="dropdown-link">
-                Thông tin tài khoản
-              </router-link>
-              <a href="#" class="dropdown-link" @click.prevent="handleLogout">
-                Đăng xuất
-              </a>
+              <router-link to="/profile" class="dropdown-link"
+                >Thông tin tài khoản</router-link
+              >
+              <router-link to="/nhat-ky-hoat-dong" class="dropdown-link"
+                >Nhật ký hoạt động</router-link
+              >
+              <a href="#" class="dropdown-link" @click.prevent="handleLogout"
+                >Đăng xuất</a
+              >
             </div>
           </li>
         </ul>
@@ -89,13 +120,16 @@ export default {
     return {
       isAdmin: false,
       isDropdownOpen: false,
+      isMenuOpen: false,
       user: null,
-      defaultAvatar: "/default-avatar.png",
     };
   },
   methods: {
     toggleDropdown() {
       this.isDropdownOpen = !this.isDropdownOpen;
+    },
+    toggleMenu() {
+      this.isMenuOpen = !this.isMenuOpen;
     },
     apiImage(filename) {
       return `/api/get-image/${filename}`;
@@ -164,7 +198,6 @@ export default {
     } catch (e) {
       console.error("Error parsing user data", e);
     }
-
     document.addEventListener("click", this.closeDropdown);
   },
   beforeUnmount() {
@@ -188,11 +221,38 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 0;
+  padding: 1rem;
+  flex-wrap: wrap;
+  backdrop-filter: none;
+  background-color: #ffffff;
 }
 
 .logo-img {
   width: 100px;
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 22px;
+  width: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.nav-toggle .bar {
+  height: 3px;
+  width: 100%;
+  background-color: #333;
+  border-radius: 2px;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
 }
 
 .nav-list {
@@ -202,6 +262,7 @@ export default {
   margin: 0;
   padding: 0;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .nav-link {
@@ -232,7 +293,6 @@ export default {
   width: 100%;
 }
 
-/* Profile styles */
 .profile-dropdown {
   position: relative;
 }
@@ -285,4 +345,81 @@ export default {
   background-color: #f3f4f6;
   color: #0ea5e9;
 }
+
+@media (max-width: 768px) {
+  .nav {
+    padding: 0.5rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+
+  .nav-menu {
+    width: 100%;
+    flex-direction: column;
+    display: none;
+  }
+
+  .nav-menu.open {
+    display: flex;
+  }
+
+  .nav-list {
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .nav-link {
+    font-size: 1.1rem;
+    width: 100%;
+  }
+
+  .profile-dropdown {
+    align-self: flex-end;
+    margin-top: 1rem;
+  }
+
+  .dropdown-menu {
+    right: 10px;
+    left: auto;
+  }
+
+  .logo-img {
+    width: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav {
+    padding: 0.5rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .nav-link {
+    font-size: 1rem;
+  }
+
+  .logo-img {
+    width: 70px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dropdown-menu {
+    min-width: 150px;
+    top: 42px;
+  }
+}
 </style>
+

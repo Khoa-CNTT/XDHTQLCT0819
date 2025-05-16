@@ -166,7 +166,7 @@
                   @click="closeEditModal"
                   class="btn-cancel"
                 >
-                  Ủy bỏ
+                  Hủy bỏ
                 </button>
                 <button type="submit" class="btn-save">Lưu thay đổi</button>
               </div>
@@ -189,29 +189,41 @@
               <div class="form-group">
                 <label>Mật khẩu cũ:</label>
                 <input
-                  type="password"
+                  :type="showOldPassword ? 'text' : 'password'"
                   v-model="passwordForm.current_password"
                   class="form-input"
                   required
                 />
+                <button type="button" @click="toggleOldPassword" class="password-toggle-btn">
+                <Eye v-if="!showOldPassword" />
+                <EyeOff v-if="showOldPassword" />
+              </button>
               </div>
               <div class="form-group">
                 <label>Mật khẩu mới:</label>
                 <input
-                  type="password"
+                  :type="showNewPassword ? 'text' : 'password'"
                   v-model="passwordForm.new_password"
                   class="form-input"
                   required
                 />
+                <button type="button" @click="toggleNewPassword" class="password-toggle-btn">
+                <Eye v-if="!showNewPassword" />
+                <EyeOff v-if="showNewPassword" />
+              </button>
               </div>
               <div class="form-group">
                 <label>Xác nhận mật khẩu mới:</label>
                 <input
-                  type="password"
+                  :type="showConfirmPassword ? 'text' : 'password'"
                   v-model="passwordForm.new_password_confirmation"
                   class="form-input"
                   required
                 />
+                <button type="button" @click="toggleConfirmPassword" class="password-toggle-btn">
+                <Eye v-if="!showConfirmPassword" />
+                <EyeOff v-if="showConfirmPassword" />
+              </button>
               </div>
               <div class="form-actions">
                 <button
@@ -239,6 +251,8 @@ import {
   Phone as PhoneIcon,
   MapPin as MapPinIcon,
   CalendarDays as CalendarDaysIcon,
+  Eye,
+  EyeOff,
 } from "lucide-vue-next";
 import { useToast } from "vue-toastification";
 
@@ -251,6 +265,8 @@ export default {
     PhoneIcon,
     MapPinIcon,
     CalendarDaysIcon,
+    Eye,
+    EyeOff,
   },
   setup() {
     const activeTab = ref("account");
@@ -263,6 +279,22 @@ export default {
       new_password: "",
       new_password_confirmation: "",
     });
+
+    const showOldPassword = ref(false); // Điều khiển việc hiển thị mật khẩu cũ
+    const showNewPassword = ref(false); // Điều khiển việc hiển thị mật khẩu mới
+    const showConfirmPassword = ref(false); // Điều khiển việc hiển thị mật khẩu xác nhận
+
+    const toggleOldPassword = () => {
+      showOldPassword.value = !showOldPassword.value;
+    };
+
+    const toggleNewPassword = () => {
+      showNewPassword.value = !showNewPassword.value;
+    };
+
+    const toggleConfirmPassword = () => {
+      showConfirmPassword.value = !showConfirmPassword.value;
+    };
 
     const fetchProfile = async () => {
       try {
@@ -365,6 +397,8 @@ export default {
             error.response.data.error ||
             error.response.data.message ||
             "Đã có lỗi xảy ra.";
+
+            
           toast.error(errorMessage);
         } else {
           toast.error("Đã có lỗi xảy ra.");
@@ -416,12 +450,19 @@ export default {
       apiImage,
       translateRole,
       passwordForm,
+      passwordForm,
+      showOldPassword,
+      showNewPassword,
+      showConfirmPassword,
+      toggleOldPassword,
+      toggleNewPassword,
+      toggleConfirmPassword,
     };
   },
 };
 </script>
 
-<style scoped>
+<!-- <style scoped>
 input[type="file"] {
   display: none;
 }
@@ -810,6 +851,26 @@ input[type="file"] {
   cursor: pointer;
 }
 
+.password-input {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.password-toggle-btn {
+  background: transparent;
+  border: none;
+  position: absolute;
+  right: 30px;
+  cursor: pointer;
+  color: #00a3e0;
+}
+
+.password-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* Animation */
 @keyframes fadeIn {
   from {
@@ -821,4 +882,784 @@ input[type="file"] {
     transform: translateY(0);
   }
 }
+</style> -->
+
+<style scoped>
+/* Base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+/* File upload button */
+.file-upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(50, 164, 199, 0.3);
+  text-transform: capitalize;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.file-upload-button:hover {
+  background: linear-gradient(135deg, #00a3e0, #00a3e0);
+  box-shadow: 0 6px 14px rgba(89, 184, 207, 0.4);
+  transform: translateY(-1px);
+}
+
+.file-upload-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(102, 126, 234, 0.3);
+}
+
+.file-upload-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+}
+
+/* Profile container */
+.profile-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  margin: 10px auto;
+  max-width: 1200px;
+  padding: 0 15px;
+}
+
+/* Left column */
+.left-column {
+  background-color: #e8f7fc;
+  padding: 15px;
+  border-radius: 8px;
+  height: fit-content;
+}
+
+.avatar-container {
+  text-align: center;
+  margin-bottom: 30px;
+  margin-top: 20px;
+}
+
+.avatar {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #c4c4c4;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  height: 100%;
+}
+
+.user-name {
+  margin-top: 20px;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #0056b3;
+}
+
+.user-username {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.badge {
+  background-color: #00a3e0;
+  color: white;
+  padding: 7px 10px;
+  border-radius: 5px;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+}
+
+.user-info {
+  margin-top: 10px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.info-item svg {
+  margin-right: 10px;
+  color: #00a3e0;
+  min-width: 24px;
+}
+
+/* Right column */
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.tabs button {
+  padding: 10px 20px;
+  border: 1px solid #00a3e0;
+  background-color: #ffffff;
+  cursor: pointer;
+  border-radius: 5px;
+  color: #00a3e0;
+  font-weight: bold;
+  flex: 1;
+  min-width: 120px;
+}
+
+.tabs button.active {
+  background-color: #00a3e0;
+  color: white;
+}
+
+.info-card-status {
+  background-color: #f1f9ff;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  height: auto;
+  min-height: 180px;
+}
+
+.info-card-status h3 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #0056b3;
+  font-weight: bold;
+}
+
+.info-card {
+  background-color: #f1f9ff;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  height: auto;
+  min-height: 300px;
+}
+
+.info-card h3 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #0056b3;
+  font-weight: bold;
+}
+
+.card-content p {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.card-content-time p {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 10px 15px;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.status-button {
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 1rem;
+  border: none;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.active {
+  background-color: #00a3e0;
+  color: white;
+}
+
+.inactive {
+  background-color: #a0a0a0;
+  color: white;
+}
+
+.unlocked {
+  background-color: #4caf50;
+  color: white;
+}
+
+.locked {
+  background-color: #f44336;
+  color: white;
+}
+
+.time-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  background-color: #ffffff;
+  padding: 10px 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.time-icon {
+  margin-right: 10px;
+  color: #00a3e0;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+}
+
+.time-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.time-value {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Fixed buttons - made responsive */
+.action-buttons-container {
+  position: fixed;
+  bottom: 70px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 999;
+}
+
+@media (min-width: 768px) {
+  .action-buttons-container {
+    flex-direction: row;
+    right: 20px;
+    gap: 15px;
+  }
+}
+
+.edit-profile-button, .change-password-button {
+  background-color: transparent;
+  color: #0a0a0a;
+  border: 2px solid #0b0b0b;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  white-space: nowrap;
+}
+
+.edit-profile-button:hover, .change-password-button:hover {
+  background-color: #a0e1f9;
+  color: white;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 0 15px;
+}
+
+.modal-container {
+  width: 100%;
+  max-width: 500px;
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  animation: fadeIn 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1;
+}
+
+.modal-close {
+  background-color: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d0d0d0;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-cancel {
+  padding: 10px 15px;
+  background-color: #f5f5f5;
+  border: 1px solid #d0d0d0;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn-save {
+  padding: 10px 15px;
+  background-color: #00a3e0;
+  border: 1px solid #00a3e0;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.password-input {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.password-toggle-btn {
+  background: transparent;
+  border: none;
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  color: #00a3e0;
+  padding: 0;
+}
+
+.password-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive styles */
+@media screen and (max-width: 992px) {
+  .profile-container {
+    grid-template-columns: 1fr 1.5fr;
+  }
+  
+  .avatar {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .user-name {
+    font-size: 1.8rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .profile-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .tabs button {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+  }
+  
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-card h3, .info-card-status h3 {
+    font-size: 1.3rem;
+  }
+  
+  .card-content p, .card-content-time p, .status-item {
+    font-size: 1rem;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .avatar {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .user-name {
+    font-size: 1.5rem;
+  }
+  
+  .user-username {
+    font-size: 1rem;
+  }
+  
+  .badge {
+    padding: 5px 8px;
+    font-size: 0.9rem;
+  }
+  
+  .tabs {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .tabs button {
+    width: 100%;
+  }
+  
+  .info-card, .info-card-status {
+    padding: 12px;
+  }
+  
+  .status-button {
+    padding: 4px 10px;
+    font-size: 0.9rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-cancel, .btn-save {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* iPad specific adjustments */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+  .profile-container {
+    gap: 15px;
+    padding: 0 10px;
+  }
+  
+  .left-column {
+    padding: 12px;
+  }
+  
+  .avatar {
+    width: 160px;
+    height: 160px;
+  }
+  
+  .info-card, .info-card-status {
+    min-height: auto;
+  }
+}
+
+/* iPhone specific adjustments */
+@media only screen and (min-device-width: 320px) and (max-device-width: 480px) {
+  .profile-container {
+    margin: 5px auto;
+    padding: 0 10px;
+  }
+  
+  .avatar-container {
+    margin-bottom: 20px;
+    margin-top: 10px;
+  }
+  
+  .avatar {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .user-name {
+    font-size: 1.3rem;
+    margin-top: 10px;
+  }
+  
+  .action-buttons-container {
+    bottom: 20px;
+    right: 10px;
+  }
+  
+  .edit-profile-button, .change-password-button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+  
+  .modal-container {
+    width: 95%;
+  }
+}
+
+/* Support for ultra-wide screens */
+@media screen and (min-width: 1400px) {
+  .profile-container {
+    max-width: 1400px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .edit-profile-button, 
+  .change-password-button, 
+  .file-upload-button,
+  .tabs button {
+    display: none !important;
+  }
+  
+  .profile-container {
+    display: block;
+  }
+  
+  .left-column,
+  .right-column {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .info-card,
+  .info-card-status {
+    break-inside: avoid;
+  }
+}
+
+/* Accessibility improvements */
+:focus {
+  outline: 3px solid #00a3e0;
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  body.dark-mode-enabled {
+    background-color: #121212;
+    color: #e0e0e0;
+  }
+  
+  body.dark-mode-enabled .left-column {
+    background-color: #1e2a38;
+  }
+  
+  body.dark-mode-enabled .info-card,
+  body.dark-mode-enabled .info-card-status {
+    background-color: #1e2a38;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+  
+  body.dark-mode-enabled .user-name {
+    color: #4da3ff;
+  }
+  
+  body.dark-mode-enabled .info-card h3,
+  body.dark-mode-enabled .info-card-status h3 {
+    color: #4da3ff;
+  }
+  
+  body.dark-mode-enabled .status-item,
+  body.dark-mode-enabled .time-item {
+    background-color: #2d3748;
+  }
+  
+  body.dark-mode-enabled .modal-container,
+  body.dark-mode-enabled .modal-header {
+    background-color: #1e2a38;
+    color: #e0e0e0;
+  }
+  
+  body.dark-mode-enabled .form-input {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e0e0e0;
+  }
+  
+  body.dark-mode-enabled .btn-cancel {
+    background-color: #2d3748;
+    color: #e0e0e0;
+    border-color: #4a5568;
+  }
+}
+
+/* Orientation changes */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  .profile-container {
+    margin-top: 5px;
+  }
+  
+  .avatar {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .avatar-container {
+    margin-bottom: 10px;
+    margin-top: 10px;
+  }
+  
+  .user-name {
+    margin-top: 10px;
+    font-size: 1.3rem;
+  }
+  
+  .modal-container {
+    max-height: 85vh;
+  }
+}
+
+/* RTL support */
+[dir="rtl"] .info-item svg {
+  margin-right: 0;
+  margin-left: 10px;
+}
+
+[dir="rtl"] .time-icon {
+  margin-right: 0;
+  margin-left: 10px;
+}
+
+[dir="rtl"] .password-toggle-btn {
+  right: auto;
+  left: 10px;
+}
+
+/* Improved buttons for mobile */
+@media (hover: none) {
+  .file-upload-button,
+  .edit-profile-button,
+  .change-password-button,
+  .btn-save,
+  .btn-cancel {
+    padding: 12px 20px; /* Larger touch targets */
+  }
+}
+
+/* Fix for fixed positioning on iOS */
+@supports (-webkit-touch-callout: none) {
+  .action-buttons-container {
+    position: fixed;
+    bottom: 80px; /* Account for iOS Safari bottom bar */
+  }
+}
 </style>
+
+
+
+
+

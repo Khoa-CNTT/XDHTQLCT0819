@@ -120,7 +120,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import axios from "axios";
 import { Bar, Pie } from "vue-chartjs";
@@ -241,17 +240,18 @@ export default {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: false, // Ẩn legend mặc định, sử dụng legend tùy chỉnh
+            display: false,
           },
           tooltip: {
             callbacks: {
               label: function (context) {
-                const value = context.parsed;
+                const value = parseFloat(context.parsed);
                 const total = context.dataset.data.reduce(
-                  (acc, val) => acc + val,
+                  (acc, val) => acc + parseFloat(val),
                   0
                 );
-                const percentage = Math.round((value / total) * 100);
+                const percentage =
+                  total > 0 ? Math.round((value / total) * 100) : 0;
                 return `${context.label}: ${new Intl.NumberFormat("vi-VN", {
                   style: "currency",
                   currency: "VND",
@@ -435,7 +435,7 @@ export default {
 <style scoped>
 .reports-page {
   padding: 3rem 4rem;
-  background: linear-gradient(135deg, #f0f4f8 0%, #dbe5f7 100%);
+  background: linear-gradient(145deg, #f8fafc 0%, #e0eafc 100%);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -448,18 +448,20 @@ export default {
 .page-title {
   font-size: 2.4rem;
   font-weight: 700;
-  color: #333;
+  color: #1e293b;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .page-title i {
   color: #0ea5e9;
   font-size: 2.2rem;
+  filter: drop-shadow(0 2px 4px rgba(14, 165, 233, 0.3));
 }
 
 /* Lọc thời gian */
@@ -470,6 +472,13 @@ export default {
   gap: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .time-tabs {
@@ -481,37 +490,84 @@ export default {
   padding: 0.8rem 1.5rem;
   border: none;
   border-radius: 1.25rem;
-  background-color: #f3f4f6;
-  color: #2d3748;
+  background-color: #f1f5f9;
+  color: #475569;
   font-size: 1.15rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.time-tabs button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.time-tabs button:hover::before {
+  opacity: 1;
 }
 
 .time-tabs button.active {
-  background-color: #f59e0b;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   color: white;
   font-weight: 700;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
-.time-tabs button:hover {
-  background-color: #e5e7eb;
-  transform: scale(1.05);
+.time-tabs button:hover:not(.active) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 .date-picker {
   padding: 0.8rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #e2e8f0;
   border-radius: 1rem;
   background-color: white;
   font-size: 1.1rem;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.date-picker:focus {
-  border-color: #0ea5e9;
+.date-picker:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Loading indicator */
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.2rem;
+  color: #64748b;
+  height: 200px;
+  animation: fadeIn 0.5s ease;
+}
+
+.loading-indicator i {
+  color: #0ea5e9;
+  font-size: 1.5rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Nội dung báo cáo */
@@ -521,33 +577,49 @@ export default {
   gap: 2.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+  animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Biểu đồ cột */
 .bar-chart-container {
-  background-color: white;
-  border-radius: 1rem;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 1.25rem;
   padding: 2rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid #d1e9ff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.8);
   height: 480px;
-  transition: all 0.3s ease;
-  animation: scaleUp 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+}
+
+.bar-chart-container::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #0ea5e9, #3b82f6, #8b5cf6);
+  opacity: 0.7;
+  border-radius: 0 0 1.25rem 1.25rem;
 }
 
 .bar-chart-container:hover {
   transform: translateY(-8px);
-}
-
-@keyframes scaleUp {
-  0% {
-    opacity: 0.5;
-    transform: scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }
 
 /* Biểu đồ tròn */
@@ -559,49 +631,120 @@ export default {
 
 .pie-chart-container {
   flex: 1;
-  background-color: white;
-  border-radius: 1rem;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 1.25rem;
   padding: 2rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid #d1e9ff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.8);
   text-align: center;
-  transition: transform 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+}
+
+.pie-chart-container:first-child::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #ef4444, #f97316, #f59e0b);
+  opacity: 0.7;
+  border-radius: 0 0 1.25rem 1.25rem;
+}
+
+.pie-chart-container:last-child::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #10b981, #14b8a6, #0ea5e9);
+  opacity: 0.7;
+  border-radius: 0 0 1.25rem 1.25rem;
 }
 
 .pie-chart-container:hover {
   transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }
 
 .pie-chart-container h3 {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #2d3748;
+  color: #1e293b;
   margin-bottom: 1.5rem;
+  position: relative;
+  display: inline-block;
+}
+
+.pie-chart-container h3::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  background-color: #cbd5e1;
+  border-radius: 3px;
 }
 
 .pie-chart-container canvas {
   height: 240px !important;
   width: 240px !important;
   margin: 0 auto;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+  animation: rotateIn 1s ease;
+}
+
+@keyframes rotateIn {
+  from {
+    opacity: 0;
+    transform: rotate(-10deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
 }
 
 .legend {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.25rem;
+  padding: 0.75rem;
+  background-color: rgba(248, 250, 252, 0.5);
+  border-radius: 0.75rem;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  transition: transform 0.2s ease;
+}
+
+.legend-item:hover {
+  transform: translateY(-2px);
+}
+
+.legend-item .color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .legend-item span {
   font-size: 1rem;
-  color: #4b5563;
+  color: #475569;
+  font-weight: 500;
 }
 
 /* Thống kê tổng quan */
@@ -609,45 +752,97 @@ export default {
   display: flex;
   justify-content: space-between;
   gap: 2rem;
-  background-color: white;
-  border-radius: 1rem;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 1.25rem;
   padding: 2.5rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border: 1px solid #d1e9ff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.summary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at top right,
+    rgba(255, 255, 255, 0.8),
+    transparent 70%
+  );
+  pointer-events: none;
 }
 
 .summary-item {
   flex: 1;
   text-align: center;
+  position: relative;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background-color: rgba(255, 255, 255, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.summary-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
 }
 
 .summary-item .label {
   font-size: 1.15rem;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+  display: block;
+  font-weight: 500;
 }
 
 .summary-item .value {
-  font-size: 1.9rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 800;
+  display: block;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  letter-spacing: -0.5px;
 }
 
 .summary-item .income {
   color: #10b981;
+  background: linear-gradient(135deg, #10b981, #059669);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .summary-item .expense {
   color: #ef4444;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .summary-item .balance {
   color: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.summary-item .balance.negative {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Responsive Mobile */
 @media (max-width: 768px) {
   .reports-page {
     padding: 1.5rem;
+    gap: 2rem;
   }
 
   .page-title {
@@ -657,15 +852,29 @@ export default {
   .time-filter {
     flex-direction: column;
     gap: 1.5rem;
+    padding: 1.25rem;
   }
 
   .time-tabs {
     justify-content: center;
     flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .time-tabs button {
+    flex: 1;
+    min-width: 80px;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+  }
+
+  .date-picker {
+    width: 100%;
   }
 
   .bar-chart-container {
     height: 350px;
+    padding: 1.5rem;
   }
 
   .pie-charts {
@@ -673,18 +882,59 @@ export default {
     gap: 1.5rem;
   }
 
+  .pie-chart-container {
+    padding: 1.5rem;
+  }
+
+  .pie-chart-container h3 {
+    font-size: 1.3rem;
+  }
+
   .pie-chart-container canvas {
     height: 200px !important;
     width: 200px !important;
   }
 
+  .legend {
+    padding: 0.5rem;
+    gap: 0.75rem;
+  }
+
+  .legend-item span {
+    font-size: 0.9rem;
+  }
+
   .summary {
     flex-direction: column;
     gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  .summary-item {
+    padding: 1rem;
+  }
+
+  .summary-item .label {
+    font-size: 1rem;
   }
 
   .summary-item .value {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .reports-page {
+    padding: 2rem;
+  }
+
+  .pie-charts {
+    flex-direction: row;
+  }
+
+  .pie-chart-container canvas {
+    height: 220px !important;
+    width: 220px !important;
   }
 }
 </style>

@@ -67,7 +67,7 @@
       <h2 class="cta-title">Tiết kiệm thông minh - Tương lai vững vàng</h2>
       <router-link to="/sign-up" class="btn-primary cta-btn">
         Bắt đầu ngay 
-        </router-link>
+      </router-link>
     </div>
   </div>
 </template>
@@ -84,40 +84,46 @@ export default {
 </script>
 
 <style scoped>
-
 .hero {
-  display: grid;
-  /* justify-content: space-between; Căn chỉnh trái phải giữa các phần */
-  padding-left: 3rem;
-  padding-right: 1rem;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 3rem 2rem 3rem;
   background-color: #f0f9ff;
-  align-items: center;
   min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.row {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
 }
 
 .hero-left {
-  width: 45%; 
+  flex: 1 1 400px;
   text-align: left;
-  display: flex; 
-  flex-direction: column;   
-  justify-content: center; 
-  align-items: center; 
-  height: 400px; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 400px;
 }
 
 .hero-right {
+  flex: 1 1 400px;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 50%;
   height: 400px;
 }
 
 .hero-content {
-  text-align: center;
   opacity: 0;
   animation: fadeIn 1s ease forwards;
 }
@@ -132,7 +138,7 @@ export default {
 }
 
 .hero-title {
-  white-space: nowrap; 
+  white-space: nowrap;
   font-size: 2.5rem;
   font-weight: bold;
   color: #0ea5e9;
@@ -154,6 +160,8 @@ export default {
   border-radius: 0.5rem;
   cursor: pointer;
   text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 
 .register-btn:hover {
@@ -168,6 +176,7 @@ export default {
   justify-content: center;
   align-items: center;
   transition: transform 0.3s ease-in-out;
+  margin: 0 auto;
 }
 
 .center-image {
@@ -175,10 +184,10 @@ export default {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  background-color:#ffffff;
+  background-color: #ffffff;
   padding: 1rem;
   border-radius: 50%;
-  box-shadow:  0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   z-index: 2;
 }
 
@@ -199,7 +208,7 @@ export default {
   position: absolute;
   width: 48px;
   height: 48px;
-  background-color:rgb(252, 252, 252);
+  background-color: rgb(252, 252, 252);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -265,13 +274,12 @@ export default {
 
 .cta-section {
   width: 100%;
+  max-width: 1200px;
   text-align: center;
-  /* margin-top: 3rem; */
   background-color: #0ea5e9;
-  padding: 2rem 0;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding: 2rem 1rem;
   border-radius: 1rem;
+  margin-top: 3rem;
 }
 
 .cta-title {
@@ -290,9 +298,83 @@ export default {
   border: none;
   cursor: pointer;
   text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 
 .cta-btn:hover {
   background-color: #f0f9ff;
+}
+
+/* Responsive Styles */
+@media (max-width: 900px) {
+  .hero-left, .hero-right {
+    flex: 1 1 100%;
+    height: auto;
+  }
+
+  .hero-title {
+    white-space: normal;
+    font-size: 2rem;
+  }
+
+  .hero-text {
+    font-size: 1.1rem;
+  }
+
+  .illustration-wrapper {
+    width: 250px;
+    height: 250px;
+  }
+
+  .center-image img {
+    height: 120px;
+    width: 120px;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .hero-title {
+    font-size: 1.5rem;
+  }
+
+  .hero-text {
+    font-size: 1rem;
+  }
+
+  .register-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .illustration-wrapper {
+    width: 200px;
+    height: 200px;
+  }
+
+  .center-image img {
+    height: 100px;
+    width: 100px;
+  }
+
+  .icon-item {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+
+  .cta-title {
+    font-size: 1.5rem;
+  }
+
+  .cta-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
 }
 </style>

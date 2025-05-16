@@ -1,30 +1,29 @@
 <?php
 
 use App\Http\Controllers\AccountController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\AiController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExampleController;
+use App\Http\Controllers\RecurringtransactionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SavingoalController;
+use App\Http\Controllers\StoryController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 
 Route::get('/example', [ExampleController::class, 'index']);
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail']);
 Route::get('/reset-password', [AuthController::class, 'resetShow']);
 Route::post('/reset-password', [AuthController::class, 'reset']);
 Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::get('/get-image/{filename}', [UserController::class, 'getImage'])
     ->where('filename', '.*');
-
-
-// Exception 
-Route::middleware('auth:sanctum')->get('/mb-bank', [TransactionController::class, 'fetchMBBankTransactions']);
 
 Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -34,7 +33,7 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
     Route::put('/user/income', [UserController::class, 'updateIncome']);
     Route::put('/user/update-profile', [UserController::class, 'updateProfile']);
     Route::post('/user/avatar-profile', [UserController::class, 'updateAvatarProfile']);
-    
+
 
     // Account
     Route::prefix('account')->group(function () {
@@ -80,8 +79,35 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
         Route::get('/summary', [ReportController::class, 'summary']);
     });
 
+    Route::prefix('ai')->group(function () {
+        Route::post('/void', [AiController::class, 'AIVoid']);
+        Route::get('/get-mbank', [AiController::class, 'fetchAndClassifyMBBankTransactions']);
+        Route::post('/chatbox/send', [AiController::class, 'chatBox']);
+    });
 
+    Route::prefix('budget')->group(function () {
+        Route::post('/', [BudgetController::class, 'store']);
+        Route::get('/', [BudgetController::class, 'getBudgetSummary']);
+        Route::get('/alerts', [BudgetController::class, 'getBudgetAlerts']);
+        Route::get('/{id}', [BudgetController::class, 'edit']);
+        Route::get('/category/{id}', [BudgetController::class, 'getCategoryBudgetStatus']);
+        Route::put('/{id}', [BudgetController::class, 'update']);
+        Route::delete('/{id}', [BudgetController::class, 'destroy']);
+    });
 
+    Route::prefix('recurringtransaction')->group(function () {
+        Route::get('/', [RecurringtransactionController::class, 'index']);
+        Route::get('/test-recurring-transactions', [RecurringTransactionController::class, 'runRecurring']); //oker
+        Route::post('/', [RecurringtransactionController::class, 'store']);
+        Route::get('{id}', [RecurringtransactionController::class, 'edit']);
+        Route::put('{id}', [RecurringtransactionController::class, 'update']);
+        Route::delete('{id}', [RecurringtransactionController::class, 'destroy']);
+    });
+
+    Route::prefix('stories')->group(function () {
+        Route::get('/', [StoryController::class, 'getstories']);
+        Route::delete('/', [StoryController::class, 'destroy']);
+    });
 
     /////// ---------ADMIN------------------///////
     Route::middleware(['checkRole:admin'])->group(function () {
@@ -90,5 +116,7 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
         Route::put('/user/update', [UserController::class, 'update']);
         Route::delete('/user/{id}', [UserController::class, 'destroy']);
         Route::put('/user/block/{id}', [UserController::class, 'block']);
+        Route::get('/dashboard-stats', [UserController::class, 'getStats']);
+
     });
 });
