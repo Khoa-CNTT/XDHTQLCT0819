@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('account_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('category_id')->nullable()->constrained()->onDelete('cascade');
-            $table->decimal('amount', 15, 2);
+            $table->double('amount');
             $table->date('transaction_date');
             $table->enum('type', ['cash', 'transfer']);
             $table->enum('transaction_type', ['income', 'expense'])->nullable();

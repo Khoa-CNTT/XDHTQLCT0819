@@ -515,12 +515,11 @@ export default {
         this.fetchData();
         this.closeModal();
       } catch (error) {
-          const errors = error.response?.data?.errors;
-
+        const errors = error.response?.data?.errors;
         if (errors) {
           Object.values(errors).forEach((fieldErrors) => {
             fieldErrors.forEach((message) => {
-              toast.error(message); 
+              toast.error(message);
             });
           });
         } else {

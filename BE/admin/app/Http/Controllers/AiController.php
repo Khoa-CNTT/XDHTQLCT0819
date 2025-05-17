@@ -47,7 +47,7 @@ class AiController extends Controller
             - Không ghi chú thích, không giải thích thêm.
             - Nếu không trích xuất được thì trả về đúng: null (chữ thường).
             PROMPT;
-                }
+    }
 
     public function AIVoid(Request $request)
     {
@@ -411,7 +411,7 @@ class AiController extends Controller
             - Không ghi chú thích, không giải thích thêm.
             - Nếu không trích xuất được thì trả về đúng: null (chữ thường).
             PROMPT;
-                }
+    }
 
     private function determineTransactionType($description)
     {
@@ -563,7 +563,7 @@ class AiController extends Controller
             - Cập nhật tên danh mục: {"action":"update_category","category_id":ID,"new_name":"Tên mới"}
             - Xóa giao dịch: {"action":"delete_transaction","transaction_id":ID}
             PROMPT;
-                }
+    }
 
 
     public function chatBox(Request $request)
