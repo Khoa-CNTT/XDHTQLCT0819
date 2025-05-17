@@ -515,7 +515,7 @@ export default {
         this.fetchData();
         this.closeModal();
       } catch (error) {
-        const errors = error.response?.data?.errors;
+          const errors = error.response?.data?.errors;
 
         if (errors) {
           Object.values(errors).forEach((fieldErrors) => {
@@ -524,7 +524,7 @@ export default {
             });
           });
         } else {
-          toast.error("Đã xảy ra lỗi không xác định.");
+          toast.error(error.response?.data.message);
         }
       } finally {
         this.formSubmitting = false;
