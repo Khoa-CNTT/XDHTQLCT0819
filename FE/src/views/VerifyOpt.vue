@@ -1,5 +1,5 @@
 <template>
-  <section id="forgot-password" class="section">
+  <section id="verify-otp" class="section">
     <div class="auth-wrapper">
       <div class="modal-header">
         <img
@@ -7,23 +7,35 @@
           alt="Logo"
           class="modal-logo"
         />
-        <h2>Quên mật khẩu</h2>
+        <h2>Nhập mã xác thực</h2>
       </div>
-      <form class="auth-form" @submit.prevent="handleForgotPassword">
+      <form class="auth-form" @submit.prevent="handleVerifyOtp">
+        <input type="hidden" v-model="email" />
+
         <div class="form-group">
-          <label for="forgot-email">Email</label>
-          <input
-            type="email"
-            id="forgot-email"
-            v-model="email"
-            required
-            placeholder="Nhập email của bạn"
-          />
+          <div class="otp-inputs">
+            <input
+              v-for="(digit, index) in otpDigits"
+              :key="index"
+              ref="otpBoxes"
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              class="otp-box"
+              v-model="otpDigits[index]"
+              @input="focusNext(index, $event)"
+              @keydown.backspace="focusPrev(index, $event)"
+            />
+          </div>
         </div>
-        <button type="submit" class="btn-primary">Gửi yêu cầu</button>
+
+        <button type="submit" class="btn-primary">Xác nhận</button>
       </form>
       <div class="auth-links">
-        <p>Quay lại <router-link to="/login">Đăng nhập ngay</router-link></p>
+        <p>
+          Chưa nhận được mã?
+          <router-link to="/forgot-password">Gửi lại</router-link>
+        </p>
       </div>
     </div>
   </section>
@@ -34,25 +46,55 @@ import axios from "axios";
 import { useToast } from "vue-toastification";
 
 export default {
-  name: "ForgotPasswordPage",
+  name: "VerifyOtpPage",
   data() {
     return {
       email: "",
+      otpDigits: Array(6).fill(""),
     };
   },
+  mounted() {
+    const storedEmail = sessionStorage.getItem("forgotEmail");
+    if (!storedEmail) {
+      this.$router.push("/forgot-password");
+    } else {
+      this.email = storedEmail;
+    }
+  },
   methods: {
-    async handleForgotPassword() {
+    focusNext(index, event) {
+      const val = event.target.value;
+      if (val && index < 5) {
+        this.$refs.otpBoxes[index + 1]?.focus();
+      }
+    },
+    focusPrev(index, event) {
+      if (!event.target.value && index > 0) {
+        this.$refs.otpBoxes[index - 1]?.focus();
+      }
+    },
+    async handleVerifyOtp() {
       const toast = useToast();
+      const otp = this.otpDigits.join("");
+
+      if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+        toast.error("Mã OTP không hợp lệ. Vui lòng nhập đủ 6 chữ số.");
+        return;
+      }
 
       try {
-        const res = await axios.post("/api/send-otp", {
+        const res = await axios.post("/api/verify-otp", {
           email: this.email,
+          otp: otp,
         });
         toast.success(res.data.message);
-        sessionStorage.setItem("forgotEmail", this.email);
-        this.$router.push({ path: "/verify-otp" });
+        sessionStorage.setItem("resetEmail", this.email);
+        sessionStorage.setItem("resetToken", otp);
+        this.$router.push({
+          path: "/reset-password",
+        });
       } catch (error) {
-        toast.error(error.response.data.message);
+        toast.error(error.response?.data?.message || "Xác thực thất bại.");
       }
     },
   },
@@ -60,7 +102,6 @@ export default {
 </script>
 
 <style scoped>
-/* Đảm bảo phần tử cha không bị ảnh hưởng bởi style toàn cục */
 html,
 body {
   margin: 0;
@@ -70,7 +111,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Phần section */
 .section {
   display: flex;
   flex-direction: column;
@@ -78,7 +118,10 @@ body {
   justify-content: center;
   background-color: #f0f2f5;
   background-image: url("/src/assets/dn.jpg");
+  position: relative;
+  min-height: 100vh;
 }
+
 .section::before {
   content: "";
   position: absolute;
@@ -90,11 +133,12 @@ body {
   backdrop-filter: blur(12px);
   z-index: 1;
 }
+
 .section > * {
   position: relative;
   z-index: 2;
 }
-/* Wrapper chứa form */
+
 .auth-wrapper {
   background-color: white;
   padding: 2rem;
@@ -105,7 +149,6 @@ body {
   margin-bottom: 2rem;
 }
 
-/* Modal header với logo và tiêu đề */
 .modal-header {
   display: flex;
   flex-direction: column;
@@ -127,7 +170,6 @@ body {
   margin-bottom: 0.5rem;
 }
 
-/* Form quên mật khẩu */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -145,16 +187,23 @@ body {
   color: #374151;
 }
 
-.auth-form input {
-  width: 100%;
-  padding: 0.75rem;
+.otp-inputs {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.otp-box {
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+  text-align: center;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
-  font-size: 1rem;
   transition: all 0.3s ease;
 }
 
-.auth-form input:focus {
+.otp-box:focus {
   outline: none;
   border-color: #0ea5e9;
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
@@ -178,7 +227,6 @@ body {
   transform: scale(1.05);
 }
 
-/* Liên kết */
 .auth-links {
   text-align: center;
   margin-top: 1.5rem;
@@ -199,15 +247,10 @@ body {
   text-decoration: underline;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .section {
     padding-top: 6rem;
     min-height: 80vh;
-  }
-
-  .section-title {
-    font-size: 2rem;
   }
 
   .auth-wrapper {
@@ -215,8 +258,10 @@ body {
     max-width: 90%;
   }
 
-  .auth-form input {
-    font-size: 0.9rem;
+  .otp-box {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
   }
 
   .auth-form button {

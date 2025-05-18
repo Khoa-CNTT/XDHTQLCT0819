@@ -219,7 +219,6 @@ class AiController extends Controller
 
 
     // MBank fetch
-
     public function fetchAndClassifyMBBankTransactions()
     {
         try {

@@ -15,8 +15,9 @@ import Budget from "@/views/Budget.vue";
 import RecurringTransactions from "@/views/RecurringTransactions.vue";
 import ReportAdmin from "@/views/ReportAdmin.vue";
 import ActivityLogs from "@/views/ActivityLogs.vue";
-import ContactAdmin from '@/views/ContactAdmin.vue';
-
+import ContactAdmin from "@/views/ContactAdmin.vue";
+import VerifyOpt from "@/views/VerifyOpt.vue";
+import ResetPassword from "@/views/ResetPassword.vue";
 const routes = [
   {
     path: "/",
@@ -113,6 +114,16 @@ const routes = [
     path: "/quan-li-lien-he",
     name: "quan-li-lien-he",
     component: ContactAdmin,
+  },
+  {
+    path: "/verify-otp",
+    name: "verify-otp",
+    component: VerifyOpt,
+  },
+  {
+    path: "/reset-password",
+    name: "reset-password",
+    component: ResetPassword,
   },
 ];
 
