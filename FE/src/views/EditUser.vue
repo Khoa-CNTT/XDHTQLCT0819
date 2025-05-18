@@ -157,13 +157,20 @@
                 class="form-control"
               />
             </div>
-            <div class="col-md-12">
+            <div class="col-md-9">
               <label class="form-label">Địa chỉ</label>
               <input
                 v-model="selectedUser.address"
                 type="text"
                 class="form-control"
               />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Vai trò</label>
+              <select v-model="selectedUser.role" class="form-select">
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+              </select>
             </div>
             <div class="col-md-12">
               <label class="form-label">Ảnh đại diện</label>
@@ -284,6 +291,7 @@ export default {
           phone: this.selectedUser.phone || "",
           fullName: this.selectedUser.fullName,
           address: this.selectedUser.address || "",
+          role: this.selectedUser.role || "",
         };
         const res = await axios.put("/api/user/update", payload, {
           headers: {

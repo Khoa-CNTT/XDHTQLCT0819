@@ -1,5 +1,5 @@
 <template>
-  <section id="forgot-password" class="section">
+  <section id="reset-password" class="section">
     <div class="auth-wrapper">
       <div class="modal-header">
         <img
@@ -7,20 +7,52 @@
           alt="Logo"
           class="modal-logo"
         />
-        <h2>Quên mật khẩu</h2>
+        <h2>Đặt lại mật khẩu</h2>
       </div>
-      <form class="auth-form" @submit.prevent="handleForgotPassword">
+      <form class="auth-form" @submit.prevent="handleResetPassword">
         <div class="form-group">
-          <label for="forgot-email">Email</label>
-          <input
-            type="email"
-            id="forgot-email"
-            v-model="email"
-            required
-            placeholder="Nhập email của bạn"
-          />
+          <input type="email" id="email" :value="email" readonly hidden />
         </div>
-        <button type="submit" class="btn-primary">Gửi yêu cầu</button>
+
+        <div class="form-group password-group">
+          <label for="password">Mật khẩu mới</label>
+          <div class="input-wrapper">
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              id="password"
+              v-model="password"
+              required
+              placeholder="Nhập mật khẩu mới"
+              minlength="6"
+            />
+            <i
+              :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"
+              class="toggle-password"
+              @click="showPassword = !showPassword"
+            ></i>
+          </div>
+        </div>
+
+        <div class="form-group password-group">
+          <label for="confirmPassword">Xác nhận mật khẩu mới</label>
+          <div class="input-wrapper">
+            <input
+              :type="showConfirmPassword ? 'text' : 'password'"
+              id="confirmPassword"
+              v-model="confirmPassword"
+              required
+              placeholder="Xác nhận mật khẩu mới"
+              minlength="6"
+            />
+            <i
+              :class="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"
+              class="toggle-password"
+              @click="showConfirmPassword = !showConfirmPassword"
+            ></i>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">Đổi mật khẩu</button>
       </form>
       <div class="auth-links">
         <p>Quay lại <router-link to="/login">Đăng nhập ngay</router-link></p>
@@ -34,25 +66,45 @@ import axios from "axios";
 import { useToast } from "vue-toastification";
 
 export default {
-  name: "ForgotPasswordPage",
+  name: "ResetPasswordPage",
   data() {
     return {
+      token: "",
       email: "",
+      password: "",
+      confirmPassword: "",
+      showPassword: false,
+      showConfirmPassword: false,
     };
   },
+  mounted() {
+    this.email = sessionStorage.getItem("resetEmail") || "";
+    this.token = sessionStorage.getItem("resetToken") || "";
+  },
   methods: {
-    async handleForgotPassword() {
+    async handleResetPassword() {
       const toast = useToast();
 
+      if (this.password !== this.confirmPassword) {
+        toast.error("Mật khẩu xác nhận không khớp!");
+        return;
+      }
+
       try {
-        const res = await axios.post("/api/send-otp", {
+        const res = await axios.post("/api/reset-password", {
+          token: this.token,
           email: this.email,
+          password: this.password,
+          password_confirmation: this.confirmPassword,
         });
+
         toast.success(res.data.message);
-        sessionStorage.setItem("forgotEmail", this.email);
-        this.$router.push({ path: "/verify-otp" });
+        this.$router.push("/login");
       } catch (error) {
-        toast.error(error.response.data.message);
+        toast.error(
+          error.response?.data?.message ||
+            "Đổi mật khẩu thất bại. Vui lòng thử lại."
+        );
       }
     },
   },
@@ -60,7 +112,6 @@ export default {
 </script>
 
 <style scoped>
-/* Đảm bảo phần tử cha không bị ảnh hưởng bởi style toàn cục */
 html,
 body {
   margin: 0;
@@ -70,7 +121,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Phần section */
 .section {
   display: flex;
   flex-direction: column;
@@ -94,7 +144,7 @@ body {
   position: relative;
   z-index: 2;
 }
-/* Wrapper chứa form */
+
 .auth-wrapper {
   background-color: white;
   padding: 2rem;
@@ -105,7 +155,6 @@ body {
   margin-bottom: 2rem;
 }
 
-/* Modal header với logo và tiêu đề */
 .modal-header {
   display: flex;
   flex-direction: column;
@@ -127,7 +176,6 @@ body {
   margin-bottom: 0.5rem;
 }
 
-/* Form quên mật khẩu */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -145,6 +193,10 @@ body {
   color: #374151;
 }
 
+.input-wrapper {
+  position: relative;
+}
+
 .auth-form input {
   width: 100%;
   padding: 0.75rem;
@@ -158,6 +210,20 @@ body {
   outline: none;
   border-color: #0ea5e9;
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+
+.auth-form input[readonly] {
+  background-color: #e5e7eb;
+  cursor: not-allowed;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #6b7280;
 }
 
 .auth-form button {
@@ -178,7 +244,6 @@ body {
   transform: scale(1.05);
 }
 
-/* Liên kết */
 .auth-links {
   text-align: center;
   margin-top: 1.5rem;
@@ -199,15 +264,10 @@ body {
   text-decoration: underline;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .section {
     padding-top: 6rem;
     min-height: 80vh;
-  }
-
-  .section-title {
-    font-size: 2rem;
   }
 
   .auth-wrapper {

@@ -28,7 +28,7 @@ class RecurringtransactionController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'savingoal_id' => 'nullable|exists:savingoals,id',
             'description' => 'required|string|max:255',
-            'amount' => 'required|numeric',
+            'amount' => 'required|numeric|digits_between:1,20',
             'period' => 'required|in:daily,weekly,monthly,yearly',
             'date' => 'required|date',
         ], [
@@ -39,6 +39,7 @@ class RecurringtransactionController extends Controller
             'description.max' => 'Mô tả không được vượt quá 255 ký tự.',
             'amount.required' => 'Vui lòng nhập số tiền.',
             'amount.numeric' => 'Số tiền phải là một số.',
+            'amount.digits_between' => 'Số tiền được vợt quá 20 số.',
             'period.required' => 'Vui lòng chọn kỳ hạn.',
             'period.in' => 'Kỳ hạn phải là một trong các giá trị: daily, weekly, monthly, yearly.',
             'date.required' => 'Vui lòng chọn ngày.',
@@ -75,7 +76,7 @@ class RecurringtransactionController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'savingoal_id' => 'nullable|exists:savingoals,id',
             'description' => 'required|string|max:255',
-            'amount' => 'required|numeric',
+            'amount' => 'required|numeric|digits_between:1,20',
             'period' => 'required|in:daily,weekly,monthly,yearly',
             'date' => 'required|date',
         ], [
@@ -86,6 +87,7 @@ class RecurringtransactionController extends Controller
             'description.max' => 'Mô tả không được vượt quá 255 ký tự.',
             'amount.required' => 'Vui lòng nhập số tiền.',
             'amount.numeric' => 'Số tiền phải là một số.',
+            'amount.digits_between' => 'Số tiền được vợt quá 20 số.',
             'period.required' => 'Vui lòng chọn kỳ hạn.',
             'period.in' => 'Kỳ hạn phải là một trong các giá trị: daily, weekly, monthly, yearly.',
             'date.required' => 'Vui lòng chọn ngày.',

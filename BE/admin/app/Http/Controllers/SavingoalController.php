@@ -60,12 +60,32 @@ class SavingoalController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name'       => 'required|string|max:255',
-                'target'     => 'required|numeric|min:0',
-                'save_money' => 'required|numeric|min:0',
+                'target'     => 'required|numeric|min:0|digits_between:1,20',
+                'save_money' => 'required|numeric|min:0|digits_between:1,20',
                 'start_day'  => 'required|date',
                 'end_day'    => 'required|date|after_or_equal:start_day',
-            ]);
+            ], [
+                'name.required'       => 'Vui lòng nhập tên mục tiêu.',
+                'name.string'         => 'Tên mục tiêu phải là chuỗi ký tự.',
+                'name.max'            => 'Tên mục tiêu không được vượt quá 255 ký tự.',
 
+                'target.required'     => 'Vui lòng nhập số tiền mục tiêu.',
+                'target.numeric'      => 'Số tiền mục tiêu phải là số.',
+                'target.min'          => 'Số tiền mục tiêu không được nhỏ hơn 0.',
+                'target.digits_between' => 'Số tiền mục tiêu không được vượt quá 20 chữ số.',
+
+                'save_money.required' => 'Vui lòng nhập số tiền đã tiết kiệm.',
+                'save_money.numeric'  => 'Số tiền đã tiết kiệm phải là số.',
+                'save_money.min'      => 'Số tiền đã tiết kiệm không được nhỏ hơn 0.',
+                'save_money.digits_between' => 'Số tiền đã tiết kiệm không được vượt quá 20 chữ số.',
+
+                'start_day.required'  => 'Vui lòng chọn ngày bắt đầu.',
+                'start_day.date'      => 'Ngày bắt đầu không hợp lệ.',
+
+                'end_day.required'    => 'Vui lòng chọn ngày kết thúc.',
+                'end_day.date'        => 'Ngày kết thúc không hợp lệ.',
+                'end_day.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
+            ]);
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
@@ -73,6 +93,7 @@ class SavingoalController extends Controller
                     'errors' => $validator->errors()
                 ], 422);
             }
+
 
             $data = $validator->validated();
             $data['user_id'] = auth()->id();
@@ -138,13 +159,33 @@ class SavingoalController extends Controller
             $goal = Savingoal::where('user_id', auth()->id())->findOrFail($id);
 
             $validator = Validator::make($request->all(), [
-                'name'                => 'required|string|max:255',
-                'target'              => 'required|numeric|min:0',
-                'save_money'          => 'required|numeric|min:0',
-                'start_day'           => 'required|date',
-                'end_day'             => 'required|date|after_or_equal:start_day',
-            ]);
+                'name'       => 'required|string|max:255',
+                'target'     => 'required|numeric|min:0|digits_between:1,20',
+                'save_money' => 'required|numeric|min:0|digits_between:1,20',
+                'start_day'  => 'required|date',
+                'end_day'    => 'required|date|after_or_equal:start_day',
+            ], [
+                'name.required'       => 'Vui lòng nhập tên mục tiêu.',
+                'name.string'         => 'Tên mục tiêu phải là chuỗi ký tự.',
+                'name.max'            => 'Tên mục tiêu không được vượt quá 255 ký tự.',
 
+                'target.required'     => 'Vui lòng nhập số tiền mục tiêu.',
+                'target.numeric'      => 'Số tiền mục tiêu phải là số.',
+                'target.min'          => 'Số tiền mục tiêu không được nhỏ hơn 0.',
+                'target.digits_between' => 'Số tiền mục tiêu không được vượt quá 20 chữ số.',
+
+                'save_money.required' => 'Vui lòng nhập số tiền đã tiết kiệm.',
+                'save_money.numeric'  => 'Số tiền đã tiết kiệm phải là số.',
+                'save_money.min'      => 'Số tiền đã tiết kiệm không được nhỏ hơn 0.',
+                'save_money.digits_between' => 'Số tiền đã tiết kiệm không được vượt quá 20 chữ số.',
+
+                'start_day.required'  => 'Vui lòng chọn ngày bắt đầu.',
+                'start_day.date'      => 'Ngày bắt đầu không hợp lệ.',
+
+                'end_day.required'    => 'Vui lòng chọn ngày kết thúc.',
+                'end_day.date'        => 'Ngày kết thúc không hợp lệ.',
+                'end_day.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
+            ]);
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,

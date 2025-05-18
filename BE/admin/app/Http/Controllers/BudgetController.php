@@ -17,15 +17,17 @@ class BudgetController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|exists:categories,id',
-            'budget_limit' => 'required|numeric',
-            'warning_threshold' => 'required|numeric',
+            'budget_limit' => 'required|numeric|digits_between:1,20',
+            'warning_threshold' => 'required|numeric|digits_between:1,20',
         ], [
             'category_id.required' => 'Vui lòng chọn danh mục.',
             'category_id.exists' => 'Danh mục đã chọn không hợp lệ.',
             'budget_limit.required' => 'Vui lòng nhập hạn mức ngân sách.',
             'budget_limit.numeric' => 'Hạn mức ngân sách phải là số.',
+            'budget_limit.digits_between' => 'Ngân sách không được vượt quá 20 chữ số.',
             'warning_threshold.required' => 'Vui lòng nhập ngưỡng cảnh báo.',
             'warning_threshold.numeric' => 'Ngưỡng cảnh báo phải là số.',
+            'warning_threshold.digits_between' => 'Ngưỡng cảnh báo không được vượt quá 20 chữ số.',
         ]);
 
         if ($validator->fails()) {
@@ -243,8 +245,17 @@ class BudgetController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|exists:categories,id',
-            'budget_limit' => 'required|numeric',
-            'warning_threshold' => 'required|numeric',
+            'budget_limit' => 'required|numeric|digits_between:1,20',
+            'warning_threshold' => 'required|numeric|digits_between:1,20',
+        ], [
+            'category_id.required' => 'Vui lòng chọn danh mục.',
+            'category_id.exists' => 'Danh mục đã chọn không hợp lệ.',
+            'budget_limit.required' => 'Vui lòng nhập hạn mức ngân sách.',
+            'budget_limit.numeric' => 'Hạn mức ngân sách phải là số.',
+            'budget_limit.digits_between' => 'Ngân sách không được vượt quá 20 chữ số.',
+            'warning_threshold.required' => 'Vui lòng nhập ngưỡng cảnh báo.',
+            'warning_threshold.numeric' => 'Ngưỡng cảnh báo phải là số.',
+            'warning_threshold.digits_between' => 'Ngưỡng cảnh báo không được vượt quá 20 chữ số.',
         ]);
 
         if ($validator->fails()) {

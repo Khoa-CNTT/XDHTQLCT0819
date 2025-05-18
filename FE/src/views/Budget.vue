@@ -1,15 +1,16 @@
 <template>
   <div class="budget-container">
     <!-- Budget Header -->
-    <div class="card shadow-sm mb-4" style="height: 70px;">
-      <div class="card-title-budget d-flex justify-content-between align-items-center" style="padding: 15px;">
-        <h5 class="mb-0">
-          <i class="fas fa-coins me-2"></i>Quản lý ngân sách
-        </h5>
+    <div class="card shadow-sm mb-4" style="height: 70px">
+      <div
+        class="card-title-budget d-flex justify-content-between align-items-center"
+        style="padding: 15px"
+      >
+        <h5 class="mb-0"><i class="fas fa-coins me-2"></i>Quản lý ngân sách</h5>
         <button class="add-btn" @click="openBudgetModal">
-        <span class="add-btn-icon">+</span>
-        Thêm ngân sách mới
-      </button>
+          <span class="add-btn-icon">+</span>
+          Thêm ngân sách mới
+        </button>
       </div>
     </div>
 
@@ -22,7 +23,9 @@
           <div
             class="progress-bar"
             :class="getProgressClass(budgetSummary.totalSpentPercentage)"
-            :style="{ width: getClampedPercentage(budgetSummary.totalSpentPercentage) }"
+            :style="{
+              width: getClampedPercentage(budgetSummary.totalSpentPercentage),
+            }"
           ></div>
         </div>
         <div class="card-info">
@@ -61,79 +64,89 @@
       >
         <div class="alert-icon">⚠️</div>
         <div class="alert-content" v-html="alert"></div>
-        <button class="alert-dismiss" @click="dismissAlert(index)">&times;</button>
+        <button class="alert-dismiss" @click="dismissAlert(index)">
+          &times;
+        </button>
       </div>
     </div>
 
-   <!-- Budget Details Section -->
-<div class="budget-section">
-  <h2 class="section-header">Chi tiết ngân sách</h2>
+    <!-- Budget Details Section -->
+    <div class="budget-section">
+      <h2 class="section-header">Chi tiết ngân sách</h2>
 
-  <div v-if="loading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Đang tải dữ liệu...</p>
-  </div>
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Đang tải dữ liệu...</p>
+      </div>
 
-  <div
-    v-else-if="budgetSummary.detailed && budgetSummary.detailed.length === 0"
-    class="empty-state"
-  >
-    <p>Chưa có ngân sách nào được thiết lập. Vui lòng thêm ngân sách mới.</p>
-  </div>
+      <div
+        v-else-if="
+          budgetSummary.detailed && budgetSummary.detailed.length === 0
+        "
+        class="empty-state"
+      >
+        <p>
+          Chưa có ngân sách nào được thiết lập. Vui lòng thêm ngân sách mới.
+        </p>
+      </div>
 
-  <!-- 🔧 Bọc bảng trong div để cuộn ngang nếu bị tràn -->
-  <div class="table-responsive">
-    <table class="budget-table">
-      <thead>
-        <tr>
-          <th>Danh mục</th>
-          <th>Ngân sách</th>
-          <th>Đã chi</th>
-          <th class="hide-mobile">Ngưỡng cảnh báo</th>
-          <th>Trạng thái</th>
-          <th>Hành động</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(budget, index) in budgetSummary.detailed" :key="index">
-          <td>
-            <div class="category-cell">
-              <div
-                class="category-icon"
-                :style="{ backgroundColor: getCategoryColor(budget.status) }"
-              >
-                <i :class="getCategoryIcon(budget.icon)"></i>
-              </div>
-              <div>{{ budget.category_name }}</div>
-            </div>
-          </td>
-          <td>{{ budget.budget_limit }}</td>
-          <td>{{ budget.spent }}</td>
-          <td class="hide-mobile">{{ budget.warning_threshold }}</td>
-          <td>
-            <span
-              class="badge"
-              :class="'badge-' + getStatusType(budget.status)"
-            >
-              {{ budget.status }}
-            </span>
-          </td>
-          <td>
-            <div class="action-buttons">
-              <button class="btn btn-edit" @click="editBudget(budget.id)">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-delete" @click="deleteBudget(budget.id)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
+      <!-- 🔧 Bọc bảng trong div để cuộn ngang nếu bị tràn -->
+      <div class="table-responsive">
+        <table class="budget-table">
+          <thead>
+            <tr>
+              <th>Danh mục</th>
+              <th>Ngân sách</th>
+              <th>Đã chi</th>
+              <th class="hide-mobile">Ngưỡng cảnh báo</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(budget, index) in budgetSummary.detailed" :key="index">
+              <td>
+                <div class="category-cell">
+                  <div
+                    class="category-icon"
+                    :style="{
+                      backgroundColor: getCategoryColor(budget.status),
+                    }"
+                  >
+                    <i :class="getCategoryIcon(budget.icon)"></i>
+                  </div>
+                  <div>{{ budget.category_name }}</div>
+                </div>
+              </td>
+              <td>{{ budget.budget_limit }}</td>
+              <td>{{ budget.spent }}</td>
+              <td class="hide-mobile">{{ budget.warning_threshold }}</td>
+              <td>
+                <span
+                  class="badge"
+                  :class="'badge-' + getStatusType(budget.status)"
+                >
+                  {{ budget.status }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn btn-edit" @click="editBudget(budget.id)">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button
+                    class="btn btn-delete"
+                    @click="deleteBudget(budget.id)"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
     <!-- Modal for adding/editing budget -->
     <div class="modal" v-if="showModal">
@@ -265,20 +278,23 @@ export default {
   methods: {
     getClampedPercentage(percentage) {
       if (!percentage && percentage !== 0) return "0%";
-      
+
       const numericPercentage = parseFloat(percentage);
       if (isNaN(numericPercentage)) return "0%";
-      
+
       return Math.min(100, numericPercentage) + "%";
     },
-    
+
     // New method to dismiss alerts
     dismissAlert(index) {
       if (index >= 0 && index < this.budgetAlerts.length) {
         // Add alert index to dismissed list
         this.dismissedAlerts.push(index);
         // Save to localStorage for persistence
-        localStorage.setItem("dismissed_budget_alerts", JSON.stringify(this.dismissedAlerts));
+        localStorage.setItem(
+          "dismissed_budget_alerts",
+          JSON.stringify(this.dismissedAlerts)
+        );
         // Remove from displayed alerts
         this.budgetAlerts.splice(index, 1);
       }
@@ -499,7 +515,16 @@ export default {
         this.fetchData();
         this.closeModal();
       } catch (error) {
-        toast.error(error.response.data.message);
+        const errors = error.response?.data?.errors;
+        if (errors) {
+          Object.values(errors).forEach((fieldErrors) => {
+            fieldErrors.forEach((message) => {
+              toast.error(message);
+            });
+          });
+        } else {
+          toast.error(error.response?.data.message);
+        }
       } finally {
         this.formSubmitting = false;
       }
@@ -1015,7 +1040,7 @@ export default {
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .budget-table td {
     max-width: 150px;
   }
@@ -1024,23 +1049,23 @@ export default {
   .summary-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .hide-mobile {
     display: none;
   }
-  
+
   .budget-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .budget-header h1 {
     margin-bottom: 12px;
   }
   .alert-box {
     padding: 10px;
   }
-  
+
   .alert-content {
     font-size: 14px;
   }
@@ -1050,19 +1075,19 @@ export default {
   .budget-container {
     padding: 12px;
   }
-  
+
   .card-value {
     font-size: 20px;
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
-  
+
   .form-actions button {
     width: 100%;
   }
-  
+
   .modal-content {
     width: 95%;
   }
@@ -1073,7 +1098,7 @@ export default {
   .alert-box {
     flex-direction: column;
   }
-  
+
   .alert-icon {
     margin-bottom: 4px;
   }
@@ -1101,5 +1126,4 @@ export default {
     display: none; /* Ẩn text, chỉ giữ icon */
   }
 }
-
 </style>

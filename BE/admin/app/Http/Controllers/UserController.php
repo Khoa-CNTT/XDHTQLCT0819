@@ -158,6 +158,7 @@ class UserController extends Controller
             $rules['username'] = 'string|max:255|unique:users,username,' . $user->id;
         }
 
+
         if ($request->has('phone')) {
             $rules['phone'] = [
                 'nullable',
@@ -175,6 +176,9 @@ class UserController extends Controller
         if ($request->has('address')) {
             $rules['address'] = 'nullable|string|max:255';
         }
+        if ($request->has('role')) {
+            $rules['role'] = 'in:admin,user';
+        }
 
         $messages = [
             'username.string' => 'Tên người dùng phải là chuỗi.',
@@ -190,6 +194,7 @@ class UserController extends Controller
             'phone.regex' => 'Số điện thoại không hợp lệ',
             'address.string' => 'Địa chỉ phải là chuỗi.',
             'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
+            'role.in' => 'Vai trò không hợp lệ (chỉ được là admin hoặc user).',
         ];
 
         $validatedData = $request->validate($rules, $messages);

@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->decimal('budget_limit', 15, 2);
-            $table->decimal('warning_threshold',15,2);
+            $table->double('budget_limit');
+            $table->double('warning_threshold');
             $table->timestamps();
         });
     }

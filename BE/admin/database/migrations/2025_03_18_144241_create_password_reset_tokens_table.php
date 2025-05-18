@@ -16,6 +16,9 @@ return new class extends Migration
             $table->string('email')->index();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
+            $table->integer('send_attempts')->default(0);
+            $table->integer('failed_attempts')->default(0);
+            $table->timestamp('locked_until')->nullable();
         });
     }
 

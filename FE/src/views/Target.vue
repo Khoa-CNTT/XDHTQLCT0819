@@ -274,8 +274,16 @@ export default {
             this.closeModal();
           })
           .catch((error) => {
-            this.toast.error("❌ Có lỗi khi cập nhật mục tiêu");
-            console.error("Có lỗi khi cập nhật mục tiêu:", error);
+            const errors = error.response?.data?.errors;
+            if (errors) {
+              Object.values(errors).forEach((fieldErrors) => {
+                fieldErrors.forEach((message) => {
+                  this.toast.error(message);
+                });
+              });
+            } else {
+              this.toast.error("Dữ liệu không hợp lệ.");
+            }
           });
       } else {
         axios
@@ -290,8 +298,16 @@ export default {
             this.toast.success("✅ Thêm mục tiêu thành công");
           })
           .catch((error) => {
-            this.toast.error("❌ Có lỗi khi thêm mục tiêu");
-            console.error("Có lỗi khi thêm mục tiêu:", error);
+            const errors = error.response?.data?.errors;
+            if (errors) {
+              Object.values(errors).forEach((fieldErrors) => {
+                fieldErrors.forEach((message) => {
+                  this.toast.error(message);
+                });
+              });
+            } else {
+              this.toast.error("Dữ liệu không hợp lệ.");
+            }
           });
       }
     },

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\ResetPasswordMail;
+use App\Mail\SendOtpMail;
 use App\Mail\VerifyEmailMail;
 use App\Models\User;
 use App\Traits\UserActivityLogger;
@@ -74,7 +75,7 @@ class AuthController extends Controller
 
             $user = User::create([
                 'username' => $request->username,
-                'email' => $request->email,
+                'email' => trim($request->email),
                 'password' => Hash::make($request->password),
                 'fullName'  => $request->fullName,
                 'phone' => $request->phone,
@@ -293,87 +294,163 @@ class AuthController extends Controller
 
 
 
-
-
-    /**
-     * @OA\Post(
-     *     path="/api/forgot-password",
-     *     summary="Gửi link reset mật khẩu",
-     *     tags={"Auth"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"email"},
-     *             @OA\Property(property="email", type="string", format="email", example="a@gmail.com")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Link reset mật khẩu đã được gửi"
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Không thể gửi email"
-     *     )
-     * )
-     */
-
-    public function sendResetLinkEmail(Request $request)
+    public function sendResetOtp(Request $request)
     {
         $request->validate([
             'email' => 'required|email|exists:users',
+        ], [
+            'email.required' => 'Vui lòng nhập địa chỉ email.',
+            'email.email' => 'Địa chỉ email không hợp lệ.',
+            'email.exists' => 'Địa chỉ email không tồn tại trong hệ thống.',
         ]);
 
-        $token = Str::random(64);
         $email = $request->email;
+        $existing = DB::table('password_reset_tokens')->where('email', $email)->first();
 
-        DB::table('password_reset_tokens')->where('email', $email)->delete();
+        if ($existing && $existing->locked_until && Carbon::parse($existing->locked_until)->isFuture()) {
+            $lockedUntil = Carbon::parse($existing->locked_until)->diffForHumans();
+            return response()->json([
+                'message' => "Tài khoản đang bị khóa do gửi quá nhiều yêu cầu. Vui lòng thử lại sau $lockedUntil.",
+                'locked_until' => $lockedUntil,
+                'send_attempts' => $existing->send_attempts,
+            ], 403);
+        }
 
-        DB::table('password_reset_tokens')->insert([
-            'email' => $email,
-            'token' => $token,
-            'created_at' => Carbon::now()
-        ]);
+        // Reset nếu đã qua thời gian khóa
+        if ($existing && $existing->locked_until && Carbon::parse($existing->locked_until)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $email)->update([
+                'send_attempts' => 1,
+                'locked_until' => null,
+            ]);
+            $existing = DB::table('password_reset_tokens')->where('email', $email)->first();
+        }
 
-        // Send email with reset link
-        try {
-            Mail::to($email)->send(new ResetPasswordMail($token, $email));
+        // Nếu đã gửi >= 5 lần thì khóa tài khoản
+        if ($existing && $existing->send_attempts >= 5) {
+            DB::table('password_reset_tokens')->where('email', $email)->update([
+                'locked_until' => Carbon::now()->addDay(),
+                'send_attempts' => 5,
+            ]);
 
             return response()->json([
-                'message' => 'Password reset link sent to your email'
+                'message' => 'Bạn đã gửi yêu cầu quá 5 lần. Tài khoản đã bị khóa trong 24 giờ.',
+                'locked_until' => Carbon::now()->addDay()->toDateTimeString(),
+            ], 403);
+        }
+
+        $otp = rand(100000, 999999);
+
+        if ($existing) {
+            DB::table('password_reset_tokens')->where('email', $email)->update([
+                'token' => $otp,
+                'created_at' => Carbon::now(),
+                'send_attempts' => $existing->send_attempts + 1,
+                'failed_attempts' => 0,
+                'locked_until' => null,
+            ]);
+        } else {
+            DB::table('password_reset_tokens')->insert([
+                'email' => $email,
+                'token' => $otp,
+                'created_at' => Carbon::now(),
+                'send_attempts' => 1,
+                'failed_attempts' => 0,
+                'locked_until' => null,
+            ]);
+        }
+
+        try {
+            Mail::to($email)->send(new SendOtpMail($otp));
+            return response()->json([
+                'message' => 'Mã xác thực (OTP) đã được gửi đến email của bạn.',
+                'send_attempts' => $existing ? $existing->send_attempts + 1 : 1,
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Could not send reset link: ' . $e->getMessage()
+                'message' => 'Không thể gửi mã xác thực. Chi tiết: ' . $e->getMessage(),
             ], 500);
         }
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/reset-password",
-     *     summary="Reset mật khẩu",
-     *     tags={"Auth"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"email", "token", "password", "password_confirmation"},
-     *             @OA\Property(property="email", type="string", format="email", example="a@gmail.com"),
-     *             @OA\Property(property="token", type="string", example="abc123token"),
-     *             @OA\Property(property="password", type="string", example="newpassword123"),
-     *             @OA\Property(property="password_confirmation", type="string", example="newpassword123")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Reset mật khẩu thành công"
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Token không hợp lệ hoặc đã hết hạn"
-     *     )
-     * )
-     */
+
+
+
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'otp' => 'required|digits:6',
+        ], [
+            'email.required' => 'Vui lòng nhập địa chỉ email.',
+            'email.email' => 'Địa chỉ email không hợp lệ.',
+            'email.exists' => 'Địa chỉ email không tồn tại trong hệ thống.',
+            'otp.required' => 'Vui lòng nhập mã OTP.',
+            'otp.digits' => 'Mã OTP phải gồm đúng 6 chữ số.',
+        ]);
+
+        $email = $request->email;
+        $otp = $request->otp;
+
+        $record = DB::table('password_reset_tokens')->where('email', $email)->first();
+
+        if (!$record) {
+            return response()->json(['message' => 'Không tìm thấy yêu cầu đặt lại mật khẩu.'], 404);
+        }
+
+        if ($record->locked_until && Carbon::parse($record->locked_until)->isFuture()) {
+            $lockedUntil = Carbon::parse($record->locked_until)->diffForHumans();
+            return response()->json([
+                'message' => "Bạn đã nhập sai OTP quá 5 lần. Vui lòng thử lại sau $lockedUntil.",
+            ], 403);
+        }
+
+        if ($record->token != $otp) {
+            $failedAttempts = ($record->failed_attempts ?? 0) + 1;
+            $maxAttempts = 5;
+            $attemptsLeft = max(0, $maxAttempts - $failedAttempts);
+
+            $updateData = ['failed_attempts' => $failedAttempts];
+            $locked = false;
+            $lockedUntilText = null;
+
+            if ($failedAttempts >= $maxAttempts) {
+                $lockedUntil = Carbon::now()->addMinutes(15);
+                $updateData['locked_until'] = $lockedUntil;
+                $locked = true;
+                $lockedUntilText = $lockedUntil->diffForHumans();
+            }
+
+            DB::table('password_reset_tokens')->where('email', $email)->update($updateData);
+
+            $message = 'Mã OTP không đúng.';
+            if (!$locked && $attemptsLeft > 0) {
+                $message .= " Bạn còn $attemptsLeft lần thử nữa.";
+            } elseif ($locked) {
+                $message .= " Bạn đã nhập sai quá $maxAttempts lần. Tài khoản bị khóa trong 15 phút.";
+            }
+
+            return response()->json([
+                'message' => $message,
+                'attempts_left' => $attemptsLeft,
+                'locked' => $locked,
+                'locked_until' => $lockedUntilText,
+            ], 400);
+        }
+
+        if (Carbon::parse($record->created_at)->addMinutes(10)->isPast()) {
+            return response()->json(['message' => 'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.'], 400);
+        }
+
+        DB::table('password_reset_tokens')->where('email', $email)->update([
+            'failed_attempts' => 0,
+            'locked_until' => null,
+        ]);
+
+        return response()->json(['message' => 'Xác thực OTP thành công.']);
+    }
+
+
 
     public function reset(Request $request)
     {
@@ -406,7 +483,7 @@ class AuthController extends Controller
         $this->logAction('Mật khẩu đã được đặt lại thành công');
 
         return response()->json([
-            'redirect_url' => env('FRONTEND_LOGIN_URL', 'http://127.0.0.1:8080/login') . '?message=' . urlencode('Mật khẩu đã được đặt lại thành công') . '&status=success'
+            'message' => 'Mật khẩu đã được đặt lại thành công!'
         ]);
     }
 }
