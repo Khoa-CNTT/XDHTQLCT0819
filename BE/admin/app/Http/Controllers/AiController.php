@@ -330,6 +330,130 @@ class AiController extends Controller
         }
     }
 
+    // MBank AUTOMATIC
+    public function fetchAndClassifyMBBankTransactionsAuto()
+    {
+        try {
+            $accounts = Account::where('is_primary', true)->get();
+
+            if ($accounts->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Không tìm thấy tài khoản chính nào.'
+                ], 400);
+            }
+
+            $totalProcessed = 0;
+            $results = [];
+
+            foreach ($accounts as $account) {
+                $authUser = User::find($account->user_id);
+
+                if (!$authUser) {
+                    Log::warning("Không tìm thấy người dùng cho account_id: {$account->id}");
+                    continue;
+                }
+
+                $list_danh_muc = Category::where('user_id', $authUser->id)->pluck('name', 'id')->toArray();
+
+                $payload = [
+                    "USERNAME"  => $account->number_card,
+                    "PASSWORD"  => Crypt::decryptString($account->password),
+                    "DAY_BEGIN" => Carbon::today()->format('d/m/Y'),
+                    "DAY_END"   => Carbon::today()->format('d/m/Y'),
+                    "NUMBER_MB" => $account->number_card
+                ];
+
+                try {
+                    $client = new \GuzzleHttp\Client();
+                    $response = $client->post('https://api-mb.dzmid.io.vn/api/transactions', [
+                        'json' => $payload,
+                    ]);
+
+                    $data = json_decode($response->getBody(), true);
+
+                    if ($data['success'] && isset($data['data']['transactionHistoryList'])) {
+                        $transactions = $data['data']['transactionHistoryList'];
+                        $processedCount = 0;
+
+                        foreach ($transactions as $transaction) {
+                            $amount = (float)($transaction['debitAmount'] ?: $transaction['creditAmount']);
+
+                            try {
+                                $transaction_date = Carbon::createFromFormat('d/m/Y H:i:s', $transaction['transactionDate'])->format('Y-m-d');
+                            } catch (\Exception $e) {
+                                Log::error('Lỗi khi phân tích ngày giao dịch: ' . $transaction['transactionDate']);
+                                continue;
+                            }
+
+                            $transaction_type = !empty($transaction['creditAmount']) ? 'income' : 'expense';
+                            $transaction_info = $this->analyzeTransaction($transaction['description'], $list_danh_muc);
+
+                            if ($transaction_info) {
+                                try {
+                                    DB::table('users')->where('id', $authUser->id)->update([
+                                        'monthly_income' => $transaction_type === 'income'
+                                            ? DB::raw('monthly_income + ' . $amount)
+                                            : DB::raw('monthly_income'),
+                                        'monthly_customer_spending' => $transaction_type === 'income'
+                                            ? DB::raw('monthly_customer_spending + ' . $amount)
+                                            : DB::raw('monthly_customer_spending - ' . $amount)
+                                    ]);
+
+                                    Transaction::create([
+                                        'user_id' => $authUser->id,
+                                        'account_id' => $account->id,
+                                        'category_id' => $transaction_info['category_id'],
+                                        'amount' => $amount,
+                                        'transaction_date' => $transaction_date,
+                                        'type' => $transaction_info['type'],
+                                        'transaction_type' => $transaction_type,
+                                        'description' => $transaction_info['description'] ?? $transaction['description'],
+                                        'address' => $transaction['addDescription'] ?? null,
+                                    ]);
+
+                                    $processedCount++;
+                                    Log::info("User ID {$authUser->id}: Đã phân loại và lưu giao dịch " . $transaction['refNo']);
+                                } catch (\Exception $e) {
+                                    Log::error("User ID {$authUser->id}: Lỗi khi lưu giao dịch: " . $e->getMessage());
+                                }
+                            }
+                        }
+
+                        $updatedUser = DB::table('users')->where('id', $authUser->id)->first();
+                        $results[] = [
+                            'user_id' => $authUser->id,
+                            'processed' => $processedCount,
+                            'monthly_income' => $updatedUser->monthly_income,
+                            'monthly_customer_spending' => $updatedUser->monthly_customer_spending,
+                        ];
+
+                        $totalProcessed += $processedCount;
+                    } else {
+                        Log::info("User ID {$authUser->id}: Không có giao dịch nào để tải về.");
+                    }
+                } catch (\GuzzleHttp\Exception\RequestException $e) {
+                    Log::error("User ID {$authUser->id}: Lỗi yêu cầu MB API: " . $e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Hoàn tất xử lý tất cả tài khoản.',
+                'total_processed' => $totalProcessed,
+                'details' => $results
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Lỗi chung khi xử lý tất cả tài khoản MB Bank: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Có lỗi xảy ra khi xử lý tài khoản MB Bank.'
+            ], 500);
+        }
+    }
+
+
     private function analyzeTransaction($description, $list_danh_muc)
     {
         $api_key = 'AIzaSyASMyZotUMFskPC3IMAbrPnKJq8Rm_sL-M';

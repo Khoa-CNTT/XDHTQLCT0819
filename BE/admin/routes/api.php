@@ -26,6 +26,7 @@ Route::post('/reset-password', [AuthController::class, 'reset']);
 Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::get('/get-image/{filename}', [UserController::class, 'getImage'])
     ->where('filename', '.*');
+Route::get('/test-recurring-transactions', [RecurringTransactionController::class, 'runRecurring']);
 
 Route::post('/contact', [ContactController::class, 'store']);
 
@@ -101,7 +102,6 @@ Route::middleware('auth:sanctum', 'checkRole:user,admin')->group(function () {
 
     Route::prefix('recurringtransaction')->group(function () {
         Route::get('/', [RecurringtransactionController::class, 'index']);
-        Route::get('/test-recurring-transactions', [RecurringTransactionController::class, 'runRecurring']); //oker
         Route::post('/', [RecurringtransactionController::class, 'store']);
         Route::get('{id}', [RecurringtransactionController::class, 'edit']);
         Route::put('{id}', [RecurringtransactionController::class, 'update']);
