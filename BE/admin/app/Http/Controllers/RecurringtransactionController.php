@@ -132,7 +132,7 @@ class RecurringtransactionController extends Controller
     // CRON
     public function processRecurringTransactions()
     {
-        $recurringTransactions = Recurringtransaction::where('user_id', Auth::id())->get();
+        $recurringTransactions = Recurringtransaction::all();
 
         foreach ($recurringTransactions as $recurringTransaction) {
             $nextTransactionDate = Carbon::parse($recurringTransaction->date);
